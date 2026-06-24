@@ -1,0 +1,245 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-saffron: var(--saffron);
+  --color-saffron-soft: var(--saffron-soft);
+  --color-maroon: var(--maroon);
+  --color-gold: var(--gold);
+  --color-temple: var(--temple);
+  --color-cream: var(--cream);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 0.75rem;
+  /* Warm cream background */
+  --background: oklch(0.985 0.012 75);
+  --foreground: oklch(0.22 0.04 30);
+
+  --card: oklch(1 0.005 75);
+  --card-foreground: oklch(0.22 0.04 30);
+
+  --popover: oklch(0.995 0.01 75);
+  --popover-foreground: oklch(0.22 0.04 30);
+
+  /* Saffron primary */
+  --primary: oklch(0.68 0.18 55);
+  --primary-foreground: oklch(0.99 0.01 75);
+
+  --secondary: oklch(0.95 0.03 75);
+  --secondary-foreground: oklch(0.3 0.06 30);
+
+  --muted: oklch(0.95 0.02 75);
+  --muted-foreground: oklch(0.5 0.04 30);
+
+  /* Maroon accent */
+  --accent: oklch(0.45 0.12 25);
+  --accent-foreground: oklch(0.98 0.01 75);
+
+  --destructive: oklch(0.55 0.22 25);
+
+  --border: oklch(0.9 0.025 70);
+  --input: oklch(0.92 0.02 70);
+  --ring: oklch(0.68 0.18 55);
+
+  /* Hindu-themed colors */
+  --saffron: oklch(0.7 0.19 55);
+  --saffron-soft: oklch(0.92 0.06 70);
+  --maroon: oklch(0.42 0.13 25);
+  --gold: oklch(0.78 0.13 85);
+  --temple: oklch(0.88 0.05 50);
+  --cream: oklch(0.985 0.012 75);
+
+  --chart-1: oklch(0.7 0.19 55);
+  --chart-2: oklch(0.45 0.13 25);
+  --chart-3: oklch(0.78 0.13 85);
+  --chart-4: oklch(0.55 0.14 145);
+  --chart-5: oklch(0.6 0.16 305);
+
+  --sidebar: oklch(0.98 0.015 75);
+  --sidebar-foreground: oklch(0.22 0.04 30);
+  --sidebar-primary: oklch(0.68 0.18 55);
+  --sidebar-primary-foreground: oklch(0.99 0.01 75);
+  --sidebar-accent: oklch(0.95 0.03 75);
+  --sidebar-accent-foreground: oklch(0.3 0.06 30);
+  --sidebar-border: oklch(0.9 0.025 70);
+  --sidebar-ring: oklch(0.68 0.18 55);
+}
+
+.dark {
+  --background: oklch(0.18 0.025 30);
+  --foreground: oklch(0.96 0.02 75);
+
+  --card: oklch(0.24 0.035 30);
+  --card-foreground: oklch(0.96 0.02 75);
+
+  --popover: oklch(0.24 0.035 30);
+  --popover-foreground: oklch(0.96 0.02 75);
+
+  --primary: oklch(0.75 0.18 60);
+  --primary-foreground: oklch(0.18 0.03 30);
+
+  --secondary: oklch(0.3 0.04 30);
+  --secondary-foreground: oklch(0.95 0.02 75);
+
+  --muted: oklch(0.3 0.04 30);
+  --muted-foreground: oklch(0.7 0.04 70);
+
+  --accent: oklch(0.55 0.15 25);
+  --accent-foreground: oklch(0.96 0.02 75);
+
+  --destructive: oklch(0.65 0.2 25);
+
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.75 0.18 60);
+
+  --saffron: oklch(0.75 0.18 60);
+  --saffron-soft: oklch(0.35 0.06 50);
+  --maroon: oklch(0.6 0.16 25);
+  --gold: oklch(0.82 0.13 85);
+  --temple: oklch(0.4 0.05 50);
+  --cream: oklch(0.18 0.025 30);
+
+  --sidebar: oklch(0.24 0.035 30);
+  --sidebar-foreground: oklch(0.96 0.02 75);
+  --sidebar-primary: oklch(0.75 0.18 60);
+  --sidebar-primary-foreground: oklch(0.18 0.03 30);
+  --sidebar-accent: oklch(0.3 0.04 30);
+  --sidebar-accent-foreground: oklch(0.95 0.02 75);
+  --sidebar-border: oklch(1 0 0 / 12%);
+  --sidebar-ring: oklch(0.75 0.18 60);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    background-image:
+      radial-gradient(at 15% 12%, oklch(0.92 0.05 60 / 0.5) 0px, transparent 50%),
+      radial-gradient(at 85% 5%, oklch(0.9 0.04 30 / 0.35) 0px, transparent 45%),
+      radial-gradient(at 50% 100%, oklch(0.95 0.03 70 / 0.4) 0px, transparent 50%);
+    background-attachment: fixed;
+  }
+  .dark body {
+    background-image:
+      radial-gradient(at 15% 12%, oklch(0.35 0.06 50 / 0.4) 0px, transparent 50%),
+      radial-gradient(at 85% 5%, oklch(0.32 0.05 25 / 0.3) 0px, transparent 45%),
+      radial-gradient(at 50% 100%, oklch(0.28 0.04 60 / 0.35) 0px, transparent 50%);
+  }
+}
+
+/* Devanagari & decorative typography helpers */
+.font-devanagari {
+  font-family: 'Noto Sans Devanagari', 'Noto Serif Devanagari', var(--font-geist-sans), sans-serif;
+}
+
+/* Subtle sacred pattern background */
+.bg-pattern-sacred {
+  background-image:
+    radial-gradient(circle at 25px 25px, oklch(0.7 0.18 55 / 0.06) 2px, transparent 2px),
+    radial-gradient(circle at 75px 75px, oklch(0.78 0.13 85 / 0.05) 1px, transparent 1px);
+  background-size: 100px 100px;
+}
+
+/* Pretty scrollbar for content areas */
+.scroll-sacred {
+  scrollbar-width: thin;
+  scrollbar-color: var(--saffron) transparent;
+}
+.scroll-sacred::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.scroll-sacred::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scroll-sacred::-webkit-scrollbar-thumb {
+  background: oklch(0.7 0.18 55 / 0.4);
+  border-radius: 8px;
+}
+.scroll-sacred::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.7 0.18 55 / 0.7);
+}
+
+/* Decorative gradient text */
+.text-gradient-saffron {
+  background: linear-gradient(135deg, oklch(0.7 0.19 55) 0%, oklch(0.6 0.16 25) 60%, oklch(0.78 0.13 85) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Card hover glow */
+.card-glow:hover {
+  box-shadow:
+    0 0 0 1px oklch(0.7 0.18 55 / 0.3),
+    0 12px 40px -8px oklch(0.7 0.18 55 / 0.25);
+}
+
+/* Animations */
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(2deg); }
+}
+.animate-float-slow {
+  animation: float-slow 8s ease-in-out infinite;
+}
+
+@keyframes shimmer-gold {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+.animate-shimmer-gold {
+  animation: shimmer-gold 3s ease-in-out infinite;
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-spin-slow {
+  animation: spin-slow 30s linear infinite;
+}

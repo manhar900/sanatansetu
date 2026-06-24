@@ -1,0 +1,33 @@
+// Prisma schema for Sanatan Dharma religious content platform
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Content {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  body        String?
+  category    String
+  type        String   // text | image | audio | video | link
+  mediaUrl    String?
+  imageUrl    String?
+  author      String?
+  language    String   @default("Sanskrit")
+  tags        String?  // comma-separated
+  views       Int      @default(0)
+  likes       Int      @default(0)
+  featured    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([type])
+  @@index([createdAt])
+}
