@@ -2,14 +2,18 @@ import type { MetadataRoute } from 'next'
 import { db } from '@/lib/db'
 import { CATEGORIES } from '@/lib/categories'
 
-// Dynamic sitemap generated from the database.
-export const dynamic = 'force-dynamic'
+export const revalidate = 3600
+
+const BASE_URL = 'https://sanatansetu.vercel.app'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = 'https://sanatansetu.example'
-
   const staticEntries: MetadataRoute.Sitemap = [
-    { url: `${base}/`, lastModified: new Date(), changeFrequency: 'daily', priority: 1 },
+    {
+      url: `${BASE_URL}/`,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 1,
+    },
   ]
 
   let contentEntries: MetadataRoute.Sitemap = []
@@ -21,7 +25,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       take: 1000,
     })
     contentEntries = items.map((item) => ({
-      url: `${base}/content/${item.id}`,
+      url: `${BASE_URL}/content/${item.id}`,
       lastModified: item.updatedAt,
       changeFrequency: 'weekly',
       priority: 0.8,
@@ -30,9 +34,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error('sitemap error:', error)
   }
 
-  // Category landing entries — they all point to / for now but signal intent.
   const categoryEntries: MetadataRoute.Sitemap = CATEGORIES.map((c) => ({
-    url: `${base}/?category=${encodeURIComponent(c.name)}`,
+    url: `${BASE_URL}/?category=${encodeURIComponent(c.name)}`,
     lastModified: new Date(),
     changeFrequency: 'weekly',
     priority: 0.6,
