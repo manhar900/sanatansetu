@@ -254,10 +254,13 @@ export function ContentClient({ item }: { item: Item }) {
           {item.mediaUrl && item.type === 'video' && (
             <div className="mb-6 aspect-video overflow-hidden rounded-2xl bg-black">
               <iframe
-                src={item.mediaUrl}
+                src={getVideoEmbedUrl(item.mediaUrl)}
                 className="w-full h-full"
                 title={displayTitle}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
                 allowFullScreen
+                referrerPolicy="strict-origin-when-cross-origin"
+                frameBorder="0"
               />
             </div>
           )}
@@ -280,23 +283,34 @@ export function ContentClient({ item }: { item: Item }) {
 
           {/* Gallery */}
           {gallery.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+            <div className="space-y-4 mb-6">
+              <h2 className="text-lg font-semibold text-foreground">Media Gallery</h2>
               {gallery.map((g, i) => (
-                <div key={i} className="overflow-hidden rounded-xl border bg-muted/30">
+                <div key={i} className="space-y-1.5">
                   {g.type === 'image' ? (
-                    <SmartImage
-                      src={g.url}
-                      alt={g.caption ?? displayTitle}
-                      className="w-full h-32 object-cover"
-                      containerClassName="w-full"
-                    />
+                    <div className="rounded-xl overflow-hidden border border-saffron/15">
+                      <SmartImage
+                        src={g.url}
+                        alt={g.caption ?? displayTitle}
+                        className="w-full"
+                        containerClassName="w-full"
+                      />
+                    </div>
                   ) : (
-                    <div className="aspect-video bg-black">
-                      <iframe src={g.url} className="w-full h-full" title={g.caption ?? `media-${i}`} allowFullScreen />
+                    <div className="rounded-xl overflow-hidden border border-saffron/15 aspect-video bg-black">
+                      <iframe
+                        src={getVideoEmbedUrl(g.url)}
+                        className="w-full h-full"
+                        title={g.caption ?? `Video ${i + 1}`}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
+                        allowFullScreen
+                        referrerPolicy="strict-origin-when-cross-origin"
+                        frameBorder="0"
+                      />
                     </div>
                   )}
                   {g.caption && (
-                    <p className="px-2 py-1 text-xs text-muted-foreground">{g.caption}</p>
+                    <p className="text-xs text-muted-foreground italic px-1">{g.caption}</p>
                   )}
                 </div>
               ))}
@@ -338,4 +352,25 @@ export function ContentClient({ item }: { item: Item }) {
       </div>
     </main>
   )
+}
+
+// Convert various video URLs to embeddable format
+function getVideoEmbedUrl(url: string): string {
+  // YouTube: youtu.be/ID, youtube.com/watch?v=ID, youtube.com/shorts/ID, youtube.com/embed/ID
+  const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/))([\w-]{11})/)
+  if (ytMatch) {
+    return `https://www.youtube.com/embed/${ytMatch[1]}?rel=0&modestbranding=1`
+  }
+  // Vimeo: vimeo.com/ID, player.vimeo.com/video/ID
+  const vimeoMatch = url.match(/(?:vimeo\.com\/(?:video\/)?|player\.vimeo\.com\/video\/)(\d+)/)
+  if (vimeoMatch) {
+    return `https://player.vimeo.com/video/${vimeoMatch[1]}`
+  }
+  // Loom: loom.com/share/ID
+  const loomMatch = url.match(/loom\.com\/share\/([a-f0-9-]+)/)
+  if (loomMatch) {
+    return `https://www.loom.com/embed/${loomMatch[1]}`
+  }
+  // Direct video file — return as-is
+  return url
 }
