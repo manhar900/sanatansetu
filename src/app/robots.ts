@@ -1,5 +1,7 @@
 import type { MetadataRoute } from 'next'
 
+const BASE_URL = 'https://sanatansetu.vercel.app'
+
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
@@ -7,7 +9,7 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: '/api/',
     },
-    sitemap: 'https://sanatansetu.example/sitemap.xml',
-    host: 'https://sanatansetu.example',
+    sitemap: `${BASE_URL}/sitemap.xml`,
+    host: BASE_URL,
   }
 }
