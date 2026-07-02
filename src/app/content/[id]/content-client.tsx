@@ -26,9 +26,14 @@ import { OmSymbol } from '@/components/sacred-icons'
 import { SmartImage } from '@/components/smart-image'
 import { useLanguage } from '@/components/language-provider'
 import { useAutoTranslation } from '@/components/use-auto-translation'
+import { useAdmin } from '@/components/admin-provider'
 import { uiLangToContentLang, getLanguage, LANGUAGES, type LanguageCode } from '@/lib/i18n'
 import { getCategoryName, getLanguageNativeName } from '@/lib/categories'
 import { toast } from 'sonner'
+import { useRouter } from 'next/navigation'
+import {
+  Trash2, Pencil, Check, X as XIcon, Clock, Shield,
+} from 'lucide-react'
 
 type Item = {
   id: string
@@ -94,12 +99,60 @@ const TYPE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = 
 
 export function ContentClient({ item }: { item: Item }) {
   const { lang, dict } = useLanguage()
+  const { isAdmin, authedFetch } = useAdmin()
+  const router = useRouter()
   const targetContentLang = uiLangToContentLang(lang as LanguageCode)
   const { data: translated, loading, isAutoTranslated } = useAutoTranslation(
     item,
     targetContentLang,
     { includeBody: true }
   )
+
+  // Admin actions
+  const [confirmDelete, setConfirmDelete] = React.useState(false)
+
+  const handleDelete = async () => {
+    if (!confirmDelete) {
+      setConfirmDelete(true)
+      setTimeout(() => setConfirmDelete(false), 3000)
+      return
+    }
+    try {
+      const res = await authedFetch(`/api/content/${item.id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error()
+      toast.success(dict.removed || 'Content removed')
+      router.push('/')
+    } catch {
+      toast.error(dict.removeFailed || 'Failed to delete')
+    }
+  }
+
+  const handleApprove = async () => {
+    try {
+      const res = await authedFetch(`/api/content/${item.id}/approve`, { method: 'POST' })
+      if (!res.ok) throw new Error()
+      toast.success(dict.approved || 'Content approved')
+      router.refresh()
+    } catch {
+      toast.error('Failed to approve')
+    }
+  }
+
+  const handleReject = async () => {
+    try {
+      const res = await authedFetch(`/api/content/${item.id}/reject`, { method: 'POST' })
+      if (!res.ok) throw new Error()
+      toast.success(dict.rejected || 'Content rejected')
+      router.push('/')
+    } catch {
+      toast.error('Failed to reject')
+    }
+  }
+
+  const handleEdit = () => {
+    // Navigate to homepage with edit parameter
+    router.push(`/?edit=${item.id}`)
+  }
 
   const translations = parseTranslations(item.translations)
   // Build list of available languages (primary + translations)
@@ -350,7 +403,7 @@ export function ContentClient({ item }: { item: Item }) {
           )}
 
           {/* Actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <Button
               onClick={handleLike}
               variant={liked ? 'default' : 'outline'}
@@ -359,6 +412,62 @@ export function ContentClient({ item }: { item: Item }) {
               <Heart className={`mr-2 h-4 w-4 ${liked ? 'fill-current' : ''}`} />
               {liked ? dict.blessed : dict.bless} · {likeCount}
             </Button>
+
+            {/* Admin actions */}
+            {isAdmin && (
+              <>
+                {/* Pending status badge */}
+                {item.status === 'pending' && (
+                  <Badge className="bg-amber-500 text-white">
+                    <Clock className="mr-1 h-3 w-3" /> {dict.pendingApproval || 'Pending Approval'}
+                  </Badge>
+                )}
+
+                {/* Approve button (only for pending items) */}
+                {item.status === 'pending' && (
+                  <Button
+                    onClick={handleApprove}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                  >
+                    <Check className="mr-2 h-4 w-4" /> {dict.approveButton || 'Approve'}
+                  </Button>
+                )}
+
+                {/* Reject button (only for pending items) */}
+                {item.status === 'pending' && (
+                  <Button
+                    onClick={handleReject}
+                    variant="outline"
+                    className="text-rose-600 border-rose-300 hover:bg-rose-50"
+                  >
+                    <XIcon className="mr-2 h-4 w-4" /> {dict.rejectButton || 'Reject'}
+                  </Button>
+                )}
+
+                {/* Edit button */}
+                <Button variant="outline" onClick={handleEdit}>
+                  <Pencil className="mr-2 h-4 w-4" /> {dict.editButton || 'Edit'}
+                </Button>
+
+                {/* Delete button */}
+                {confirmDelete ? (
+                  <Button
+                    variant="destructive"
+                    onClick={handleDelete}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" /> {dict.yesRemove || 'Confirm Delete?'}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    onClick={handleDelete}
+                    className="text-rose-600 border-rose-300 hover:bg-rose-50"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" /> {dict.remove || 'Delete'}
+                  </Button>
+                )}
+              </>
+            )}
           </div>
         </motion.article>
 
