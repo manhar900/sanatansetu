@@ -27,7 +27,7 @@ import { SmartImage } from '@/components/smart-image'
 import { useLanguage } from '@/components/language-provider'
 import { useAutoTranslation } from '@/components/use-auto-translation'
 import { uiLangToContentLang, getLanguage, LANGUAGES, type LanguageCode } from '@/lib/i18n'
-import { getCategoryName } from '@/lib/categories'
+import { getCategoryName, getLanguageNativeName } from '@/lib/categories'
 import { toast } from 'sonner'
 
 type Item = {
@@ -64,15 +64,24 @@ function parseGallery(raw: string | null): { type: 'image' | 'video'; url: strin
   return []
 }
 
-function parseTranslations(raw: string | null): Record<string, any> {
-  if (!raw) return {}
+function parseTranslations(raw: string | null): { lang: string; title: string; description: string; body: string }[] {
+  if (!raw) return []
   try {
     const parsed = JSON.parse(raw)
-    if (parsed && typeof parsed === 'object') return parsed
+    if (Array.isArray(parsed)) {
+      return parsed
+        .filter((t: any) => t && t.lang && t.title)
+        .map((t: any) => ({
+          lang: String(t.lang),
+          title: String(t.title),
+          description: String(t.description || ''),
+          body: String(t.body || ''),
+        }))
+    }
   } catch {
     // ignore
   }
-  return {}
+  return []
 }
 
 const TYPE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -93,12 +102,16 @@ export function ContentClient({ item }: { item: Item }) {
   )
 
   const translations = parseTranslations(item.translations)
-  const availableLangs = Object.keys(translations)
+  // Build list of available languages (primary + translations)
+  // Clean language names: strip " (AI)" suffix for display
+  const availableLangs = translations.map((t) => t.lang.replace(' (AI)', ''))
   const [activeLang, setActiveLang] = React.useState<string>(item.language)
 
   // Determine which translation to display.
   const showOriginal = activeLang === item.language
-  const humanTranslation = showOriginal ? null : translations[activeLang.toLowerCase()]
+  const humanTranslation = showOriginal ? null : translations.find(
+    (t) => t.lang === activeLang || t.lang === activeLang + ' (AI)' || t.lang.replace(' (AI)', '') === activeLang
+  )
   const autoTrans = translated && activeLang === targetContentLang ? translated : null
 
   const displayTitle =
@@ -130,7 +143,7 @@ export function ContentClient({ item }: { item: Item }) {
   }
 
   const createdDate = new Date(item.createdAt)
-  const langBtns = [item.language, ...availableLangs.filter((l) => l !== item.language.toLowerCase())]
+  const langBtns = [item.language, ...availableLangs.filter((l) => l !== item.language)]
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-amber-50/30 via-background to-rose-50/20 dark:from-amber-950/10 dark:via-background dark:to-rose-950/10">
@@ -204,6 +217,8 @@ export function ContentClient({ item }: { item: Item }) {
             </span>
             {langBtns.map((l) => {
               const isActive = l === activeLang || l.toLowerCase() === activeLang.toLowerCase()
+              const isPrimary = l === item.language
+              const isAi = translations.some((t) => t.lang.replace(' (AI)', '') === l && t.lang.includes('(AI)'))
               return (
                 <Button
                   key={l}
@@ -212,7 +227,9 @@ export function ContentClient({ item }: { item: Item }) {
                   onClick={() => setActiveLang(l)}
                   className="h-7 text-xs"
                 >
-                  {l}
+                  {getLanguageNativeName(l)}
+                  {isPrimary && <span className="ml-1 text-[0.6rem] opacity-70">(Primary)</span>}
+                  {isAi && <span className="ml-1 text-[0.6rem]">✨</span>}
                 </Button>
               )
             })}
@@ -225,7 +242,7 @@ export function ContentClient({ item }: { item: Item }) {
                   className="h-7 text-xs"
                 >
                   {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
-                  <span className="ml-1">{targetContentLang}</span>
+                  <span className="ml-1">{getLanguageNativeName(targetContentLang)}</span>
                 </Button>
               )}
             {isAutoTranslated && activeLang === targetContentLang && (
