@@ -1800,16 +1800,42 @@ function DetailDialog({
   React.useEffect(() => {
     if (item) {
       setLiked(false)
-      setLikeCount(item.likes)
-      setActiveLang(item.language)
+      setLikeCount(typeof item.likes === 'number' ? item.likes : 0)
+      setActiveLang(item.language ?? 'Sanskrit')
     }
   }, [item])
 
   if (!item) return null
 
-  const translations = parseTranslations(item.translations)
+  // Defensive normalization — guard against partial ContentItem payloads
+  // (e.g. if /api/pending ever returns a subset again). Without this, calling
+  // `.toLowerCase()` on undefined `item.language` throws a client-side exception.
+  const safeItem = {
+    ...item,
+    language: item.language ?? 'Sanskrit',
+    type: item.type ?? 'text',
+    status: item.status ?? 'published',
+    likes: typeof item.likes === 'number' ? item.likes : 0,
+    views: typeof item.views === 'number' ? item.views : 0,
+    featured: Boolean(item.featured),
+    body: item.body ?? null,
+    mediaUrl: item.mediaUrl ?? null,
+    imageUrl: item.imageUrl ?? null,
+    author: item.author ?? null,
+    tags: item.tags ?? null,
+    translations: item.translations ?? null,
+    mediaGallery: item.mediaGallery ?? null,
+    submittedBy: item.submittedBy ?? null,
+    description: item.description ?? '',
+    title: item.title ?? '',
+    category: item.category ?? '',
+    createdAt: item.createdAt ?? new Date().toISOString(),
+    updatedAt: item.updatedAt ?? item.createdAt ?? new Date().toISOString(),
+  }
+
+  const translations = parseTranslations(safeItem.translations)
   const availableLangs = Object.keys(translations).map((l) => l.charAt(0).toUpperCase() + l.slice(1))
-  const showOriginal = activeLang.toLowerCase() === item.language.toLowerCase()
+  const showOriginal = activeLang.toLowerCase() === safeItem.language.toLowerCase()
   const humanTranslation = !showOriginal
     ? translations[activeLang.toLowerCase()]
     : null
@@ -1818,15 +1844,15 @@ function DetailDialog({
       ? translated
       : null
 
-  const displayTitle = humanTranslation?.title ?? autoTrans?.title ?? item.title
+  const displayTitle = humanTranslation?.title ?? autoTrans?.title ?? safeItem.title
   const displayDescription =
-    humanTranslation?.description ?? autoTrans?.description ?? item.description
-  const displayBody = humanTranslation?.body ?? autoTrans?.body ?? item.body
+    humanTranslation?.description ?? autoTrans?.description ?? safeItem.description
+  const displayBody = humanTranslation?.body ?? autoTrans?.body ?? safeItem.body
 
-  const gallery = parseGallery(item.mediaGallery)
-  const category = getCategoryName(item.category)
-  const TypeIcon = TYPE_ICONS[item.type] ?? FileText
-  const isPending = item.status === 'pending'
+  const gallery = parseGallery(safeItem.mediaGallery)
+  const category = getCategoryName(safeItem.category)
+  const TypeIcon = TYPE_ICONS[safeItem.type] ?? FileText
+  const isPending = safeItem.status === 'pending'
 
   const handleLike = async () => {
     if (liked || !item) return
@@ -1855,9 +1881,9 @@ function DetailDialog({
     }
   }
 
-  const langButtons = [item.language, ...availableLangs.filter((l) => l.toLowerCase() !== item.language.toLowerCase())]
+  const langButtons = [safeItem.language, ...availableLangs.filter((l) => l.toLowerCase() !== safeItem.language.toLowerCase())]
   const includesTarget = langButtons.some((l) => l.toLowerCase() === targetContentLang.toLowerCase())
-  if (!includesTarget && targetContentLang !== item.language) {
+  if (!includesTarget && targetContentLang !== safeItem.language) {
     langButtons.push(targetContentLang)
   }
 
@@ -1872,9 +1898,9 @@ function DetailDialog({
               </Badge>
             )}
             <Badge variant="outline" className="capitalize">
-              <TypeIcon className="mr-1 h-3 w-3" /> {getTypeLabel(item.type, dict)}
+              <TypeIcon className="mr-1 h-3 w-3" /> {getTypeLabel(safeItem.type, dict)}
             </Badge>
-            {item.featured && (
+            {safeItem.featured && (
               <Badge className="bg-gradient-to-r from-yellow-500 to-amber-500 text-white border-0">
                 <Crown className="mr-1 h-3 w-3" /> {dict.featured}
               </Badge>
@@ -1920,10 +1946,10 @@ function DetailDialog({
         </div>
 
         {/* Cover */}
-        {item.imageUrl && (
+        {safeItem.imageUrl && (
           <div className="overflow-hidden rounded-xl">
             <SmartImage
-              src={item.imageUrl}
+              src={safeItem.imageUrl}
               alt={displayTitle}
               className="w-full h-auto max-h-80 object-cover"
               containerClassName="w-full"
@@ -1932,21 +1958,21 @@ function DetailDialog({
         )}
 
         {/* Media */}
-        {item.mediaUrl && item.type === 'audio' && (
-          <audio controls className="w-full" src={item.mediaUrl} />
+        {safeItem.mediaUrl && safeItem.type === 'audio' && (
+          <audio controls className="w-full" src={safeItem.mediaUrl} />
         )}
-        {item.mediaUrl && item.type === 'video' && (
+        {safeItem.mediaUrl && safeItem.type === 'video' && (
           <div className="aspect-video overflow-hidden rounded-xl bg-black">
             <iframe
-              src={item.mediaUrl}
+              src={safeItem.mediaUrl}
               className="w-full h-full"
               title={displayTitle}
               allowFullScreen
             />
           </div>
         )}
-        {item.mediaUrl && item.type === 'link' && (
-          <a href={item.mediaUrl} target="_blank" rel="noopener noreferrer">
+        {safeItem.mediaUrl && safeItem.type === 'link' && (
+          <a href={safeItem.mediaUrl} target="_blank" rel="noopener noreferrer">
             <Button variant="outline" className="w-full sm:w-auto">
               <LinkIcon className="mr-2 h-4 w-4" /> {dict.openExternal}
               <ArrowUpRight className="ml-1 h-3 w-3" />
@@ -1994,9 +2020,9 @@ function DetailDialog({
         )}
 
         {/* Tags */}
-        {item.tags && (
+        {safeItem.tags && (
           <div className="flex flex-wrap gap-1.5">
-            {item.tags
+            {safeItem.tags
               .split(',')
               .map((t) => t.trim())
               .filter(Boolean)
@@ -2010,23 +2036,23 @@ function DetailDialog({
 
         {/* Meta */}
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground pt-2 border-t border-border/60">
-          {item.author && (
+          {safeItem.author && (
             <span className="inline-flex items-center gap-1">
-              <User className="h-3.5 w-3.5" /> {dict.author}: {item.author}
+              <User className="h-3.5 w-3.5" /> {dict.author}: {safeItem.author}
             </span>
           )}
           <span className="inline-flex items-center gap-1">
-            <Calendar className="h-3.5 w-3.5" /> {formatRelativeTime(item.createdAt, dict)}
+            <Calendar className="h-3.5 w-3.5" /> {formatRelativeTime(safeItem.createdAt, dict)}
           </span>
           <span className="inline-flex items-center gap-1">
-            <Eye className="h-3.5 w-3.5" /> {item.views} {dict.views}
+            <Eye className="h-3.5 w-3.5" /> {safeItem.views} {dict.views}
           </span>
           <span className="inline-flex items-center gap-1">
-            <Languages className="h-3.5 w-3.5" /> {dict.primaryLang}: {item.language}
+            <Languages className="h-3.5 w-3.5" /> {dict.primaryLang}: {safeItem.language}
           </span>
-          {item.submittedBy && (
+          {safeItem.submittedBy && (
             <span className="inline-flex items-center gap-1">
-              <User className="h-3.5 w-3.5" /> {dict.submittedBy}: {item.submittedBy}
+              <User className="h-3.5 w-3.5" /> {dict.submittedBy}: {safeItem.submittedBy}
             </span>
           )}
         </div>
