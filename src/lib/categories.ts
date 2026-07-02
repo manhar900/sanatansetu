@@ -119,3 +119,19 @@ export const CONTENT_TYPES = [
 ] as const
 
 export type ContentType = (typeof CONTENT_TYPES)[number]["value"]
+
+// Helper to get the category object by name
+export function getCategoryName(name: string): Category | undefined {
+  return CATEGORIES.find((c) => c.name === name)
+}
+
+// Helper to get the native display name for a content language string
+export function getLanguageNativeName(language: string): string {
+  const found = LANGUAGES.find((l) => l === language)
+  return found ?? language
+}
+
+// Helper to look up a content type by value
+export function getContentType(value: string) {
+  return CONTENT_TYPES.find((t) => t.value === value)
+}

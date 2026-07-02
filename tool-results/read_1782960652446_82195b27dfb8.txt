@@ -1,0 +1,1532 @@
+     1→'use client'
+     2→
+     3→import * as React from 'react'
+     4→import { motion, AnimatePresence } from 'framer-motion'
+     5→import {
+     6→  Search, Upload, Sun, Moon, Heart, Eye, Trash2, X, Sparkles,
+     7→  BookOpen, AudioLines, Video, Link as LinkIcon, Image as ImageIcon,
+     8→  FileText, ChevronRight, Calendar, User, Globe, Tag, Flame, Crown,
+     9→  TrendingUp, Clock, ArrowUpRight, Quote, Loader2,
+    10→} from 'lucide-react'
+    11→import { Button } from '@/components/ui/button'
+    12→import { Input } from '@/components/ui/input'
+    13→import { Textarea } from '@/components/ui/textarea'
+    14→import { Label } from '@/components/ui/label'
+    15→import { Badge } from '@/components/ui/badge'
+    16→import {
+    17→  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+    18→  DialogFooter, DialogClose,
+    19→} from '@/components/ui/dialog'
+    20→import {
+    21→  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+    22→} from '@/components/ui/select'
+    23→import {
+    24→  Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
+    25→} from '@/components/ui/sheet'
+    26→import {
+    27→  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+    28→} from '@/components/ui/dropdown-menu'
+    29→import { useTheme } from 'next-themes'
+    30→import { toast } from 'sonner'
+    31→import { OmSymbol, LotusIcon, DiyaIcon, KalashIcon } from '@/components/sacred-icons'
+    32→import { CATEGORIES, LANGUAGES, CONTENT_TYPES, type ContentType } from '@/lib/categories'
+    33→
+    34→// ===================== Types =====================
+    35→type ContentItem = {
+    36→  id: string
+    37→  title: string
+    38→  description: string
+    39→  body: string | null
+    40→  category: string
+    41→  type: string
+    42→  mediaUrl: string | null
+    43→  imageUrl: string | null
+    44→  author: string | null
+    45→  language: string
+    46→  tags: string | null
+    47→  views: number
+    48→  likes: number
+    49→  featured: boolean
+    50→  createdAt: string
+    51→  updatedAt: string
+    52→}
+    53→
+    54→// ===================== Constants =====================
+    55→const SORTS = [
+    56→  { value: 'newest', label: 'Newest First', icon: Clock },
+    57→  { value: 'oldest', label: 'Oldest First', icon: Clock },
+    58→  { value: 'popular', label: 'Most Viewed', icon: Eye },
+    59→  { value: 'liked', label: 'Most Liked', icon: Heart },
+    60→]
+    61→
+    62→const QUOTES = [
+    63→  { text: 'सत्यमेव जयते', trans: 'Truth alone triumphs — Mundaka Upanishad' },
+    64→  { text: 'वसुधैव कुटुम्बकम्', trans: 'The whole world is one family — Maha Upanishad' },
+    65→  { text: 'अहं ब्रह्मास्मि', trans: 'I am Brahman — Brihadaranyaka Upanishad' },
+    66→  { text: 'तत्त्वमसि', trans: 'Thou art that — Chandogya Upanishad' },
+    67→]
+    68→
+    69→// ===================== Main Component =====================
+    70→export default function Home() {
+    71→  const { theme, setTheme } = useTheme()
+    72→  const [mounted, setMounted] = React.useState(false)
+    73→  const [items, setItems] = React.useState<ContentItem[]>([])
+    74→  const [stats, setStats] = React.useState<{ total: number; categories: { name: string; count: number }[] }>({
+    75→    total: 0,
+    76→    categories: [],
+    77→  })
+    78→  const [loading, setLoading] = React.useState(true)
+    79→
+    80→  // filters
+    81→  const [search, setSearch] = React.useState('')
+    82→  const [category, setCategory] = React.useState('All')
+    83→  const [type, setType] = React.useState('All')
+    84→  const [sort, setSort] = React.useState('newest')
+    85→
+    86→  // modals
+    87→  const [uploadOpen, setUploadOpen] = React.useState(false)
+    88→  const [activeItem, setActiveItem] = React.useState<ContentItem | null>(null)
+    89→
+    90→  React.useEffect(() => setMounted(true), [])
+    91→
+    92→  // fetch content
+    93→  const fetchContent = React.useCallback(async () => {
+    94→    setLoading(true)
+    95→    try {
+    96→      const params = new URLSearchParams()
+    97→      if (search) params.set('search', search)
+    98→      if (category !== 'All') params.set('category', category)
+    99→      if (type !== 'All') params.set('type', type)
+   100→      params.set('sort', sort)
+   101→      const res = await fetch(`/api/content?${params.toString()}`)
+   102→      const json = await res.json()
+   103→      setItems(json.items || [])
+   104→    } catch {
+   105→      toast.error('Failed to load content')
+   106→    } finally {
+   107→      setLoading(false)
+   108→    }
+   109→  }, [search, category, type, sort])
+   110→
+   111→  React.useEffect(() => {
+   112→    const t = setTimeout(fetchContent, search ? 350 : 0)
+   113→    return () => clearTimeout(t)
+   114→  }, [fetchContent, search])
+   115→
+   116→  const fetchStats = React.useCallback(async () => {
+   117→    try {
+   118→      const res = await fetch('/api/stats')
+   119→      const json = await res.json()
+   120→      setStats(json)
+   121→    } catch {}
+   122→  }, [])
+   123→
+   124→  React.useEffect(() => {
+   125→    fetchContent()
+   126→    fetchStats()
+   127→  }, [fetchContent, fetchStats])
+   128→
+   129→  const handleCreated = async () => {
+   130→    setUploadOpen(false)
+   131→    await Promise.all([fetchContent(), fetchStats()])
+   132→    toast.success('Content uploaded successfully 🙏')
+   133→  }
+   134→
+   135→  const handleDeleted = async (id: string) => {
+   136→    try {
+   137→      await fetch(`/api/content/${id}`, { method: 'DELETE' })
+   138→      setActiveItem(null)
+   139→      await Promise.all([fetchContent(), fetchStats()])
+   140→      toast.success('Content removed')
+   141→    } catch {
+   142→      toast.error('Failed to delete')
+   143→    }
+   144→  }
+   145→
+   146→  const handleLike = async (id: string) => {
+   147→    try {
+   148→      const res = await fetch(`/api/content/${id}/like`, { method: 'POST' })
+   149→      const json = await res.json()
+   150→      setItems((prev) =>
+   151→        prev.map((it) => (it.id === id ? { ...it, likes: json.likes } : it))
+   152→      )
+   153→      if (activeItem?.id === id) {
+   154→        setActiveItem({ ...activeItem, likes: json.likes })
+   155→      }
+   156→      toast.success('Blessed 🙏')
+   157→    } catch {
+   158→      toast.error('Failed to like')
+   159→    }
+   160→  }
+   161→
+   162→  const quote = React.useMemo(
+   163→    () => QUOTES[Math.floor(Math.random() * QUOTES.length)],
+   164→    []
+   165→  )
+   166→
+   167→  return (
+   168→    <div className="min-h-screen flex flex-col bg-background text-foreground">
+   169→      <Header
+   170→        onUpload={() => setUploadOpen(true)}
+   171→        onSearch={setSearch}
+   172→        theme={mounted ? theme : undefined}
+   173→        onToggleTheme={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+   174→        totalCount={stats.total}
+   175→      />
+   176→
+   177→      <main className="flex-1">
+   178→        <Hero
+   179→          totalCount={stats.total}
+   180→          categoryCount={stats.categories.length || CATEGORIES.length}
+   181→          onUpload={() => setUploadOpen(true)}
+   182→          onBrowse={() => {
+   183→            document.getElementById('library')?.scrollIntoView({ behavior: 'smooth' })
+   184→          }}
+   185→        />
+   186→
+   187→        <CategorySection
+   188→          categories={CATEGORIES}
+   189→          counts={Object.fromEntries(stats.categories.map((c) => [c.name, c.count]))}
+   190→          onSelect={(cat) => {
+   191→            setCategory(cat)
+   192→            document.getElementById('library')?.scrollIntoView({ behavior: 'smooth' })
+   193→          }}
+   194→        />
+   195→
+   196→        <LibrarySection
+   197→          items={items}
+   198→          loading={loading}
+   199→          search={search}
+   200→          category={category}
+   201→          type={type}
+   202→          sort={sort}
+   203→          onSearch={setSearch}
+   204→          onCategory={setCategory}
+   205→          onType={setType}
+   206→          onSort={setSort}
+   207→          onSelect={setActiveItem}
+   208→          onLike={handleLike}
+   209→        />
+   210→
+   211→        <QuoteBanner quote={quote} />
+   212→      </main>
+   213→
+   214→      <Footer onUpload={() => setUploadOpen(true)} />
+   215→
+   216→      {/* Upload Dialog */}
+   217→      <UploadDialog
+   218→        open={uploadOpen}
+   219→        onOpenChange={setUploadOpen}
+   220→        onCreated={handleCreated}
+   221→      />
+   222→
+   223→      {/* Detail Dialog */}
+   224→      <DetailDialog
+   225→        item={activeItem}
+   226→        onOpenChange={(open) => !open && setActiveItem(null)}
+   227→        onLike={() => activeItem && handleLike(activeItem.id)}
+   228→        onDelete={() => activeItem && handleDeleted(activeItem.id)}
+   229→      />
+   230→    </div>
+   231→  )
+   232→}
+   233→
+   234→// ===================== Header =====================
+   235→function Header({
+   236→  onUpload, onSearch, theme, onToggleTheme, totalCount,
+   237→}: {
+   238→  onUpload: () => void
+   239→  onSearch: (s: string) => void
+   240→  theme?: string
+   241→  onToggleTheme: () => void
+   242→  totalCount: number
+   243→}) {
+   244→  const [mobileSearch, setMobileSearch] = React.useState(false)
+   245→
+   246→  return (
+   247→    <header className="sticky top-0 z-40 w-full border-b border-saffron/20 bg-background/85 backdrop-blur-xl">
+   248→      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+   249→        <div className="flex h-16 items-center gap-3 sm:gap-6">
+   250→          {/* Logo */}
+   251→          <a href="#" className="flex items-center gap-2.5 shrink-0 group">
+   252→            <div className="relative">
+   253→              <div className="absolute inset-0 bg-saffron/30 rounded-full blur-md group-hover:bg-saffron/50 transition" />
+   254→              <div className="relative h-10 w-10 rounded-full bg-gradient-to-br from-saffron via-amber-500 to-maroon flex items-center justify-center text-white shadow-md">
+   255→                <OmSymbol size={22} className="text-white" strokeWidth={2.6} />
+   256→              </div>
+   257→            </div>
+   258→            <div className="hidden sm:flex flex-col leading-none">
+   259→              <span className="font-bold text-base tracking-tight text-foreground">
+   260→                Sanatan Setu
+   261→              </span>
+   262→              <span className="text-[10px] text-muted-foreground tracking-wider uppercase">
+   263→                Bridge to Sanatan Dharma
+   264→              </span>
+   265→            </div>
+   266→          </a>
+   267→
+   268→          {/* Search (desktop) */}
+   269→          <div className="hidden md:flex flex-1 max-w-xl">
+   270→            <div className="relative w-full group">
+   271→              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-saffron transition" />
+   272→              <Input
+   273→                placeholder="Search mantras, scriptures, bhajans…"
+   274→                onChange={(e) => onSearch(e.target.value)}
+   275→                className="pl-10 pr-3 h-10 bg-muted/60 border-saffron/15 focus-visible:border-saffron/50 focus-visible:ring-saffron/20"
+   276→              />
+   277→            </div>
+   278→          </div>
+   279→
+   280→          <div className="flex-1 md:hidden" />
+   281→
+   282→          {/* Actions */}
+   283→          <div className="flex items-center gap-2 shrink-0">
+   284→            <Badge variant="outline" className="hidden lg:flex border-saffron/30 text-saffron bg-saffron/5">
+   285→              <Sparkles className="h-3 w-3 mr-1" />
+   286→              {totalCount} sacred items
+   287→            </Badge>
+   288→
+   289→            <Button
+   290→              variant="ghost"
+   291→              size="icon"
+   292→              onClick={onToggleTheme}
+   293→              aria-label="Toggle theme"
+   294→              className="text-foreground hover:bg-saffron/10"
+   295→            >
+   296→              {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+   297→            </Button>
+   298→
+   299→            <Button
+   300→              variant="ghost"
+   301→              size="icon"
+   302→              onClick={() => setMobileSearch(!mobileSearch)}
+   303→              aria-label="Search"
+   304→              className="md:hidden text-foreground hover:bg-saffron/10"
+   305→            >
+   306→              <Search className="h-5 w-5" />
+   307→            </Button>
+   308→
+   309→            <Button
+   310→              onClick={onUpload}
+   311→              className="bg-gradient-to-r from-saffron to-maroon hover:from-saffron/90 hover:to-maroon/90 text-white shadow-sm hover:shadow-md transition-all"
+   312→            >
+   313→              <Upload className="h-4 w-4 mr-2" />
+   314→              <span className="hidden sm:inline">Upload</span>
+   315→            </Button>
+   316→          </div>
+   317→        </div>
+   318→
+   319→        {/* Mobile search */}
+   320→        <AnimatePresence>
+   321→          {mobileSearch && (
+   322→            <motion.div
+   323→              initial={{ height: 0, opacity: 0 }}
+   324→              animate={{ height: 'auto', opacity: 1 }}
+   325→              exit={{ height: 0, opacity: 0 }}
+   326→              className="md:hidden overflow-hidden pb-3"
+   327→            >
+   328→              <div className="relative">
+   329→                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+   330→                <Input
+   331→                  placeholder="Search…"
+   332→                  onChange={(e) => onSearch(e.target.value)}
+   333→                  className="pl-10 bg-muted/60 border-saffron/15"
+   334→                />
+   335→              </div>
+   336→            </motion.div>
+   337→          )}
+   338→        </AnimatePresence>
+   339→      </div>
+   340→    </header>
+   341→  )
+   342→}
+   343→
+   344→// ===================== Hero =====================
+   345→function Hero({
+   346→  totalCount, categoryCount, onUpload, onBrowse,
+   347→}: {
+   348→  totalCount: number
+   349→  categoryCount: number
+   350→  onUpload: () => void
+   351→  onBrowse: () => void
+   352→}) {
+   353→  return (
+   354→    <section className="relative overflow-hidden bg-pattern-sacred">
+   355→      {/* Decorative background elements */}
+   356→      <div className="absolute inset-0 pointer-events-none">
+   357→        <div className="absolute -top-20 -right-20 h-72 w-72 rounded-full bg-saffron/15 blur-3xl" />
+   358→        <div className="absolute top-40 -left-20 h-80 w-80 rounded-full bg-maroon/10 blur-3xl" />
+   359→        <div className="absolute bottom-0 right-1/3 h-64 w-64 rounded-full bg-gold/10 blur-3xl" />
+   360→      </div>
+   361→
+   362→      {/* Floating Om symbols */}
+   363→      <motion.div
+   364→        className="absolute top-12 left-[8%] text-saffron/15 hidden lg:block"
+   365→        animate={{ y: [0, -15, 0], rotate: [0, 5, 0] }}
+   366→        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+   367→      >
+   368→        <OmSymbol size={64} strokeWidth={1.8} />
+   369→      </motion.div>
+   370→      <motion.div
+   371→        className="absolute top-32 right-[10%] text-maroon/15 hidden lg:block"
+   372→        animate={{ y: [0, 12, 0], rotate: [0, -8, 0] }}
+   373→        transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+   374→      >
+   375→        <LotusIcon size={80} strokeWidth={1.5} />
+   376→      </motion.div>
+   377→
+   378→      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-28 relative">
+   379→        <div className="max-w-3xl mx-auto text-center">
+   380→          <motion.div
+   381→            initial={{ opacity: 0, scale: 0.9 }}
+   382→            animate={{ opacity: 1, scale: 1 }}
+   383→            transition={{ duration: 0.6 }}
+   384→            className="inline-flex items-center justify-center mb-8"
+   385→          >
+   386→            <div className="relative">
+   387→              <div className="absolute inset-0 bg-saffron/40 rounded-full blur-2xl animate-pulse" />
+   388→              <div className="relative h-20 w-20 sm:h-24 sm:w-24 rounded-full bg-gradient-to-br from-saffron via-amber-500 to-maroon flex items-center justify-center text-white shadow-xl">
+   389→                <OmSymbol size={48} className="text-white" strokeWidth={2.4} />
+   390→              </div>
+   391→            </div>
+   392→          </motion.div>
+   393→
+   394→          <motion.div
+   395→            initial={{ opacity: 0, y: 20 }}
+   396→            animate={{ opacity: 1, y: 0 }}
+   397→            transition={{ delay: 0.15, duration: 0.6 }}
+   398→            className="mb-5"
+   399→          >
+   400→            <Badge className="bg-saffron/15 text-saffron border border-saffron/30 hover:bg-saffron/20 font-medium">
+   401→              <DiyaIcon size={14} className="mr-1.5" />
+   402→              ॥ लोकाः समस्ताः सुखिनो भवन्तु ॥
+   403→            </Badge>
+   404→          </motion.div>
+   405→
+   406→          <motion.h1
+   407→            initial={{ opacity: 0, y: 20 }}
+   408→            animate={{ opacity: 1, y: 0 }}
+   409→            transition={{ delay: 0.25, duration: 0.6 }}
+   410→            className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-tight"
+   411→          >
+   412→            <span className="text-gradient-saffron">Sanatan Setu</span>
+   413→            <br />
+   414→            <span className="text-foreground text-3xl sm:text-4xl lg:text-5xl">
+   415→              A Sacred Library of Hindu Dharma
+   416→            </span>
+   417→          </motion.h1>
+   418→
+   419→          <motion.p
+   420→            initial={{ opacity: 0, y: 20 }}
+   421→            animate={{ opacity: 1, y: 0 }}
+   422→            transition={{ delay: 0.35, duration: 0.6 }}
+   423→            className="mt-6 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed"
+   424→          >
+   425→            Upload, preserve, and explore the eternal wisdom of Hinduism — the Vedas, Upanishads,
+   426→            Bhagavad Gita, Ramayana, mantras, bhajans, and the teachings of saints.
+   427→            A digital bridge to Sanatan Dharma for seekers everywhere.
+   428→          </motion.p>
+   429→
+   430→          <motion.div
+   431→            initial={{ opacity: 0, y: 20 }}
+   432→            animate={{ opacity: 1, y: 0 }}
+   433→            transition={{ delay: 0.45, duration: 0.6 }}
+   434→            className="mt-9 flex flex-wrap items-center justify-center gap-3"
+   435→          >
+   436→            <Button
+   437→              size="lg"
+   438→              onClick={onUpload}
+   439→              className="bg-gradient-to-r from-saffron to-maroon hover:from-saffron/90 hover:to-maroon/90 text-white shadow-lg shadow-saffron/20 hover:shadow-xl hover:shadow-saffron/30 transition-all h-12 px-7"
+   440→            >
+   441→              <Upload className="h-5 w-5 mr-2" />
+   442→              Upload Sacred Content
+   443→            </Button>
+   444→            <Button
+   445→              size="lg"
+   446→              variant="outline"
+   447→              onClick={onBrowse}
+   448→              className="h-12 px-7 border-saffron/30 text-foreground hover:bg-saffron/5 hover:border-saffron/50"
+   449→            >
+   450→              <BookOpen className="h-5 w-5 mr-2" />
+   451→              Explore Library
+   452→            </Button>
+   453→          </motion.div>
+   454→
+   455→          <motion.div
+   456→            initial={{ opacity: 0 }}
+   457→            animate={{ opacity: 1 }}
+   458→            transition={{ delay: 0.55, duration: 0.6 }}
+   459→            className="mt-12 grid grid-cols-3 gap-3 sm:gap-6 max-w-lg mx-auto"
+   460→          >
+   461→            <Stat value={totalCount} label="Sacred Items" />
+   462→            <Stat value={categoryCount} label="Categories" />
+   463→            <Stat value="∞" label="Eternal Wisdom" />
+   464→          </motion.div>
+   465→        </div>
+   466→      </div>
+   467→
+   468→      {/* Decorative bottom border */}
+   469→      <div className="h-1 w-full bg-gradient-to-r from-transparent via-saffron/50 to-transparent" />
+   470→    </section>
+   471→  )
+   472→}
+   473→
+   474→function Stat({ value, label }: { value: React.ReactNode; label: string }) {
+   475→  return (
+   476→    <div className="text-center">
+   477→      <div className="text-2xl sm:text-3xl font-bold text-gradient-saffron">{value}</div>
+   478→      <div className="text-xs sm:text-sm text-muted-foreground mt-1">{label}</div>
+   479→    </div>
+   480→  )
+   481→}
+   482→
+   483→// ===================== Category Section =====================
+   484→function CategorySection({
+   485→  categories, counts, onSelect,
+   486→}: {
+   487→  categories: typeof CATEGORIES
+   488→  counts: Record<string, number>
+   489→  onSelect: (cat: string) => void
+   490→}) {
+   491→  return (
+   492→    <section className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-14 sm:py-16">
+   493→      <div className="text-center mb-10">
+   494→        <Badge variant="outline" className="border-saffron/30 text-saffron bg-saffron/5 mb-3">
+   495→          <Crown className="h-3 w-3 mr-1" />
+   496→          Twelve Sacred Streams
+   497→        </Badge>
+   498→        <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
+   499→          Browse by Category
+   500→        </h2>
+   501→        <p className="mt-3 text-muted-foreground max-w-2xl mx-auto">
+   502→          From the eternal Vedas to the devotional bhajans of saints — explore the
+   503→          many streams of Sanatan Dharma.
+   504→        </p>
+   505→      </div>
+   506→
+   507→      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+   508→        {categories.map((cat, i) => (
+   509→          <motion.button
+   510→            key={cat.name}
+   511→            initial={{ opacity: 0, y: 16 }}
+   512→            whileInView={{ opacity: 1, y: 0 }}
+   513→            viewport={{ once: true, margin: '-50px' }}
+   514→            transition={{ delay: i * 0.04, duration: 0.4 }}
+   515→            whileHover={{ y: -4 }}
+   516→            onClick={() => onSelect(cat.name)}
+   517→            className={`group text-left rounded-2xl p-5 bg-gradient-to-br ${cat.accent} border border-saffron/15 hover:border-saffron/40 transition-all relative overflow-hidden card-glow`}
+   518→          >
+   519→            <div className="flex items-start justify-between mb-3">
+   520→              <div className="h-11 w-11 rounded-xl bg-white/70 dark:bg-black/30 backdrop-blur flex items-center justify-center font-bold text-xs tracking-wider text-maroon shadow-sm">
+   521→                {cat.icon}
+   522→              </div>
+   523→              <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-saffron group-hover:translate-x-1 transition" />
+   524→            </div>
+   525→            <h3 className="font-bold text-foreground text-base">{cat.name}</h3>
+   526→            <div className="font-devanagari text-sm text-maroon/80 mt-0.5">{cat.sanskrit}</div>
+   527→            <p className="mt-2 text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+   528→              {cat.description}
+   529→            </p>
+   530→            <div className="mt-3 text-xs text-saffron font-medium">
+   531→              {counts[cat.name] || 0} {counts[cat.name] === 1 ? 'item' : 'items'}
+   532→            </div>
+   533→          </motion.button>
+   534→        ))}
+   535→      </div>
+   536→    </section>
+   537→  )
+   538→}
+   539→
+   540→// ===================== Library Section =====================
+   541→function LibrarySection({
+   542→  items, loading, search, category, type, sort,
+   543→  onSearch, onCategory, onType, onSort, onSelect, onLike,
+   544→}: {
+   545→  items: ContentItem[]
+   546→  loading: boolean
+   547→  search: string
+   548→  category: string
+   549→  type: string
+   550→  sort: string
+   551→  onSearch: (s: string) => void
+   552→  onCategory: (c: string) => void
+   553→  onType: (t: string) => void
+   554→  onSort: (s: string) => void
+   555→  onSelect: (item: ContentItem) => void
+   556→  onLike: (id: string) => void
+   557→}) {
+   558→  const sortObj = SORTS.find((s) => s.value === sort)!
+   559→
+   560→  return (
+   561→    <section id="library" className="bg-muted/30 border-y border-saffron/15">
+   562→      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-14 sm:py-16">
+   563→        <div className="flex flex-col gap-2 mb-8">
+   564→          <Badge variant="outline" className="border-saffron/30 text-saffron bg-saffron/5 w-fit">
+   565→            <BookOpen className="h-3 w-3 mr-1" />
+   566→            The Library
+   567→          </Badge>
+   568→          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
+   569→            Sacred Content Library
+   570→          </h2>
+   571→          <p className="text-muted-foreground">
+   572→            Browse all uploaded content — mantras, scriptures, bhajans, and more.
+   573→          </p>
+   574→        </div>
+   575→
+   576→        {/* Filters bar */}
+   577→        <div className="flex flex-col gap-4 mb-8">
+   578→          {/* Search row */}
+   579→          <div className="relative w-full">
+   580→            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+   581→            <Input
+   582→              value={search}
+   583→              onChange={(e) => onSearch(e.target.value)}
+   584→              placeholder="Search by title, author, tags, or text…"
+   585→              className="pl-10 pr-10 h-11 bg-background border-saffron/15 focus-visible:border-saffron/50 focus-visible:ring-saffron/20"
+   586→            />
+   587→            {search && (
+   588→              <button
+   589→                onClick={() => onSearch('')}
+   590→                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+   591→              >
+   592→                <X className="h-4 w-4" />
+   593→              </button>
+   594→            )}
+   595→          </div>
+   596→
+   597→          {/* Pills + sorts */}
+   598→          <div className="flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
+   599→            <div className="flex flex-wrap gap-2">
+   600→              <FilterPill active={category === 'All'} onClick={() => onCategory('All')}>
+   601→                All
+   602→              </FilterPill>
+   603→              {CATEGORIES.slice(0, 8).map((c) => (
+   604→                <FilterPill
+   605→                  key={c.name}
+   606→                  active={category === c.name}
+   607→                  onClick={() => onCategory(c.name)}
+   608→                >
+   609→                  {c.name}
+   610→                </FilterPill>
+   611→              ))}
+   612→            </div>
+   613→
+   614→            <div className="flex flex-wrap gap-2 items-center">
+   615→              <Select value={type} onValueChange={onType}>
+   616→                <SelectTrigger className="w-[150px] h-9 bg-background border-saffron/15">
+   617→                  <SelectValue placeholder="Type" />
+   618→                </SelectTrigger>
+   619→                <SelectContent>
+   620→                  <SelectItem value="All">All Types</SelectItem>
+   621→                  {CONTENT_TYPES.map((t) => (
+   622→                    <SelectItem key={t.value} value={t.value}>
+   623→                      {t.label}
+   624→                    </SelectItem>
+   625→                  ))}
+   626→                </SelectContent>
+   627→              </Select>
+   628→
+   629→              <Select value={sort} onValueChange={onSort}>
+   630→                <SelectTrigger className="w-[160px] h-9 bg-background border-saffron/15">
+   631→                  <sortObj.icon className="h-3.5 w-3.5 mr-1.5 text-saffron" />
+   632→                  <SelectValue placeholder="Sort" />
+   633→                </SelectTrigger>
+   634→                <SelectContent>
+   635→                  {SORTS.map((s) => (
+   636→                    <SelectItem key={s.value} value={s.value}>
+   637→                      {s.label}
+   638→                    </SelectItem>
+   639→                  ))}
+   640→                </SelectContent>
+   641→              </Select>
+   642→            </div>
+   643→          </div>
+   644→        </div>
+   645→
+   646→        {/* Results */}
+   647→        {loading ? (
+   648→          <div className="flex flex-col items-center justify-center py-24">
+   649→            <Loader2 className="h-10 w-10 text-saffron animate-spin mb-4" />
+   650→            <p className="text-muted-foreground">Loading sacred content…</p>
+   651→          </div>
+   652→        ) : items.length === 0 ? (
+   653→          <EmptyState search={search} />
+   654→        ) : (
+   655→          <>
+   656→            <div className="text-sm text-muted-foreground mb-5">
+   657→              Showing <span className="font-semibold text-foreground">{items.length}</span>{' '}
+   658→              {items.length === 1 ? 'item' : 'items'}
+   659→              {category !== 'All' && (
+   660→                <>
+   661→                  {' '}in <span className="text-saffron font-medium">{category}</span>
+   662→                </>
+   663→              )}
+   664→              {type !== 'All' && (
+   665→                <>
+   666→                  {' '}of type <span className="text-saffron font-medium">{type}</span>
+   667→                </>
+   668→              )}
+   669→            </div>
+   670→
+   671→            <motion.div
+   672→              layout
+   673→              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
+   674→            >
+   675→              <AnimatePresence mode="popLayout">
+   676→                {items.map((item) => (
+   677→                  <ContentCard
+   678→                    key={item.id}
+   679→                    item={item}
+   680→                    onClick={() => onSelect(item)}
+   681→                    onLike={() => onLike(item.id)}
+   682→                  />
+   683→                ))}
+   684→              </AnimatePresence>
+   685→            </motion.div>
+   686→          </>
+   687→        )}
+   688→      </div>
+   689→    </section>
+   690→  )
+   691→}
+   692→
+   693→function FilterPill({
+   694→  active, onClick, children,
+   695→}: {
+   696→  active: boolean
+   697→  onClick: () => void
+   698→  children: React.ReactNode
+   699→}) {
+   700→  return (
+   701→    <button
+   702→      onClick={onClick}
+   703→      className={`px-3.5 h-8 rounded-full text-xs font-medium transition-all border ${
+   704→        active
+   705→          ? 'bg-gradient-to-r from-saffron to-maroon text-white border-transparent shadow-sm'
+   706→          : 'bg-background text-muted-foreground border-saffron/20 hover:border-saffron/50 hover:text-saffron'
+   707→      }`}
+   708→    >
+   709→      {children}
+   710→    </button>
+   711→  )
+   712→}
+   713→
+   714→function EmptyState({ search }: { search: string }) {
+   715→  return (
+   716→    <div className="flex flex-col items-center justify-center py-20 text-center">
+   717→      <div className="relative mb-6">
+   718→        <div className="absolute inset-0 bg-saffron/20 blur-2xl rounded-full" />
+   719→        <div className="relative h-20 w-20 rounded-full bg-saffron/10 flex items-center justify-center text-saffron">
+   720→          <BookOpen className="h-9 w-9" />
+   721→        </div>
+   722→      </div>
+   723→      <h3 className="text-xl font-semibold text-foreground">
+   724→        {search ? 'No matches found' : 'The library awaits'}
+   725→      </h3>
+   726→      <p className="mt-2 text-muted-foreground max-w-md">
+   727→        {search
+   728→          ? `No content matches "${search}". Try different keywords or browse all categories.`
+   729→          : 'Be the first to upload sacred content to this growing library of Sanatan Dharma.'}
+   730→      </p>
+   731→    </div>
+   732→  )
+   733→}
+   734→
+   735→// ===================== Content Card =====================
+   736→function ContentCard({
+   737→  item, onClick, onLike,
+   738→}: {
+   739→  item: ContentItem
+   740→  onClick: () => void
+   741→  onLike: () => void
+   742→}) {
+   743→  const cat = CATEGORIES.find((c) => c.name === item.category)
+   744→  const typeMeta = CONTENT_TYPES.find((t) => t.value === item.type)
+   745→
+   746→  return (
+   747→    <motion.article
+   748→      layout
+   749→      initial={{ opacity: 0, scale: 0.96 }}
+   750→      animate={{ opacity: 1, scale: 1 }}
+   751→      exit={{ opacity: 0, scale: 0.96 }}
+   752→      transition={{ duration: 0.25 }}
+   753→      onClick={onClick}
+   754→      className="group cursor-pointer rounded-2xl bg-card border border-saffron/15 hover:border-saffron/40 overflow-hidden shadow-sm hover:shadow-xl transition-all card-glow relative flex flex-col"
+   755→    >
+   756→      {/* Top stripe with category color */}
+   757→      <div className={`h-1.5 w-full bg-gradient-to-r ${cat?.accent || 'from-saffron to-maroon'}`} />
+   758→
+   759→      {/* Image / Decoration */}
+   760→      {item.imageUrl ? (
+   761→        <div className="aspect-[16/9] overflow-hidden bg-muted">
+   762→          <img
+   763→            src={item.imageUrl}
+   764→            alt={item.title}
+   765→            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+   766→            onError={(e) => {
+   767→              ;(e.target as HTMLImageElement).style.display = 'none'
+   768→            }}
+   769→          />
+   770→        </div>
+   771→      ) : (
+   772→        <div className={`aspect-[16/9] relative overflow-hidden bg-gradient-to-br ${cat?.accent || 'from-saffron/20 to-maroon/20'}`}>
+   773→          <div className="absolute inset-0 flex items-center justify-center">
+   774→            <motion.div
+   775→              animate={{ rotate: [0, 5, -5, 0] }}
+   776→              transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+   777→              className="text-saffron/30 dark:text-saffron/40"
+   778→            >
+   779→              {item.type === 'audio' ? (
+   780→                <AudioLines size={64} strokeWidth={1.2} />
+   781→              ) : item.type === 'video' ? (
+   782→                <Video size={64} strokeWidth={1.2} />
+   783→              ) : item.type === 'image' ? (
+   784→                <ImageIcon size={64} strokeWidth={1.2} />
+   785→              ) : item.type === 'link' ? (
+   786→                <LinkIcon size={64} strokeWidth={1.2} />
+   787→              ) : (
+   788→                <OmSymbol size={72} strokeWidth={1.4} />
+   789→              )}
+   790→            </motion.div>
+   791→          </div>
+   792→          <div className="absolute top-3 left-3">
+   793→            <div className="h-9 w-9 rounded-lg bg-white/70 dark:bg-black/30 backdrop-blur flex items-center justify-center font-bold text-[10px] tracking-wider text-maroon">
+   794→              {cat?.icon || 'OM'}
+   795→            </div>
+   796→          </div>
+   797→          {item.featured && (
+   798→            <div className="absolute top-3 right-3">
+   799→              <Badge className="bg-gold/90 text-maroon border-0 hover:bg-gold">
+   800→                <Crown className="h-3 w-3 mr-1" /> Featured
+   801→              </Badge>
+   802→            </div>
+   803→          )}
+   804→        </div>
+   805→      )}
+   806→
+   807→      {/* Content */}
+   808→      <div className="p-5 flex flex-col flex-1">
+   809→        <div className="flex items-center gap-2 mb-3">
+   810→          <Badge variant="outline" className="border-saffron/30 text-saffron bg-saffron/5 text-[10px] font-medium">
+   811→            {item.category}
+   812→          </Badge>
+   813→          <Badge variant="secondary" className="text-[10px] gap-1">
+   814→            <TypeGlyph type={item.type} className="h-2.5 w-2.5" />
+   815→            {typeMeta?.label || item.type}
+   816→          </Badge>
+   817→        </div>
+   818→
+   819→        <h3 className="font-bold text-foreground text-lg leading-snug line-clamp-2 group-hover:text-saffron transition">
+   820→          {item.title}
+   821→        </h3>
+   822→        <p className="mt-2 text-sm text-muted-foreground line-clamp-2 leading-relaxed flex-1">
+   823→          {item.description}
+   824→        </p>
+   825→
+   826→        {/* Tags */}
+   827→        {item.tags && (
+   828→          <div className="mt-3 flex flex-wrap gap-1">
+   829→            {item.tags.split(',').slice(0, 3).map((t, i) => (
+   830→              <span key={i} className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+   831→                #{t.trim()}
+   832→              </span>
+   833→            ))}
+   834→          </div>
+   835→        )}
+   836→
+   837→        {/* Footer */}
+   838→        <div className="mt-4 pt-3 border-t border-saffron/10 flex items-center justify-between text-xs text-muted-foreground">
+   839→          <div className="flex items-center gap-3">
+   840→            <span className="flex items-center gap-1">
+   841→              <Eye className="h-3.5 w-3.5" />
+   842→              {item.views}
+   843→            </span>
+   844→            <span className="flex items-center gap-1">
+   845→              <Calendar className="h-3.5 w-3.5" />
+   846→              {formatDate(item.createdAt)}
+   847→            </span>
+   848→          </div>
+   849→          <button
+   850→            onClick={(e) => {
+   851→              e.stopPropagation()
+   852→              onLike()
+   853→            }}
+   854→            className="flex items-center gap-1 px-2 py-1 rounded-md hover:bg-saffron/10 hover:text-saffron transition text-foreground"
+   855→            aria-label="Like"
+   856→          >
+   857→            <Heart className="h-3.5 w-3.5" />
+   858→            {item.likes}
+   859→          </button>
+   860→        </div>
+   861→      </div>
+   862→    </motion.article>
+   863→  )
+   864→}
+   865→
+   866→const TYPE_ICONS: Record<ContentType, React.ComponentType<{ className?: string; size?: number; strokeWidth?: number }>> = {
+   867→  text: FileText,
+   868→  image: ImageIcon,
+   869→  audio: AudioLines,
+   870→  video: Video,
+   871→  link: LinkIcon,
+   872→}
+   873→
+   874→function TypeGlyph({ type, className }: { type: string; className?: string }) {
+   875→  const Icon = TYPE_ICONS[type as ContentType] || FileText
+   876→  return <Icon className={className} />
+   877→}
+   878→
+   879→function formatDate(iso: string) {
+   880→  const d = new Date(iso)
+   881→  const now = new Date()
+   882→  const diff = (now.getTime() - d.getTime()) / 1000
+   883→  if (diff < 60) return 'just now'
+   884→  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
+   885→  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
+   886→  if (diff < 2592000) return `${Math.floor(diff / 86400)}d ago`
+   887→  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+   888→}
+   889→
+   890→// ===================== Quote Banner =====================
+   891→function QuoteBanner({ quote }: { quote: { text: string; trans: string } }) {
+   892→  return (
+   893→    <section className="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+   894→      <motion.div
+   895→        initial={{ opacity: 0, y: 24 }}
+   896→        whileInView={{ opacity: 1, y: 0 }}
+   897→        viewport={{ once: true, margin: '-100px' }}
+   898→        transition={{ duration: 0.6 }}
+   899→        className="relative rounded-3xl bg-gradient-to-br from-saffron/10 via-cream to-maroon/10 dark:from-saffron/15 dark:via-card dark:to-maroon/15 border border-saffron/25 p-8 sm:p-12 overflow-hidden"
+   900→      >
+   901→        <div className="absolute top-0 right-0 -mt-6 -mr-6 text-saffron/15">
+   902→          <OmSymbol size={180} strokeWidth={1} />
+   903→        </div>
+   904→        <Quote className="h-10 w-10 text-saffron mb-4" />
+   905→        <div className="font-devanagari text-3xl sm:text-4xl text-maroon font-bold mb-3">
+   906→          ॥ {quote.text} ॥
+   907→        </div>
+   908→        <p className="text-base sm:text-lg text-foreground/80 italic">
+   909→          {quote.trans}
+   910→        </p>
+   911→      </motion.div>
+   912→    </section>
+   913→  )
+   914→}
+   915→
+   916→// ===================== Footer =====================
+   917→function Footer({ onUpload }: { onUpload: () => void }) {
+   918→  return (
+   919→    <footer className="mt-auto bg-gradient-to-b from-background to-muted/40 border-t border-saffron/20">
+   920→      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
+   921→        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
+   922→          <div className="md:col-span-2">
+   923→            <div className="flex items-center gap-2.5 mb-4">
+   924→              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-saffron via-amber-500 to-maroon flex items-center justify-center text-white shadow-md">
+   925→                <OmSymbol size={22} className="text-white" strokeWidth={2.6} />
+   926→              </div>
+   927→              <div>
+   928→                <div className="font-bold text-foreground">Sanatan Setu</div>
+   929→                <div className="text-[10px] text-muted-foreground tracking-wider uppercase">
+   930→                  Bridge to Sanatan Dharma
+   931→                </div>
+   932→              </div>
+   933→            </div>
+   934→            <p className="text-sm text-muted-foreground max-w-md leading-relaxed">
+   935→              A digital library dedicated to preserving and sharing the eternal wisdom of Hinduism.
+   936→              Upload mantras, scriptures, bhajans, and teachings to share with seekers worldwide.
+   937→            </p>
+   938→            <div className="font-devanagari text-sm text-maroon/80 mt-3">
+   939→              ॥ लोकाः समस्ताः सुखिनो भवन्तु ॥
+   940→            </div>
+   941→          </div>
+   942→
+   943→          <div>
+   944→            <h4 className="font-semibold text-foreground mb-3 text-sm">Sacred Streams</h4>
+   945→            <ul className="space-y-2 text-sm text-muted-foreground">
+   946→              {CATEGORIES.slice(0, 6).map((c) => (
+   947→                <li key={c.name}>{c.name}</li>
+   948→              ))}
+   949→            </ul>
+   950→          </div>
+   951→
+   952→          <div>
+   953→            <h4 className="font-semibold text-foreground mb-3 text-sm">Contribute</h4>
+   954→            <ul className="space-y-2 text-sm text-muted-foreground">
+   955→              <li>
+   956→                <button onClick={onUpload} className="hover:text-saffron transition text-left">
+   957→                  Upload Content
+   958→                </button>
+   959→              </li>
+   960→              <li>Browse Library</li>
+   961→              <li>Suggest a Category</li>
+   962→              <li>About Sanatan Setu</li>
+   963→            </ul>
+   964→          </div>
+   965→        </div>
+   966→
+   967→        <div className="pt-6 border-t border-saffron/15 flex flex-col sm:flex-row items-center justify-between gap-3">
+   968→          <p className="text-xs text-muted-foreground">
+   969→            © {new Date().getFullYear()} Sanatan Setu · A digital offering at the feet of Sanatan Dharma
+   970→          </p>
+   971→          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+   972→            <span className="flex items-center gap-1">
+   973→              <DiyaIcon size={12} /> Made with devotion
+   974→            </span>
+   975→          </div>
+   976→        </div>
+   977→      </div>
+   978→    </footer>
+   979→  )
+   980→}
+   981→
+   982→// ===================== Upload Dialog =====================
+   983→function UploadDialog({
+   984→  open, onOpenChange, onCreated,
+   985→}: {
+   986→  open: boolean
+   987→  onOpenChange: (open: boolean) => void
+   988→  onCreated: () => void
+   989→}) {
+   990→  const [submitting, setSubmitting] = React.useState(false)
+   991→  const [form, setForm] = React.useState({
+   992→    title: '',
+   993→    description: '',
+   994→    body: '',
+   995→    category: CATEGORIES[0].name,
+   996→    type: 'text' as ContentType,
+   997→    mediaUrl: '',
+   998→    imageUrl: '',
+   999→    author: '',
+  1000→    language: 'Sanskrit',
+  1001→    tags: '',
+  1002→    featured: false,
+  1003→  })
+  1004→
+  1005→  const update = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) =>
+  1006→    setForm((prev) => ({ ...prev, [k]: v }))
+  1007→
+  1008→  const handleSubmit = async (e: React.FormEvent) => {
+  1009→    e.preventDefault()
+  1010→    if (!form.title.trim() || !form.description.trim()) {
+  1011→      toast.error('Title and description are required')
+  1012→      return
+  1013→    }
+  1014→    setSubmitting(true)
+  1015→    try {
+  1016→      const res = await fetch('/api/content', {
+  1017→        method: 'POST',
+  1018→        headers: { 'Content-Type': 'application/json' },
+  1019→        body: JSON.stringify(form),
+  1020→      })
+  1021→      if (!res.ok) {
+  1022→        const j = await res.json()
+  1023→        throw new Error(j.error || 'Failed to upload')
+  1024→      }
+  1025→      setForm({
+  1026→        title: '', description: '', body: '', category: CATEGORIES[0].name,
+  1027→        type: 'text', mediaUrl: '', imageUrl: '', author: '',
+  1028→        language: 'Sanskrit', tags: '', featured: false,
+  1029→      })
+  1030→      onCreated()
+  1031→    } catch (err: any) {
+  1032→      toast.error(err.message || 'Upload failed')
+  1033→    } finally {
+  1034→      setSubmitting(false)
+  1035→    }
+  1036→  }
+  1037→
+  1038→  return (
+  1039→    <Dialog open={open} onOpenChange={onOpenChange}>
+  1040→      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto scroll-sacred bg-background border-saffron/25">
+  1041→        <DialogHeader>
+  1042→          <div className="flex items-center gap-3">
+  1043→            <div className="h-11 w-11 rounded-full bg-gradient-to-br from-saffron to-maroon flex items-center justify-center text-white shadow-md">
+  1044→              <Upload className="h-5 w-5" />
+  1045→            </div>
+  1046→            <div>
+  1047→              <DialogTitle className="text-xl text-foreground">
+  1048→                Upload Sacred Content
+  1049→              </DialogTitle>
+  1050→              <DialogDescription>
+  1051→                Share mantras, scriptures, bhajans, or wisdom with the Sanatan Setu community.
+  1052→              </DialogDescription>
+  1053→            </div>
+  1054→          </div>
+  1055→        </DialogHeader>
+  1056→
+  1057→        <form onSubmit={handleSubmit} className="space-y-4 mt-2">
+  1058→          {/* Title */}
+  1059→          <div className="space-y-1.5">
+  1060→            <Label htmlFor="title" className="text-sm font-medium">
+  1061→              Title <span className="text-maroon">*</span>
+  1062→            </Label>
+  1063→            <Input
+  1064→              id="title"
+  1065→              value={form.title}
+  1066→              onChange={(e) => update('title', e.target.value)}
+  1067→              placeholder="e.g., Gayatri Mantra"
+  1068→              className="border-saffron/20 focus-visible:border-saffron/50"
+  1069→              required
+  1070→            />
+  1071→          </div>
+  1072→
+  1073→          {/* Description */}
+  1074→          <div className="space-y-1.5">
+  1075→            <Label htmlFor="description" className="text-sm font-medium">
+  1076→              Short Description <span className="text-maroon">*</span>
+  1077→            </Label>
+  1078→            <Textarea
+  1079→              id="description"
+  1080→              value={form.description}
+  1081→              onChange={(e) => update('description', e.target.value)}
+  1082→              placeholder="A brief summary of this content…"
+  1083→              rows={2}
+  1084→              className="border-saffron/20 focus-visible:border-saffron/50 resize-none"
+  1085→              required
+  1086→            />
+  1087→          </div>
+  1088→
+  1089→          {/* Category + Type */}
+  1090→          <div className="grid grid-cols-2 gap-3">
+  1091→            <div className="space-y-1.5">
+  1092→              <Label className="text-sm font-medium">Category</Label>
+  1093→              <Select value={form.category} onValueChange={(v) => update('category', v)}>
+  1094→                <SelectTrigger className="bg-background border-saffron/20">
+  1095→                  <SelectValue />
+  1096→                </SelectTrigger>
+  1097→                <SelectContent>
+  1098→                  {CATEGORIES.map((c) => (
+  1099→                    <SelectItem key={c.name} value={c.name}>
+  1100→                      {c.name} · <span className="font-devanagari text-xs text-muted-foreground">{c.sanskrit}</span>
+  1101→                    </SelectItem>
+  1102→                  ))}
+  1103→                </SelectContent>
+  1104→              </Select>
+  1105→            </div>
+  1106→            <div className="space-y-1.5">
+  1107→              <Label className="text-sm font-medium">Content Type</Label>
+  1108→              <Select value={form.type} onValueChange={(v) => update('type', v as ContentType)}>
+  1109→                <SelectTrigger className="bg-background border-saffron/20">
+  1110→                  <SelectValue />
+  1111→                </SelectTrigger>
+  1112→                <SelectContent>
+  1113→                  {CONTENT_TYPES.map((t) => (
+  1114→                    <SelectItem key={t.value} value={t.value}>
+  1115→                      {t.label}
+  1116→                    </SelectItem>
+  1117→                  ))}
+  1118→                </SelectContent>
+  1119→              </Select>
+  1120→            </div>
+  1121→          </div>
+  1122→
+  1123→          {/* Conditional fields based on type */}
+  1124→          {(form.type === 'text') && (
+  1125→            <div className="space-y-1.5">
+  1126→              <Label htmlFor="body" className="text-sm font-medium">
+  1127→                Body / Full Content
+  1128→              </Label>
+  1129→              <Textarea
+  1130→                id="body"
+  1131→                value={form.body}
+  1132→                onChange={(e) => update('body', e.target.value)}
+  1133→                placeholder="Paste the mantra, verse, article, or commentary here. Line breaks will be preserved."
+  1134→                rows={7}
+  1135→                className="border-saffron/20 focus-visible:border-saffron/50 resize-y font-devanagari"
+  1136→              />
+  1137→              <p className="text-xs text-muted-foreground">
+  1138→                Line breaks are preserved. Sanskrit, Awadhi, and all languages are welcome.
+  1139→              </p>
+  1140→            </div>
+  1141→          )}
+  1142→
+  1143→          {(form.type === 'image' || form.type === 'audio' || form.type === 'video' || form.type === 'link') && (
+  1144→            <div className="space-y-1.5">
+  1145→              <Label htmlFor="mediaUrl" className="text-sm font-medium">
+  1146→                {form.type === 'link' ? 'External URL' : `${form.type.charAt(0).toUpperCase() + form.type.slice(1)} URL`}
+  1147→              </Label>
+  1148→              <Input
+  1149→                id="mediaUrl"
+  1150→                value={form.mediaUrl}
+  1151→                onChange={(e) => update('mediaUrl', e.target.value)}
+  1152→                placeholder={
+  1153→                  form.type === 'image'
+  1154→                    ? 'https://example.com/deity-image.jpg'
+  1155→                    : form.type === 'audio'
+  1156→                    ? 'https://example.com/chanting.mp3'
+  1157→                    : form.type === 'video'
+  1158→                    ? 'https://youtube.com/watch?v=…'
+  1159→                    : 'https://…'
+  1160→                }
+  1161→                className="border-saffron/20 focus-visible:border-saffron/50"
+  1162→              />
+  1163→              <p className="text-xs text-muted-foreground">
+  1164→                Paste a direct URL to the {form.type}. For YouTube, use the full video URL.
+  1165→              </p>
+  1166→            </div>
+  1167→          )}
+  1168→
+  1169→          {/* Optional: cover image URL */}
+  1170→          <div className="space-y-1.5">
+  1171→            <Label htmlFor="imageUrl" className="text-sm font-medium">
+  1172→              Cover Image URL <span className="text-muted-foreground font-normal">(optional)</span>
+  1173→            </Label>
+  1174→            <Input
+  1175→              id="imageUrl"
+  1176→              value={form.imageUrl}
+  1177→              onChange={(e) => update('imageUrl', e.target.value)}
+  1178→              placeholder="https://example.com/cover.jpg"
+  1179→              className="border-saffron/20 focus-visible:border-saffron/50"
+  1180→            />
+  1181→          </div>
+  1182→
+  1183→          {/* Body always available as additional note for media */}
+  1184→          {form.type !== 'text' && (
+  1185→            <div className="space-y-1.5">
+  1186→              <Label htmlFor="body" className="text-sm font-medium">
+  1187→                Description / Lyrics / Notes <span className="text-muted-foreground font-normal">(optional)</span>
+  1188→              </Label>
+  1189→              <Textarea
+  1190→                id="body"
+  1191→                value={form.body}
+  1192→                onChange={(e) => update('body', e.target.value)}
+  1193→                placeholder="Add lyrics, explanation, or context…"
+  1194→                rows={4}
+  1195→                className="border-saffron/20 focus-visible:border-saffron/50 resize-y font-devanagari"
+  1196→              />
+  1197→            </div>
+  1198→          )}
+  1199→
+  1200→          {/* Author + Language */}
+  1201→          <div className="grid grid-cols-2 gap-3">
+  1202→            <div className="space-y-1.5">
+  1203→              <Label htmlFor="author" className="text-sm font-medium">
+  1204→                Author / Source <span className="text-muted-foreground font-normal">(optional)</span>
+  1205→              </Label>
+  1206→              <Input
+  1207→                id="author"
+  1208→                value={form.author}
+  1209→                onChange={(e) => update('author', e.target.value)}
+  1210→                placeholder="e.g., Sage Valmiki"
+  1211→                className="border-saffron/20 focus-visible:border-saffron/50"
+  1212→              />
+  1213→            </div>
+  1214→            <div className="space-y-1.5">
+  1215→              <Label className="text-sm font-medium">Language</Label>
+  1216→              <Select value={form.language} onValueChange={(v) => update('language', v)}>
+  1217→                <SelectTrigger className="bg-background border-saffron/20">
+  1218→                  <SelectValue />
+  1219→                </SelectTrigger>
+  1220→                <SelectContent>
+  1221→                  {LANGUAGES.map((l) => (
+  1222→                    <SelectItem key={l} value={l}>{l}</SelectItem>
+  1223→                  ))}
+  1224→                </SelectContent>
+  1225→              </Select>
+  1226→            </div>
+  1227→          </div>
+  1228→
+  1229→          {/* Tags */}
+  1230→          <div className="space-y-1.5">
+  1231→            <Label htmlFor="tags" className="text-sm font-medium">
+  1232→              Tags <span className="text-muted-foreground font-normal">(comma-separated)</span>
+  1233→            </Label>
+  1234→            <Input
+  1235→              id="tags"
+  1236→              value={form.tags}
+  1237→              onChange={(e) => update('tags', e.target.value)}
+  1238→              placeholder="krishna, devotion, daily-chant"
+  1239→              className="border-saffron/20 focus-visible:border-saffron/50"
+  1240→            />
+  1241→          </div>
+  1242→
+  1243→          {/* Featured */}
+  1244→          <label className="flex items-center gap-2 cursor-pointer group">
+  1245→            <input
+  1246→              type="checkbox"
+  1247→              checked={form.featured}
+  1248→              onChange={(e) => update('featured', e.target.checked)}
+  1249→              className="h-4 w-4 rounded border-saffron/30 text-saffron focus:ring-saffron/30"
+  1250→            />
+  1251→            <span className="text-sm text-foreground group-hover:text-saffron transition flex items-center gap-1">
+  1252→              <Crown className="h-3.5 w-3.5 text-gold" />
+  1253→              Mark as featured content
+  1254→            </span>
+  1255→          </label>
+  1256→
+  1257→          <DialogFooter className="gap-2 pt-2 border-t border-saffron/10">
+  1258→            <DialogClose asChild>
+  1259→              <Button type="button" variant="outline">
+  1260→                Cancel
+  1261→              </Button>
+  1262→            </DialogClose>
+  1263→            <Button
+  1264→              type="submit"
+  1265→              disabled={submitting}
+  1266→              className="bg-gradient-to-r from-saffron to-maroon hover:from-saffron/90 hover:to-maroon/90 text-white shadow-md"
+  1267→            >
+  1268→              {submitting ? (
+  1269→                <>
+  1270→                  <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Uploading…
+  1271→                </>
+  1272→              ) : (
+  1273→                <>
+  1274→                  <Upload className="h-4 w-4 mr-2" /> Offer to Library
+  1275→                </>
+  1276→              )}
+  1277→            </Button>
+  1278→          </DialogFooter>
+  1279→        </form>
+  1280→      </DialogContent>
+  1281→    </Dialog>
+  1282→  )
+  1283→}
+  1284→
+  1285→// ===================== Detail Dialog =====================
+  1286→function DetailDialog({
+  1287→  item, onOpenChange, onLike, onDelete,
+  1288→}: {
+  1289→  item: ContentItem | null
+  1290→  onOpenChange: (open: boolean) => void
+  1291→  onLike: () => void
+  1292→  onDelete: () => void
+  1293→}) {
+  1294→  const cat = CATEGORIES.find((c) => c.name === item?.category)
+  1295→  const typeMeta = CONTENT_TYPES.find((t) => t.value === item?.type)
+  1296→  const [confirmDelete, setConfirmDelete] = React.useState(false)
+  1297→
+  1298→  React.useEffect(() => {
+  1299→    if (!item) setConfirmDelete(false)
+  1300→  }, [item])
+  1301→
+  1302→  // Fetch fresh item on open to bump views
+  1303→  const [freshItem, setFreshItem] = React.useState<ContentItem | null>(null)
+  1304→  React.useEffect(() => {
+  1305→    if (!item) {
+  1306→      setFreshItem(null)
+  1307→      return
+  1308→    }
+  1309→    let active = true
+  1310→    fetch(`/api/content/${item.id}`)
+  1311→      .then((r) => r.json())
+  1312→      .then((j) => {
+  1313→        if (active && j.item) setFreshItem(j.item)
+  1314→      })
+  1315→      .catch(() => {})
+  1316→    return () => {
+  1317→      active = false
+  1318→    }
+  1319→  }, [item])
+  1320→
+  1321→  const display = freshItem || item
+  1322→
+  1323→  return (
+  1324→    <Dialog open={!!item} onOpenChange={onOpenChange}>
+  1325→      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto scroll-sacred bg-background border-saffron/25 p-0">
+  1326→        {display && (
+  1327→          <>
+  1328→            {/* Header banner */}
+  1329→            <div className={`relative h-32 bg-gradient-to-br ${cat?.accent || 'from-saffron/30 to-maroon/30'} overflow-hidden`}>
+  1330→              <div className="absolute inset-0 flex items-center justify-center text-saffron/20 dark:text-saffron/30">
+  1331→                <motion.div
+  1332→                  animate={{ rotate: [0, 360] }}
+  1333→                  transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}
+  1334→                >
+  1335→                  <OmSymbol size={120} strokeWidth={1} />
+  1336→                </motion.div>
+  1337→              </div>
+  1338→              <div className="absolute top-4 left-4">
+  1339→                <div className="h-12 w-12 rounded-xl bg-white/80 dark:bg-black/40 backdrop-blur flex items-center justify-center font-bold text-xs tracking-wider text-maroon shadow-md">
+  1340→                  {cat?.icon || 'OM'}
+  1341→                </div>
+  1342→              </div>
+  1343→              {display.featured && (
+  1344→                <div className="absolute top-4 right-4">
+  1345→                  <Badge className="bg-gold/90 text-maroon border-0 hover:bg-gold">
+  1346→                    <Crown className="h-3 w-3 mr-1" /> Featured
+  1347→                  </Badge>
+  1348→                </div>
+  1349→              )}
+  1350→              <DialogClose asChild>
+  1351→                <button
+  1352→                  className="absolute bottom-4 right-4 h-9 w-9 rounded-full bg-white/70 dark:bg-black/40 backdrop-blur hover:bg-white/90 flex items-center justify-center text-foreground"
+  1353→                  aria-label="Close"
+  1354→                >
+  1355→                  <X className="h-4 w-4" />
+  1356→                </button>
+  1357→              </DialogClose>
+  1358→            </div>
+  1359→
+  1360→            <div className="p-6 sm:p-8 -mt-2">
+  1361→              {/* Badges */}
+  1362→              <div className="flex items-center gap-2 mb-3">
+  1363→                <Badge variant="outline" className="border-saffron/30 text-saffron bg-saffron/5">
+  1364→                  {display.category}
+  1365→                </Badge>
+  1366→                <Badge variant="secondary" className="gap-1">
+  1367→                  <TypeGlyph type={display.type} className="h-3 w-3" />
+  1368→                  {typeMeta?.label || display.type}
+  1369→                </Badge>
+  1370→                <Badge variant="outline" className="border-gold/30 text-gold bg-gold/5">
+  1371→                  <Globe className="h-3 w-3 mr-1" />
+  1372→                  {display.language}
+  1373→                </Badge>
+  1374→              </div>
+  1375→
+  1376→              {/* Title */}
+  1377→              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground leading-tight">
+  1378→                {display.title}
+  1379→              </h2>
+  1380→              <p className="mt-2 text-base text-muted-foreground italic leading-relaxed">
+  1381→                {display.description}
+  1382→              </p>
+  1383→
+  1384→              {/* Author + meta */}
+  1385→              <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
+  1386→                {display.author && (
+  1387→                  <span className="flex items-center gap-1">
+  1388→                    <User className="h-3.5 w-3.5" />
+  1389→                    {display.author}
+  1390→                  </span>
+  1391→                )}
+  1392→                <span className="flex items-center gap-1">
+  1393→                  <Calendar className="h-3.5 w-3.5" />
+  1394→                  {formatDate(display.createdAt)}
+  1395→                </span>
+  1396→                <span className="flex items-center gap-1">
+  1397→                  <Eye className="h-3.5 w-3.5" />
+  1398→                  {display.views} views
+  1399→                </span>
+  1400→                <span className="flex items-center gap-1">
+  1401→                  <Heart className="h-3.5 w-3.5" />
+  1402→                  {display.likes} likes
+  1403→                </span>
+  1404→              </div>
+  1405→
+  1406→              {/* Media */}
+  1407→              {display.type === 'image' && display.mediaUrl && (
+  1408→                <div className="mt-5 rounded-xl overflow-hidden border border-saffron/15">
+  1409→                  <img src={display.mediaUrl} alt={display.title} className="w-full" />
+  1410→                </div>
+  1411→              )}
+  1412→              {display.type === 'audio' && display.mediaUrl && (
+  1413→                <div className="mt-5 rounded-xl bg-muted/50 border border-saffron/15 p-4">
+  1414→                  <audio controls className="w-full">
+  1415→                    <source src={display.mediaUrl} />
+  1416→                    Your browser does not support audio playback.
+  1417→                  </audio>
+  1418→                </div>
+  1419→              )}
+  1420→              {display.type === 'video' && display.mediaUrl && (
+  1421→                <div className="mt-5 rounded-xl overflow-hidden border border-saffron/15 aspect-video">
+  1422→                  {display.mediaUrl.includes('youtube.com') || display.mediaUrl.includes('youtu.be') ? (
+  1423→                    <iframe
+  1424→                      src={getYouTubeEmbed(display.mediaUrl)}
+  1425→                      title={display.title}
+  1426→                      className="w-full h-full"
+  1427→                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  1428→                      allowFullScreen
+  1429→                    />
+  1430→                  ) : (
+  1431→                    <video controls className="w-full h-full">
+  1432→                      <source src={display.mediaUrl} />
+  1433→                      Your browser does not support video playback.
+  1434→                    </video>
+  1435→                  )}
+  1436→                </div>
+  1437→              )}
+  1438→              {display.type === 'link' && display.mediaUrl && (
+  1439→                <a
+  1440→                  href={display.mediaUrl}
+  1441→                  target="_blank"
+  1442→                  rel="noopener noreferrer"
+  1443→                  className="mt-5 flex items-center gap-3 p-4 rounded-xl bg-muted/50 border border-saffron/15 hover:border-saffron/40 hover:bg-saffron/5 transition"
+  1444→                >
+  1445→                  <div className="h-10 w-10 rounded-lg bg-saffron/15 flex items-center justify-center text-saffron">
+  1446→                    <LinkIcon className="h-5 w-5" />
+  1447→                  </div>
+  1448→                  <div className="flex-1 min-w-0">
+  1449→                    <div className="font-medium text-foreground text-sm">Open External Resource</div>
+  1450→                    <div className="text-xs text-muted-foreground truncate">{display.mediaUrl}</div>
+  1451→                  </div>
+  1452→                  <ArrowUpRight className="h-4 w-4 text-saffron" />
+  1453→                </a>
+  1454→              )}
+  1455→
+  1456→              {/* Body */}
+  1457→              {display.body && (
+  1458→                <div className="mt-6 prose prose-sm max-w-none">
+  1459→                  <div className="whitespace-pre-wrap text-foreground/90 leading-relaxed font-devanagari text-[15px]">
+  1460→                    {display.body}
+  1461→                  </div>
+  1462→                </div>
+  1463→              )}
+  1464→
+  1465→              {/* Tags */}
+  1466→              {display.tags && (
+  1467→                <div className="mt-6 flex flex-wrap gap-2">
+  1468→                  {display.tags.split(',').map((t, i) => (
+  1469→                    <span key={i} className="text-xs px-2.5 py-1 rounded-full bg-saffron/10 text-saffron border border-saffron/15">
+  1470→                      <Tag className="h-3 w-3 inline mr-1" />
+  1471→                      {t.trim()}
+  1472→                    </span>
+  1473→                  ))}
+  1474→                </div>
+  1475→              )}
+  1476→
+  1477→              {/* Actions */}
+  1478→              <div className="mt-7 pt-5 border-t border-saffron/15 flex items-center justify-between gap-3">
+  1479→                <div className="flex items-center gap-2">
+  1480→                  <Button
+  1481→                    onClick={onLike}
+  1482→                    className="bg-gradient-to-r from-saffron to-maroon hover:from-saffron/90 hover:to-maroon/90 text-white"
+  1483→                  >
+  1484→                    <Heart className="h-4 w-4 mr-2" />
+  1485→                    Bless ({display.likes})
+  1486→                  </Button>
+  1487→                </div>
+  1488→
+  1489→                {confirmDelete ? (
+  1490→                  <div className="flex items-center gap-2">
+  1491→                    <span className="text-xs text-muted-foreground">Sure?</span>
+  1492→                    <Button
+  1493→                      size="sm"
+  1494→                      variant="destructive"
+  1495→                      onClick={onDelete}
+  1496→                    >
+  1497→                      Yes, remove
+  1498→                    </Button>
+  1499→                    <Button
+  1500→                      size="sm"
+  1501→                      variant="outline"
+  1502→                      onClick={() => setConfirmDelete(false)}
+  1503→                    >
+  1504→                      Cancel
+  1505→                    </Button>
+  1506→                  </div>
+  1507→                ) : (
+  1508→                  <Button
+  1509→                    size="sm"
+  1510→                    variant="ghost"
+  1511→                    onClick={() => setConfirmDelete(true)}
+  1512→                    className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+  1513→                  >
+  1514→                    <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+  1515→                    Remove
+  1516→                  </Button>
+  1517→                )}
+  1518→              </div>
+  1519→            </div>
+  1520→          </>
+  1521→        )}
+  1522→      </DialogContent>
+  1523→    </Dialog>
+  1524→  )
+  1525→}
+  1526→
+  1527→function getYouTubeEmbed(url: string): string {
+  1528→  // Handle youtu.be/ID and youtube.com/watch?v=ID
+  1529→  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([\w-]{11})/)
+  1530→  return match ? `https://www.youtube.com/embed/${match[1]}` : url
+  1531→}
+  1532→

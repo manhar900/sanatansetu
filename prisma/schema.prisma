@@ -5,7 +5,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -21,13 +21,18 @@ model Content {
   author      String?
   language    String   @default("Sanskrit")
   tags        String?  // comma-separated
+  translations String?
+  mediaGallery String?
   views       Int      @default(0)
   likes       Int      @default(0)
   featured    Boolean  @default(false)
+  status      String   @default("published") // published | pending | rejected
+  submittedBy String?  // name of the user who submitted (optional)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([category])
   @@index([type])
   @@index([createdAt])
+  @@index([status])
 }

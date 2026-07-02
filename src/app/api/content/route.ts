@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { isAdminRequest } from '@/lib/admin-auth'
 
 export async function GET(req: NextRequest) {
   try {
@@ -9,8 +10,18 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get('search')
     const sort = searchParams.get('sort') || 'newest'
     const featured = searchParams.get('featured')
+    const status = searchParams.get('status')
+    const limitParam = searchParams.get('limit')
+    const limit = limitParam ? Math.min(200, Math.max(1, parseInt(limitParam, 10) || 50)) : undefined
 
-    const where: any = {}
+    const where: Record<string, unknown> = {}
+    // Only show published content to regular users.
+    // Admin can see pending/rejected by passing status=pending|rejected|all
+    if (status && status !== 'all') {
+      where.status = status
+    } else if (!status) {
+      where.status = 'published'
+    }
     if (category && category !== 'All') where.category = category
     if (type && type !== 'All') where.type = type
     if (featured === 'true') where.featured = true
@@ -24,7 +35,7 @@ export async function GET(req: NextRequest) {
       ]
     }
 
-    let orderBy: any = { createdAt: 'desc' }
+    let orderBy: Record<string, string> = { createdAt: 'desc' }
     if (sort === 'oldest') orderBy = { createdAt: 'asc' }
     else if (sort === 'popular') orderBy = { views: 'desc' }
     else if (sort === 'liked') orderBy = { likes: 'desc' }
@@ -32,6 +43,7 @@ export async function GET(req: NextRequest) {
     const items = await db.content.findMany({
       where,
       orderBy,
+      ...(limit ? { take: limit } : {}),
     })
 
     return NextResponse.json({ items })
@@ -52,19 +64,41 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // If admin is uploading, publish immediately. Otherwise mark as pending.
+    const isAdmin = isAdminRequest(req)
+    const uploadStatus = isAdmin ? 'published' : 'pending'
+
+    // Serialize translations and mediaGallery to JSON strings for storage.
+    const translationsJson =
+      data.translations && typeof data.translations === 'object'
+        ? JSON.stringify(data.translations)
+        : data.translations && typeof data.translations === 'string'
+          ? data.translations
+          : null
+    const mediaGalleryJson =
+      data.mediaGallery && typeof data.mediaGallery === 'object'
+        ? JSON.stringify(data.mediaGallery)
+        : data.mediaGallery && typeof data.mediaGallery === 'string'
+          ? data.mediaGallery
+          : null
+
     const item = await db.content.create({
       data: {
-        title: data.title.trim(),
-        description: data.description.trim(),
-        body: data.body?.trim() || null,
-        category: data.category,
-        type: data.type,
-        mediaUrl: data.mediaUrl?.trim() || null,
-        imageUrl: data.imageUrl?.trim() || null,
-        author: data.author?.trim() || null,
-        language: data.language || 'Sanskrit',
-        tags: data.tags?.trim() || null,
+        title: String(data.title).trim(),
+        description: String(data.description).trim(),
+        body: data.body ? String(data.body).trim() : null,
+        category: String(data.category),
+        type: String(data.type),
+        mediaUrl: data.mediaUrl ? String(data.mediaUrl).trim() : null,
+        imageUrl: data.imageUrl ? String(data.imageUrl).trim() : null,
+        author: data.author ? String(data.author).trim() : null,
+        language: data.language ? String(data.language) : 'Sanskrit',
+        tags: data.tags ? String(data.tags).trim() : null,
+        translations: translationsJson,
+        mediaGallery: mediaGalleryJson,
         featured: Boolean(data.featured),
+        status: uploadStatus,
+        submittedBy: data.submittedBy ? String(data.submittedBy).trim() : null,
       },
     })
 
