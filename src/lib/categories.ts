@@ -94,20 +94,25 @@ export const CATEGORIES: Category[] = [
   },
 ]
 
-export const LANGUAGES = [
-  "Sanskrit",
-  "Hindi",
-  "English",
-  "Awadhi",
-  "Tamil",
-  "Telugu",
-  "Bengali",
-  "Marathi",
-  "Kannada",
-  "Malayalam",
-  "Gujarati",
-  "Pali",
-  "Prakrit",
+export const LANGUAGES: { value: string; native: string }[] = [
+  { value: 'Sanskrit',  native: 'संस्कृतम्' },
+  { value: 'Hindi',     native: 'हिन्दी' },
+  { value: 'English',   native: 'English' },
+  { value: 'Awadhi',    native: 'अवधी' },
+  { value: 'Tamil',     native: 'தமிழ்' },
+  { value: 'Telugu',    native: 'తెలుగు' },
+  { value: 'Bengali',   native: 'বাংলা' },
+  { value: 'Marathi',   native: 'मराठी' },
+  { value: 'Kannada',   native: 'ಕನ್ನಡ' },
+  { value: 'Malayalam', native: 'മലയാളം' },
+  { value: 'Gujarati',  native: 'ગુજરાતી' },
+  { value: 'Punjabi',   native: 'ਪੰਜਾਬੀ' },
+  { value: 'Odia',      native: 'ଓଡ଼ିଆ' },
+  { value: 'Assamese',  native: 'অসমীয়া' },
+  { value: 'Urdu',      native: 'اُردُو' },
+  { value: 'Nepali',    native: 'नेपाली' },
+  { value: 'Pali',      native: 'पालि' },
+  { value: 'Prakrit',   native: 'प्राकृत' },
 ]
 
 export const CONTENT_TYPES = [
@@ -127,8 +132,8 @@ export function getCategoryName(name: string): Category | undefined {
 
 // Helper to get the native display name for a content language string
 export function getLanguageNativeName(language: string): string {
-  const found = LANGUAGES.find((l) => l === language)
-  return found ?? language
+  const found = LANGUAGES.find((l) => l.value === language)
+  return found ? found.native : language
 }
 
 // Helper to look up a content type by value

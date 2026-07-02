@@ -1222,7 +1222,7 @@ function emptyForm(): UploadFormState {
     mediaUrl: '',
     imageUrl: '',
     author: '',
-    language: LANGUAGES[0],
+    language: LANGUAGES[0].value,
     tags: '',
     featured: false,
     translations: [],
@@ -1526,8 +1526,8 @@ function UploadDialog({
                 </SelectTrigger>
                 <SelectContent>
                   {LANGUAGES.map((l) => (
-                    <SelectItem key={l} value={l}>
-                      {l}
+                    <SelectItem key={l.value} value={l.value}>
+                      {l.native} · {l.value}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -1685,8 +1685,8 @@ function UploadDialog({
                     </SelectTrigger>
                     <SelectContent>
                       {LANGUAGES.map((l) => (
-                        <SelectItem key={l} value={l}>
-                          {l}
+                        <SelectItem key={l.value} value={l.value}>
+                          {l.native} · {l.value}
                         </SelectItem>
                       ))}
                     </SelectContent>
