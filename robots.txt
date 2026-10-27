@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Sanatan Setu Library & 108-Bead Naam Jaap Counter Sitemap
+Sitemap: https://sanatansetu.vercel.app/sitemap.xml
