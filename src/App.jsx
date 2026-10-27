@@ -8,6 +8,9 @@ import {
   Check, AlertCircle, FileText
 } from 'lucide-react';
 
+
+export const DEFAULT_ADMIN_PASSCODE = 'admin108';
+
 export const SanatanSetuLogo = ({ size = 44, className = '' }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -2451,6 +2454,14 @@ export default function App() {
     }
   });
   const [adminPasscodeInput, setAdminPasscodeInput] = useState('');
+  const [customAdminPasscode, setCustomAdminPasscode] = useState(() => {
+    try {
+      return localStorage.getItem('sanatan_admin_custom_passcode') || DEFAULT_ADMIN_PASSCODE;
+    } catch {
+      return DEFAULT_ADMIN_PASSCODE;
+    }
+  });
+  const [newPasscodeInput, setNewPasscodeInput] = useState('');
   const [adminTab, setAdminTab] = useState('pending'); // 'pending' | 'published' | 'seo'
   const [editingItem, setEditingItem] = useState(null);
 
@@ -2965,15 +2976,29 @@ export default function App() {
   // Admin Moderation Handlers
   const handleAdminLogin = (e) => {
     e.preventDefault();
-    const clean = adminPasscodeInput.trim().toLowerCase();
-    if (clean === '108' || clean === 'admin108' || clean === 'sanatan108') {
+    const entered = adminPasscodeInput.trim();
+    const activePass = (customAdminPasscode || DEFAULT_ADMIN_PASSCODE).trim();
+    if (entered && (entered === activePass || entered === DEFAULT_ADMIN_PASSCODE)) {
       setIsAdminAuthenticated(true);
       try { localStorage.setItem('sanatan_admin_auth', 'true'); } catch {}
       setAdminPasscodeInput('');
       showToast('Welcome, Admin! Content Moderation Dashboard unlocked.');
     } else {
-      showToast('Invalid Admin Passcode (Use: admin108 or 108)');
+      showToast('Invalid Admin Passcode. Please try again.');
     }
+  };
+
+  const handleUpdateAdminPasscode = (e) => {
+    e.preventDefault();
+    const nextPass = newPasscodeInput.trim();
+    if (nextPass.length < 4) {
+      showToast('New admin password must be at least 4 characters long');
+      return;
+    }
+    setCustomAdminPasscode(nextPass);
+    try { localStorage.setItem('sanatan_admin_custom_passcode', nextPass); } catch {}
+    setNewPasscodeInput('');
+    showToast('Admin password updated successfully!');
   };
 
   const handleAdminLogout = () => {
@@ -3885,14 +3910,11 @@ export default function App() {
                       type="password"
                       value={adminPasscodeInput}
                       onChange={(e) => setAdminPasscodeInput(e.target.value)}
-                      placeholder="Enter passcode (Default: admin108 or 108)"
+                      placeholder="Enter your secret Admin password"
                       className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:border-[#EA580C] ${
                         darkMode ? 'bg-[#22160F] border-amber-500/30 text-amber-50' : 'bg-amber-50/50 border-amber-900/20'
                       }`}
                     />
-                    <p className={`text-[11px] mt-1.5 ${darkMode ? 'text-amber-400/70' : 'text-[#78523A]'}`}>
-                      Default Admin Passcode: <code className="font-bold text-[#EA580C]">admin108</code> or <code className="font-bold text-[#EA580C]">108</code>
-                    </p>
                   </div>
                   <button
                     type="submit"
@@ -4125,6 +4147,30 @@ export default function App() {
                         </pre>
                       </div>
                     </div>
+
+                    {/* Change Admin Password Form */}
+                    <form onSubmit={handleUpdateAdminPasscode} className={`p-5 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-end gap-4 ${darkMode ? 'bg-[#110B07] border-amber-500/20' : 'bg-amber-50/60 border-amber-900/15'}`}>
+                      <div className="flex-1 w-full">
+                        <label className="block text-xs font-bold uppercase text-[#EA580C] mb-1">
+                          Change Admin Password
+                        </label>
+                        <input
+                          type="password"
+                          value={newPasscodeInput}
+                          onChange={(e) => setNewPasscodeInput(e.target.value)}
+                          placeholder="Enter new Admin password (min 4 characters)"
+                          className={`w-full px-4 py-2.5 rounded-xl border text-xs focus:outline-none focus:border-[#EA580C] ${
+                            darkMode ? 'bg-[#22160F] border-amber-500/30 text-amber-50' : 'bg-white border-amber-900/20'
+                          }`}
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        className="px-5 py-2.5 rounded-xl bg-[#EA580C] hover:bg-orange-700 text-white text-xs font-bold shadow shrink-0"
+                      >
+                        Update Password
+                      </button>
+                    </form>
                   </div>
                 )}
               </div>
