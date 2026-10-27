@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: oklch(0.985 0.012 75);
+  --foreground: oklch(0.22 0.04 30);
+  --primary: oklch(0.68 0.18 55);
+  --saffron: oklch(0.7 0.19 55);
+  --saffron-soft: oklch(0.92 0.06 70);
+  --maroon: oklch(0.42 0.13 25);
+  --gold: oklch(0.78 0.13 85);
+  --temple: oklch(0.88 0.05 50);
+  --cream: oklch(0.985 0.012 75);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
