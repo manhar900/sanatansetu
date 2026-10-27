@@ -8,7 +8,7 @@ import {
   Check, AlertCircle, FileText
 } from 'lucide-react';
 
-
+// Change your default Admin Password here (or set VITE_ADMIN_PASSWORD in Vercel Environment Variables)
 export const DEFAULT_ADMIN_PASSCODE = '';
 
 export const SanatanSetuLogo = ({ size = 44, className = '' }) => (
@@ -2277,29 +2277,48 @@ export const JAAP_MANTRAS = [
   { id: 'om-aim-hrim-klim', name: 'Navarna Chamunda Mantra', sanskrit: 'ॐ ऐं ह्रीं क्लीं चामुण्डायै विच्चे', deity: 'Maa Adi-Shakti जगदम्बा', defaultGoal: 108 }
 ];
 
+export const NAAM_JAAP_SEO_FAQS = [
+  {
+    q: 'What is the Online 108 Naam Jaap Counter (Naam Jamm Counter / Digital Mala)?',
+    a: 'The Sanatan Setu 108 Naam Jaap Counter (also searched as Naam Jamm Counter, Nam Jap Counter, or Online Japa Mala Counter) is a free interactive 108-bead digital Rudraksha and Tulsi mala tool. It tracks your daily mantra chants, completed 108-bead malas, meditation (Dhyana) duration, and lifetime Naam Jaap count with a 528Hz sacred chime.'
+  },
+  {
+    q: 'Which mantras can I chant on the Naam Jaap Counter?',
+    a: 'You can chant Radha Naam Jaap, Shri Ram Jai Ram Jai Jai Ram, Hare Krishna Maha Mantra, Om Namah Shivaya, Gayatri Mantra, Mahamrityunjaya Mantra, Om Namo Bhagavate Vasudevaya, Om Gam Ganapataye Namah, or enter your own custom Ishta Devata mantra.'
+  },
+  {
+    q: 'Why are there 108 beads in a Naam Jaap Mala?',
+    a: 'In Vedic astronomy and Upanishadic science, 108 represents cosmic harmony: 12 Rashis (zodiac signs) multiplied by 9 Navagrahas (planets) equals 108, and 27 Nakshatras across 4 Padas (directions) equals 108. Completing 108 beads constitutes 1 full Mala.'
+  },
+  {
+    q: 'How are community-uploaded Hindu scriptures verified and indexed on Google?',
+    a: 'Every scripture, mantra, temple chronicle, or bhajan uploaded to Sanatan Setu is reviewed by the Admin for scriptural authenticity. Once approved, it is added to the dynamic Schema.org Article structured data, crawlable scripture index, and XML Sitemap for Google Search indexing.'
+  }
+];
+
 export const SEO_INDEX_HTML_TEMPLATE = `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sanatan Setu Library – Authentic Hindu Scriptures, Temples, Mantras & 108 Naam Jaap Counter</title>
-    <meta name="description" content="Explore authentic Hindu scriptures, Vedas, 10 Principal Upanishads, 18 Maha Puranas, Bhagavad Gita, Ramayana, Mahabharata, Sacred Temple Guides, Complete Hanuman Chalisa, Aartis, and Interactive 108-Bead Naam Jaap Counter." />
-    <meta name="keywords" content="Sanatan Dharma, Hindu Scriptures, Vedas, Upanishads, Bhagavad Gita, Puranas, Hanuman Chalisa, Gayatri Mantra, Mahamrityunjaya Mantra, Jagannath Temple Puri, Kamakhya Temple, Badrinath Dham, Srirangam, 108 Naam Jaap Counter" />
+    <title>Naam Jaap Counter (108 Digital Mala) & Sanatan Setu Hindu Scripture Library</title>
+    <meta name="description" content="Free 108-Bead Naam Jaap Counter (Naam Jamm Counter / Online Japa Mala) for Radha Naam, Ram Naam, Hare Krishna & Om Namah Shivaya, plus authentic Hindu Scriptures, Vedas, Upanishads, Puranas, Hanuman Chalisa & Temple Guides." />
+    <meta name="keywords" content="naam jaap, naam jaap counter, naam jamm counter, nam jap counter, 108 naam jaap counter online, digital mala counter, radha naam jaap counter, ram naam jaap counter, japa mala online, Sanatan Setu, Hindu Scriptures, Vedas, Upanishads, Bhagavad Gita, Hanuman Chalisa, Jagannath Temple Puri" />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <meta name="author" content="Sanatan Setu Library" />
     <meta name="theme-color" content="#EA580C" />
     <link rel="canonical" href="https://sanatansetu.vercel.app/" />
     <!-- Open Graph / Social Sharing -->
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Sanatan Setu Library" />
-    <meta property="og:title" content="Sanatan Setu Library – Bridge to Eternal Vedic Wisdom" />
-    <meta property="og:description" content="Authentic multilingual library of Vedas, Upanishads, Puranas, Mantras, Aartis, Temple Histories, and 108-Bead Digital Mala Counter." />
+    <meta property="og:site_name" content="Sanatan Setu – Naam Jaap Counter & Vedic Library" />
+    <meta property="og:title" content="108 Naam Jaap Counter (Digital Mala) & Sanatan Setu Scripture Library" />
+    <meta property="og:description" content="Practice daily 108-bead Naam Jaap (Naam Jamm Counter) online with 528Hz chime and read unabridged Sanskrit, Hindi & English Vedas, Upanishads, Puranas, Mantras & Temple Histories." />
     <meta property="og:locale" content="en_IN" />
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Sanatan Setu Library – Eternal Vedic Wisdom & 108 Naam Jaap" />
-    <meta name="twitter:description" content="Read unabridged Sanskrit, Hindi & English sacred texts, temple histories, and chant with the 108-bead Naam Jaap counter." />
+    <meta name="twitter:title" content="108 Naam Jaap Counter & Sanatan Setu Hindu Scripture Library" />
+    <meta name="twitter:description" content="Free online 108-bead Naam Jaap Counter (Naam Jamm Counter) and authentic multilingual Hindu scripture library." />
   </head>
   <body class="bg-[#FDFBF7] text-[#2C1A12] antialiased selection:bg-orange-500 selection:text-white">
     <div id="root"></div>
@@ -2564,22 +2583,64 @@ export default function App() {
     return () => window.removeEventListener('hashchange', handleHash);
   }, [items]);
 
-  // Dynamic SEO Engine: Updates Title, Meta Description, Keywords, Open Graph, Canonical & JSON-LD Schema
+  // Separate Approved vs Pending items (moved above seoMetadata so uploaded approved items are indexed in JSON-LD & Sitemap)
+  const approvedItems = useMemo(
+    () => items.filter((item) => item.status === 'approved' || item.isApproved === true),
+    [items]
+  );
+
+  const pendingItems = useMemo(
+    () => items.filter((item) => item.status === 'pending' || item.isApproved === false),
+    [items]
+  );
+
+  // Dynamic XML Sitemap & robots.txt Generators (automatically includes all approved & uploaded content!)
+  const generatedSitemapXml = useMemo(() => {
+    const baseUrl = typeof window !== 'undefined' && window.location.origin.startsWith('http')
+      ? window.location.origin
+      : 'https://sanatansetu.vercel.app';
+    const today = new Date().toISOString().split('T')[0];
+    const urls = [
+      `  <url>\n    <loc>${baseUrl}/</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>`,
+      `  <url>\n    <loc>${baseUrl}/#jaap</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>0.95</priority>\n  </url>`
+    ];
+    CATEGORIES.forEach((c) => {
+      urls.push(
+        `  <url>\n    <loc>${baseUrl}/#category/${encodeURIComponent(c.id)}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.85</priority>\n  </url>`
+      );
+    });
+    approvedItems.forEach((item) => {
+      urls.push(
+        `  <url>\n    <loc>${baseUrl}/#article/${encodeURIComponent(item.id)}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.90</priority>\n  </url>`
+      );
+    });
+    return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>`;
+  }, [approvedItems]);
+
+  const generatedRobotsTxt = useMemo(() => {
+    const baseUrl = typeof window !== 'undefined' && window.location.origin.startsWith('http')
+      ? window.location.origin
+      : 'https://sanatansetu.vercel.app';
+    return `User-agent: *\nAllow: /\n\n# Naam Jaap Counter & Sanatan Setu Sitemap\nSitemap: ${baseUrl}/sitemap.xml`;
+  }, []);
+
+  // Dynamic SEO Engine: Updates Title, Meta Description, Keywords, Open Graph, Canonical & Multi-Entity JSON-LD Schema
   const seoMetadata = useMemo(() => {
     const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://sanatansetu.vercel.app';
     if (selectedItem) {
       const bodyExcerpt = getBodyForLanguage(selectedItem, 'English').slice(0, 160).replace(/\s+/g, ' ');
       return {
-        title: `${selectedItem.title} | ${selectedItem.category} – Sanatan Setu Library`,
+        title: `${selectedItem.title} | ${selectedItem.category} – Sanatan Setu & Naam Jaap`,
         description: selectedItem.description || bodyExcerpt,
-        keywords: [...(selectedItem.tags || []), selectedItem.category, 'Sanatan Dharma', 'Hindu Scriptures'].join(', '),
+        keywords: [...(selectedItem.tags || []), selectedItem.title, selectedItem.category, 'naam jaap', 'naam jaap counter', 'Sanatan Dharma', 'Hindu Scriptures'].join(', '),
         canonical: `${baseUrl}/#article/${selectedItem.id}`,
         type: 'article',
         jsonLd: {
           '@context': 'https://schema.org',
           '@type': 'Article',
           headline: selectedItem.title,
-          description: selectedItem.description,
+          description: selectedItem.description || bodyExcerpt,
+          articleBody: getBodyForLanguage(selectedItem, 'English'),
           articleSection: selectedItem.category,
           inLanguage: ['en', 'hi', 'sa'],
           author: {
@@ -2590,32 +2651,48 @@ export default function App() {
             '@type': 'Organization',
             name: 'Sanatan Setu Library'
           },
+          mainEntityOfPage: `${baseUrl}/#article/${selectedItem.id}`,
           keywords: (selectedItem.tags || []).join(', ')
         }
       };
     }
     if (activeView === 'jaap') {
       return {
-        title: '108-Bead Naam Jaap Counter & Digital Mala | Sanatan Setu Library',
-        description: 'Interactive 108-bead digital Rudraksha/Tulsi mala counter with 528Hz sacred chime, Dhyana timer, and Vedic mantras (Om Namah Shivaya, Hare Krishna, Gayatri Mantra).',
-        keywords: '108 Naam Jaap Counter, Digital Mala, Mantra Counter, Om Namah Shivaya, Hare Krishna, Gayatri Mantra',
+        title: '108 Naam Jaap Counter Online (Naam Jamm Counter & Digital Mala) | Sanatan Setu',
+        description: 'Free 108-Bead Naam Jaap Counter (Naam Jamm Counter / Nam Jap Counter / Digital Rudraksha Mala) with 528Hz sacred chime, Dhyana timer, Radha Naam, Ram Naam, Hare Krishna & Om Namah Shivaya.',
+        keywords: 'naam jaap, naam jaap counter, naam jamm counter, nam jap counter, 108 naam jaap counter, online mala counter, radha naam jaap counter, ram naam jaap counter, hare krishna counter, digital japa mala',
         canonical: `${baseUrl}/#jaap`,
         type: 'website',
         jsonLd: {
           '@context': 'https://schema.org',
-          '@type': 'WebApplication',
-          name: 'Sanatan Setu 108-Bead Naam Jaap Counter',
-          applicationCategory: 'LifestyleApplication',
-          description: 'Interactive 108-bead Naam Jaap counter for daily mantra meditation.'
+          '@graph': [
+            {
+              '@type': 'SoftwareApplication',
+              name: 'Sanatan Setu 108-Bead Naam Jaap Counter (Naam Jamm Counter)',
+              alternateName: ['Naam Jaap Counter', 'Naam Jamm Counter', '108 Digital Mala Counter', 'Nam Jap Counter Online'],
+              applicationCategory: 'LifestyleApplication',
+              operatingSystem: 'Web Browser (Mobile & Desktop)',
+              offers: { '@type': 'Offer', price: '0', priceCurrency: 'INR' },
+              description: 'Interactive 108-bead Naam Jaap counter and digital japa mala for daily mantra meditation with 528Hz chime and Dhyana timer.'
+            },
+            {
+              '@type': 'FAQPage',
+              mainEntity: NAAM_JAAP_SEO_FAQS.map((f) => ({
+                '@type': 'Question',
+                name: f.q,
+                acceptedAnswer: { '@type': 'Answer', text: f.a }
+              }))
+            }
+          ]
         }
       };
     }
     if (selectedCategory !== 'All') {
       const catObj = CATEGORIES.find((c) => c.id === selectedCategory);
       return {
-        title: `${selectedCategory} (${catObj?.sanskrit || ''}) Scriptures & Guides | Sanatan Setu Library`,
+        title: `${selectedCategory} (${catObj?.sanskrit || ''}) Scriptures & Naam Jaap | Sanatan Setu Library`,
         description: catObj?.description || `Explore authentic ${selectedCategory} texts, verses, and meanings on Sanatan Setu Library.`,
-        keywords: `${selectedCategory}, ${catObj?.sanskrit || ''}, Sanatan Dharma, Vedic Library`,
+        keywords: `${selectedCategory}, ${catObj?.sanskrit || ''}, naam jaap, naam jaap counter, Sanatan Dharma, Vedic Library`,
         canonical: `${baseUrl}/#category/${encodeURIComponent(selectedCategory)}`,
         type: 'website',
         jsonLd: {
@@ -2627,25 +2704,58 @@ export default function App() {
       };
     }
     return {
-      title: 'Sanatan Setu Library – Authentic Hindu Scriptures, Temples, Mantras & 108 Naam Jaap',
-      description: 'Explore unabridged Hindu scriptures in Sanskrit, Hindi & English: Four Vedas, 10 Principal Upanishads, 18 Maha Puranas, Bhagavad Gita, Ramayana, Mahabharata, Temple Histories, and 108-Bead Naam Jaap Counter.',
-      keywords: 'Sanatan Setu, Sanatan Dharma, Vedas, Upanishads, Bhagavad Gita, Puranas, Hanuman Chalisa, Gayatri Mantra, Jagannath Temple Puri, Kamakhya Temple, Badrinath Dham, 108 Naam Jaap Counter',
+      title: 'Naam Jaap Counter (108 Digital Mala) & Sanatan Setu Hindu Scripture Library',
+      description: 'Practice daily 108-Bead Naam Jaap Counter (Naam Jamm Counter / Online Japa Mala) and read authentic, admin-verified Hindu scriptures in Sanskrit, Hindi & English: Vedas, Upanishads, Puranas, Gita, Hanuman Chalisa & Temples.',
+      keywords: 'naam jaap, naam jaap counter, naam jamm counter, nam jap counter, 108 naam jaap counter online, digital mala counter, radha naam jaap, ram naam jaap, Sanatan Setu, Vedas, Upanishads, Bhagavad Gita, Puranas, Hanuman Chalisa, Gayatri Mantra, Jagannath Temple Puri',
       canonical: `${baseUrl}/`,
       type: 'website',
       jsonLd: {
         '@context': 'https://schema.org',
-        '@type': 'WebSite',
-        name: 'Sanatan Setu Library',
-        url: baseUrl,
-        description: 'Digital Sanctuary of Eternal Vedic Wisdom, Scriptures, Temple Histories, and 108-Bead Naam Jaap Counter.',
-        potentialAction: {
-          '@type': 'SearchAction',
-          target: `${baseUrl}/?q={search_term_string}`,
-          'query-input': 'required name=search_term_string'
-        }
+        '@graph': [
+          {
+            '@type': 'WebSite',
+            name: 'Sanatan Setu – 108 Naam Jaap Counter & Hindu Scripture Library',
+            alternateName: ['Sanatan Setu', 'Naam Jaap Counter', 'Naam Jamm Counter', '108 Mala Counter Online'],
+            url: baseUrl,
+            description: 'Free 108-Bead Naam Jaap Counter (Digital Mala) and Authentic Multilingual Hindu Scripture Library.',
+            potentialAction: {
+              '@type': 'SearchAction',
+              target: `${baseUrl}/?q={search_term_string}`,
+              'query-input': 'required name=search_term_string'
+            }
+          },
+          {
+            '@type': 'SoftwareApplication',
+            name: '108-Bead Naam Jaap Counter (Naam Jamm Counter)',
+            applicationCategory: 'LifestyleApplication',
+            operatingSystem: 'Web',
+            offers: { '@type': 'Offer', price: '0', priceCurrency: 'INR' },
+            description: 'Online 108-bead Naam Jaap counter for chanting Radha Naam, Ram Naam, Om Namah Shivaya, Hare Krishna Maha Mantra, and Gayatri Mantra.'
+          },
+          {
+            '@type': 'ItemList',
+            name: 'Verified Hindu Scriptures, Mantras & Temple Guides',
+            numberOfItems: approvedItems.length,
+            itemListElement: approvedItems.map((it, idx) => ({
+              '@type': 'ListItem',
+              position: idx + 1,
+              url: `${baseUrl}/#article/${it.id}`,
+              name: it.title,
+              description: it.description
+            }))
+          },
+          {
+            '@type': 'FAQPage',
+            mainEntity: NAAM_JAAP_SEO_FAQS.map((f) => ({
+              '@type': 'Question',
+              name: f.q,
+              acceptedAnswer: { '@type': 'Answer', text: f.a }
+            }))
+          }
+        ]
       }
     };
-  }, [selectedItem, activeView, selectedCategory]);
+  }, [selectedItem, activeView, selectedCategory, approvedItems]);
 
   useEffect(() => {
     if (typeof document === 'undefined') return;
@@ -2686,16 +2796,7 @@ export default function App() {
     scriptEl.textContent = JSON.stringify(seoMetadata.jsonLd);
   }, [seoMetadata]);
 
-  // Separate Approved vs Pending items
-  const approvedItems = useMemo(
-    () => items.filter((item) => item.status === 'approved' || item.isApproved === true),
-    [items]
-  );
 
-  const pendingItems = useMemo(
-    () => items.filter((item) => item.status === 'pending' || item.isApproved === false),
-    [items]
-  );
 
   // Filtered Public Items
   const filteredItems = useMemo(() => {
@@ -3335,6 +3436,44 @@ export default function App() {
               </div>
             </section>
 
+            {/* Instant 108 Naam Jaap Counter Spotlight Banner on Homepage for Direct SEO & User Access */}
+            <section aria-labelledby="naam-jaap-spotlight-heading" className="pt-10 pb-2 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="bg-gradient-to-r from-[#451A03] via-[#9A3412] to-[#EA580C] rounded-3xl p-6 sm:p-8 text-white shadow-xl border border-amber-400/30 flex flex-col lg:flex-row items-center justify-between gap-6">
+                <div className="space-y-2 text-center lg:text-left max-w-2xl">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/30 text-amber-300 text-xs font-bold uppercase tracking-wider">
+                    <Flame className="w-4 h-4 fill-amber-400 text-amber-400" /> #1 Online 108-Bead Digital Mala &amp; Naam Jaap Counter
+                  </div>
+                  <h2 id="naam-jaap-spotlight-heading" className="text-2xl sm:text-3xl font-black leading-tight">
+                    108-Bead Naam Jaap Counter (नाम जाप काउंटर · Digital Mala)
+                  </h2>
+                  <p className="text-xs sm:text-sm text-amber-100/90 leading-relaxed">
+                    Chant <strong>Radha Naam</strong>, <strong>Shri Ram Jai Ram</strong>, <strong>Hare Krishna Maha Mantra</strong>, <strong>Om Namah Shivaya</strong>, or <strong>Gayatri Mantra</strong> with live 108-bead mala tracking, 528Hz sacred chime, and Dhyana meditation timer.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-center gap-3 shrink-0">
+                  <button
+                    onClick={handleIncrementJaap}
+                    className="px-6 py-4 rounded-2xl bg-amber-300 hover:bg-amber-200 text-[#2C1A12] font-black text-sm shadow-lg active:scale-95 transition-all flex items-center gap-2"
+                  >
+                    <Flame className="w-5 h-5 text-[#EA580C] fill-[#EA580C]" />
+                    <span>Quick Chant +1 (Bead {currentCount % 108 === 0 && currentCount > 0 ? 108 : currentCount % 108}/108)</span>
+                  </button>
+                  <a
+                    href="#jaap"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setActiveView('jaap');
+                    }}
+                    className="px-5 py-4 rounded-2xl bg-black/35 hover:bg-black/50 text-white border border-amber-300/40 font-bold text-xs sm:text-sm transition-all flex items-center gap-1.5"
+                  >
+                    <span>Open Full 108 Naam Jaap Counter</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </a>
+                </div>
+              </div>
+            </section>
+
             {/* Browse by Category Section — Every Card Has Full Background Image */}
             <section id="categories" aria-labelledby="browse-categories-heading" className="py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
@@ -3639,6 +3778,75 @@ export default function App() {
                   })}
                 </div>
               )}
+            </section>
+
+            {/* Google SEO Hub: Naam Jaap Counter Guide, FAQ & Complete Crawlable Index of All Uploaded/Approved Scriptures */}
+            <section aria-labelledby="naam-jaap-seo-faq-heading" className="py-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div
+                className={`rounded-3xl p-6 sm:p-8 border space-y-8 ${
+                  darkMode ? 'bg-[#160F0A] border-amber-500/20' : 'bg-amber-50/60 border-amber-900/10'
+                }`}
+              >
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-widest text-[#EA580C]">
+                    Sacred Chanting &amp; Digital Mala Guide
+                  </span>
+                  <h2 id="naam-jaap-seo-faq-heading" className="text-xl sm:text-2xl font-extrabold mt-1">
+                    108 Naam Jaap Counter (Naam Jamm Counter) – Frequently Asked Questions
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    {NAAM_JAAP_SEO_FAQS.map((faq, idx) => (
+                      <div
+                        key={idx}
+                        className={`p-4 rounded-2xl border ${
+                          darkMode ? 'bg-[#1F140E] border-amber-500/15' : 'bg-white border-amber-900/10'
+                        }`}
+                      >
+                        <h3 className="font-bold text-sm text-[#EA580C]">{faq.q}</h3>
+                        <p className={`text-xs mt-1.5 leading-relaxed ${darkMode ? 'text-amber-100/85' : 'text-[#78523A]'}`}>
+                          {faq.a}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Crawlable Directory of All Approved & Uploaded Scriptures (Ensures Googlebot Discovers Every Article Link) */}
+                <div className={`pt-6 border-t ${darkMode ? 'border-amber-500/20' : 'border-amber-900/10'}`}>
+                  <h3 className="text-sm font-extrabold uppercase tracking-wider text-[#EA580C] mb-3">
+                    Complete Index of Verified Scriptures, Mantras &amp; Uploaded Sacred Texts ({approvedItems.length})
+                  </h3>
+                  <nav aria-label="All Sacred Articles Directory" className="flex flex-wrap gap-2">
+                    <a
+                      href="#jaap"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setActiveView('jaap');
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-[#EA580C] text-white text-xs font-bold"
+                    >
+                      108-Bead Naam Jaap Counter (Digital Mala)
+                    </a>
+                    {approvedItems.map((it) => (
+                      <a
+                        key={it.id}
+                        href={`#article/${it.id}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleOpenItem(it);
+                        }}
+                        className={`px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all hover:border-[#EA580C] ${
+                          darkMode
+                            ? 'bg-[#1F140E] border-amber-500/20 text-amber-200'
+                            : 'bg-white border-amber-900/10 text-[#2C1A12]'
+                        }`}
+                      >
+                        {it.title}
+                      </a>
+                    ))}
+                  </nav>
+                </div>
+              </div>
             </section>
           </div>
         )}
@@ -4125,12 +4333,37 @@ export default function App() {
                           Dynamic meta tags, Open Graph tags, canonical URLs, and JSON-LD structured data are active across all 23 scriptures and 12 categories.
                         </p>
                       </div>
-                      <button
-                        onClick={() => handleCopyText(SEO_INDEX_HTML_TEMPLATE, 'Copied SEO index.html to clipboard!')}
-                        className="px-4 py-2.5 rounded-xl bg-[#EA580C] text-white text-xs font-bold flex items-center gap-1.5 shadow hover:bg-orange-700 shrink-0"
-                      >
-                        <Copy className="w-4 h-4" /> Copy SEO index.html
-                      </button>
+                      <div className="flex flex-wrap gap-2 shrink-0">
+                        <button
+                          onClick={() => handleCopyText(SEO_INDEX_HTML_TEMPLATE, 'Copied SEO index.html to clipboard!')}
+                          className="px-3.5 py-2 rounded-xl bg-[#EA580C] text-white text-xs font-bold flex items-center gap-1.5 shadow hover:bg-orange-700"
+                        >
+                          <Copy className="w-3.5 h-3.5" /> Copy index.html
+                        </button>
+                        <button
+                          onClick={() => handleCopyText(generatedSitemapXml, 'Copied public/sitemap.xml (includes all approved uploads)!')}
+                          className="px-3.5 py-2 rounded-xl bg-amber-600 text-white text-xs font-bold flex items-center gap-1.5 shadow hover:bg-amber-700"
+                        >
+                          <Copy className="w-3.5 h-3.5" /> Copy public/sitemap.xml
+                        </button>
+                        <button
+                          onClick={() => handleCopyText(generatedRobotsTxt, 'Copied public/robots.txt to clipboard!')}
+                          className="px-3.5 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold flex items-center gap-1.5 shadow hover:bg-emerald-700"
+                        >
+                          <Copy className="w-3.5 h-3.5" /> Copy public/robots.txt
+                        </button>
+                        <button
+                          onClick={() =>
+                            handleCopyText(
+                              JSON.stringify(approvedItems, null, 2),
+                              'Copied all Approved Scriptures JSON (including new uploads)!'
+                            )
+                          }
+                          className="px-3.5 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold flex items-center gap-1.5 shadow hover:bg-blue-700"
+                        >
+                          <FileText className="w-3.5 h-3.5" /> Export Approved Items JSON
+                        </button>
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
