@@ -54,12 +54,12 @@ export const INITIAL_SACRED_ITEMS = [
     views: 68, likes: 1, language: 'English', author: 'Skanda Purana & Temple Chronicles',
     imageUrl: 'https://i.postimg.cc/9MvdM5j8/jagannath-puri.jpg', tags: ['jagannath', 'puri', 'char-dham', 'odisha'],
     body: {
-      English: "Shree Jagannath Temple in Puri, Odisha, is one of the four sacred Char Dham pilgrimage sites of Sanatan Dharma. Dedicated to Lord Jagannath along with his brother Balabhadra and sister Subhadra, the temple is revered as the Eastern Abode of the Lord of the Universe.
+      English: `Shree Jagannath Temple in Puri, Odisha, is one of the four sacred Char Dham pilgrimage sites of Sanatan Dharma. Dedicated to Lord Jagannath along with his brother Balabhadra and sister Subhadra, the temple is revered as the Eastern Abode of the Lord of the Universe.
 
 • Daru Brahma: Deities carved from sacred Neem wood and renewed during Nabakalebara.
 • Rath Yatra: The world-famous annual Festival of Chariots.
 • Mahaprasad: Cooked in earthen pots stacked seven high in the Rosaghara.
-• Kalinga Architecture: Rising 214 feet, crowned by the Nila Chakra.",
+• Kalinga Architecture: Rising 214 feet, crowned by the Nila Chakra.`,
       Hindi: "पुरी (ओडिशा) स्थित श्री जगन्नाथ मंदिर सनातन धर्म के चार पवित्र धामों में से एक है। भगवान जगन्नाथ, बलभद्र और सुभद्रा को समर्पित यह मंदिर 'जग के नाथ' का पूर्वी धाम है।",
       Sanskrit: "नीलाचलनिवासाय नित्याय परमात्मने । बलभद्रसुभद्राभ्यां जगन्नाथाय ते नमः ॥"
     }
