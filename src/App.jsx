@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 
 
-export const DEFAULT_ADMIN_PASSCODE = 'admin108';
+export const DEFAULT_ADMIN_PASSCODE = '';
 
 export const SanatanSetuLogo = ({ size = 44, className = '' }) => (
   <svg
