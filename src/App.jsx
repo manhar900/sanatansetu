@@ -44,17 +44,141 @@ export const SUPPORTED_LANGUAGES = [
   { id: 'Italian', label: 'Italian (Italiano)', native: 'Italiano', group: 'World', locale: 'it-IT', greeting: 'Saggezza Vedica Eterna · Sanatan Dharma' }
 ];
 
-// Converts any YouTube watch/share/shorts URL into an embeddable URL
-export function getYouTubeEmbedUrl(url) {
-  if (!url || typeof url !== 'string') return null;
-  const trimmed = url.trim();
-  const regExp = /(?:youtube\.com\/(?:[^/]+\/.+\/|Spin\/|v\/|e(?:mbed)?\/|shorts\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/i;
-  const match = trimmed.match(regExp);
-  if (match && match[1]) {
-    return `https://www.youtube.com/embed/${match[1]}`;
+export const SECURE_PROTO = ['htt', 'ps://'].join('');
+
+// Automatically strips any accidental google search redirect prefix and extracts clean URL or YouTube ID
+export function cleanExternalUrl(rawUrl) {
+  if (!rawUrl || typeof rawUrl !== 'string') return '';
+  let u = rawUrl.trim();
+  // If user pasted full <iframe src="..."> snippet from YouTube Share -> Embed, extract src
+  const iframeSrcMatch = u.match(/src=["']([^"']+)["']/i);
+  if (iframeSrcMatch && iframeSrcMatch[1]) {
+    u = iframeSrcMatch[1];
   }
-  return null;
+  while (u.includes('google.com/search?q=') || u.includes('google.com/url?q=')) {
+    const qIdx = u.indexOf('?q=');
+    if (qIdx !== -1) {
+      try {
+        u = decodeURIComponent(u.slice(qIdx + 3).split('&')[0]);
+      } catch (e) {
+        u = u.slice(qIdx + 3).split('&')[0];
+      }
+    } else {
+      break;
+    }
+  }
+  return u;
 }
+
+export function extractYouTubeId(url) {
+  const cleaned = cleanExternalUrl(url);
+  if (!cleaned) return null;
+  if (/^[a-zA-Z0-9_-]{11}$/.test(cleaned)) return cleaned;
+  const regExp = /(?:youtube(?:-nocookie)?\.com\/(?:[^/]+\/.+\/|v\/|e(?:mbed)?\/|shorts\/|live\/|.*[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i;
+  const match = cleaned.match(regExp);
+  return match && match[1] ? match[1] : null;
+}
+
+export function getYouTubeEmbedUrl(url) {
+  const ytId = extractYouTubeId(url);
+  if (!ytId) return null;
+  const host = ['www', 'youtube', 'com'].join('.');
+  return `${SECURE_PROTO}${host}/embed/${ytId}?playsinline=1&rel=0&modestbranding=1`;
+}
+
+// Opens a richly typeset, print-ready Sacred PDF eBook view for ANY item in the library (so every scripture has an instant PDF eBook!)
+export function openSacredPrintablePdf(item, lang = 'English') {
+  if (typeof window === 'undefined') return;
+  if (item.pdfUrl && item.pdfUrl !== '#auto-pdf' && !item.pdfUrl.startsWith('#')) {
+    window.open(item.pdfUrl, '_blank', 'noopener,noreferrer');
+    return;
+  }
+  const bodyText = getBodyForLanguage(item, lang);
+  const sanText = typeof item.body === 'object' && item.body.Sanskrit ? item.body.Sanskrit : '';
+  const hinText = typeof item.body === 'object' && item.body.Hindi ? item.body.Hindi : '';
+  const engText = typeof item.body === 'object' && item.body.English ? item.body.English : bodyText;
+  const win = window.open('', '_blank');
+  if (!win) return;
+  const esc = (str) => String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  win.document.write(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>${esc(item.title)} – Sacred PDF eBook | Sanatan Setu Library</title>
+  <style>
+    @page { size: A4; margin: 18mm; }
+    body { font-family: Georgia, 'Noto Serif Devanagari', serif; background: #FFFDF7; color: #2C1A12; line-height: 1.75; padding: 24px 36px; max-width: 820px; margin: 0 auto; }
+    .toolbar { background: #2C1A12; color: #FDE68A; padding: 12px 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; font-family: system-ui, sans-serif; }
+    .btn { background: #EA580C; color: #fff; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; }
+    .header-box { border: 2px solid #D97706; border-radius: 16px; padding: 22px; background: #FFFBEB; text-align: center; margin-bottom: 24px; }
+    .badge { color: #EA580C; font-weight: bold; font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; }
+    h1 { font-size: 24px; margin: 8px 0; color: #7C2D12; }
+    .meta { font-size: 13px; color: #78523A; }
+    .section-title { font-size: 15px; font-weight: bold; color: #EA580C; border-bottom: 1px solid #FDE68A; padding-bottom: 6px; margin-top: 24px; margin-bottom: 10px; text-transform: uppercase; }
+    .content { white-space: pre-line; font-size: 15px; }
+    @media print { .toolbar { display: none; } body { padding: 0; background: #fff; } }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <span><strong>🕉️ Sanatan Setu Sacred PDF eBook</strong> · ${esc(item.title)}</span>
+    <button class="btn" onclick="window.print()">🖨️ Save as PDF / Print</button>
+  </div>
+  <div class="header-box">
+    <div class="badge">॥ श्री गणेशाय नमः · ${esc(item.sanskritBadge || item.category)} ॥</div>
+    <h1>${esc(item.title)}</h1>
+    <div class="meta">Source / Tradition: ${esc(item.author || 'Vedic Tradition')} · Sanatan Setu Library (sanatansetulibrary.com)</div>
+    <p style="font-style:italic; font-size:14px; margin-top:10px;">${esc(item.description)}</p>
+  </div>
+  ${sanText ? `<div class="section-title">॥ मूल संस्कृत पाठ (Original Sanskrit Verses) ॥</div><div class="content">${esc(sanText)}</div>` : ''}
+  ${hinText ? `<div class="section-title">॥ हिन्दी भावार्थ एवं संपूर्ण पाठ (Hindi Text & Meaning) ॥</div><div class="content">${esc(hinText)}</div>` : ''}
+  ${engText ? `<div class="section-title">॥ Complete English Text & Commentary ॥</div><div class="content">${esc(engText)}</div>` : ''}
+</body>
+</html>`);
+  win.document.close();
+}
+
+// Unlimited Browser Database Engine (IndexedDB) so users can upload unlimited articles, PDFs, videos & high-res photos without hitting localStorage limits
+export const SanatanUnlimitedDB = {
+  dbName: 'SanatanSetuUnlimitedDB',
+  storeName: 'sacred_items_store',
+  open() {
+    return new Promise((resolve, reject) => {
+      if (typeof window === 'undefined' || !window.indexedDB) {
+        return reject(new Error('IndexedDB unavailable'));
+      }
+      const req = window.indexedDB.open(this.dbName, 1);
+      req.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(this.storeName)) {
+          db.createObjectStore(this.storeName);
+        }
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  },
+  async saveItems(itemsArray) {
+    try {
+      const db = await this.open();
+      const tx = db.transaction(this.storeName, 'readwrite');
+      tx.objectStore(this.storeName).put(itemsArray, 'all_items_v5');
+    } catch (e) {}
+  },
+  async loadItems() {
+    try {
+      const db = await this.open();
+      return await new Promise((resolve) => {
+        const tx = db.transaction(this.storeName, 'readonly');
+        const req = tx.objectStore(this.storeName).get('all_items_v5');
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => resolve(null);
+      });
+    } catch (e) {
+      return null;
+    }
+  }
+};
 
 // Verified Copyright-Free (CC / Public Domain) Wikimedia Commons Photographs for Categories & Sacred Items
 export const COPYRIGHT_FREE_CATEGORY_PHOTOS = {
@@ -129,31 +253,111 @@ export const SanatanSetuLogo = ({ size = 44, className = '' }) => (
   </svg>
 );
 
-// Advanced CSS Keyframe Animations for Vedic Mandala, Floating Particles, Card Reveal & Shimmer
+// Advanced CSS Keyframe Animations: Marquee, Liquid Gold Shimmer, Aarti Orbit, Diya Flicker, Floating Particles & 3D Card Glow
 export const SacredAnimationsStyle = () => (
   <style>{`
     @keyframes floatSlow {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-6px); }
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-8px) rotate(2deg); }
     }
     @keyframes spinSlow {
       from { transform: rotate(0deg); }
       to { transform: rotate(360deg); }
     }
+    @keyframes spinReverseSlow {
+      from { transform: rotate(360deg); }
+      to { transform: rotate(0deg); }
+    }
     @keyframes pulseGlow {
-      0%, 100% { box-shadow: 0 0 18px rgba(234, 88, 12, 0.35), 0 0 36px rgba(245, 158, 11, 0.2); }
-      50% { box-shadow: 0 0 30px rgba(234, 88, 12, 0.65), 0 0 55px rgba(245, 158, 11, 0.4); }
+      0%, 100% { box-shadow: 0 0 20px rgba(234, 88, 12, 0.4), 0 0 45px rgba(245, 158, 11, 0.22); }
+      50% { box-shadow: 0 0 36px rgba(234, 88, 12, 0.75), 0 0 70px rgba(245, 158, 11, 0.45); }
     }
     @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(14px); }
-      to { opacity: 1; transform: translateY(0); }
+      from { opacity: 0; transform: translateY(16px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
-    .animate-float-slow { animation: floatSlow 4.5s ease-in-out infinite; }
-    .animate-spin-slow { animation: spinSlow 38s linear infinite; }
-    .animate-pulse-glow { animation: pulseGlow 3s ease-in-out infinite; }
-    .animate-fade-in-up { animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    @keyframes shimmerGold {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    @keyframes sacredMarquee {
+      0% { transform: translateX(0%); }
+      100% { transform: translateX(-50%); }
+    }
+    @keyframes aartiOrbit {
+      0% { transform: rotate(0deg) translateX(78px) rotate(0deg); }
+      100% { transform: rotate(360deg) translateX(78px) rotate(-360deg); }
+    }
+    @keyframes diyaFlicker {
+      0%, 100% { transform: scale(1) rotate(-2deg); opacity: 0.95; }
+      50% { transform: scale(1.14, 1.22) rotate(2deg); opacity: 1; }
+    }
+    @keyframes chantParticleUp {
+      0% { opacity: 1; transform: translateY(0) scale(0.85); }
+      100% { opacity: 0; transform: translateY(-95px) scale(1.35); }
+    }
+    .animate-float-slow { animation: floatSlow 4.2s ease-in-out infinite; }
+    .animate-spin-slow { animation: spinSlow 36s linear infinite; }
+    .animate-spin-reverse-slow { animation: spinReverseSlow 28s linear infinite; }
+    .animate-pulse-glow { animation: pulseGlow 2.8s ease-in-out infinite; }
+    .animate-fade-in-up { animation: fadeInUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    .animate-shimmer-gold {
+      background-size: 200% auto;
+      animation: shimmerGold 5s ease infinite;
+    }
+    .animate-sacred-marquee {
+      display: flex;
+      width: max-content;
+      animation: sacredMarquee 34s linear infinite;
+    }
+    .animate-sacred-marquee:hover {
+      animation-play-state: paused;
+    }
+    .animate-aarti-orbit {
+      animation: aartiOrbit 4.2s linear infinite;
+    }
+    .animate-diya-flicker {
+      animation: diyaFlicker 0.9s ease-in-out infinite;
+    }
+    .animate-chant-particle {
+      animation: chantParticleUp 1.1s ease-out forwards;
+    }
   `}</style>
 );
+
+export const DAILY_SACRED_SHLOKAS = [
+  {
+    sanskrit: 'कर्मण्येवाधिकारस्ते मा फलेषु कदाचन । मा कर्मफलहेतुर्भूर्मा ते सङ्गोऽस्त्वकर्मणि ॥',
+    source: 'Shrimad Bhagavad Gita · 2.47',
+    english: 'You have a right to perform your prescribed duty, but never to the fruits of action. Never consider yourself the cause of the results, nor be attached to inaction.',
+    hindi: 'तेरा अधिकार केवल कर्तव्य-कर्म करने में ही है, उसके फलों में कभी नहीं। इसलिए तू कर्मों के फल का हेतु मत बन और कर्म न करने में भी तेरी आसक्ति न हो।'
+  },
+  {
+    sanskrit: 'ॐ भूर्भुवः स्वः तत्सवितुर्वरेण्यं भर्गो देवस्य धीमहि धियो यो नः प्रचोदयात् ॥',
+    source: 'Rigveda · 3.62.10 (Vedamata Gayatri)',
+    english: 'We meditate upon the adorable spiritual radiance of Savitr, the Supreme Creator. May that Divine Light illuminate and inspire our intellect.',
+    hindi: 'हम उस प्राणस्वरूप, दुःखनाशक, आनंदस्वरूप, श्रेष्ठ सविता देव के दिव्य तेज का ध्यान करते हैं; वह परमात्मा हमारी बुद्धि को सन्मार्ग में प्रेरित करे।'
+  },
+  {
+    sanskrit: 'ॐ त्र्यम्बकं यजामहे सुगन्धिं पुष्टिवर्धनम् । उर्वारुकमिव बन्धनान्मृत्योर्मुक्षीय माऽमृतात् ॥',
+    source: 'Rigveda · 7.59.12 (Mahamrityunjaya Mantra)',
+    english: 'We worship the Three-Eyed Lord Shiva, fragrant and nourishing all beings. May He liberate us from mortality just as a ripened cucumber is freed from its vine, and grant us immortality.',
+    hindi: 'हम सुगंधित और पुष्टि के वर्धक तीन नेत्रों वाले भगवान शिव की आराधना करते हैं; वे हमें ककड़ी के फल की भाँति मृत्यु के बंधन से मुक्त करें और अमृतत्व प्रदान करें।'
+  },
+  {
+    sanskrit: 'यदा यदा हि धर्मस्य ग्लानिर्भवति भारत । अभ्युत्थानमधर्मस्य तदात्मानं सृजाम्यहम् ॥',
+    source: 'Shrimad Bhagavad Gita · 4.7',
+    english: 'Whenever and wherever there is a decline in righteousness (Dharma) and a predominant rise of unrighteousness (Adharma), O descendant of Bharata, at that time I manifest Myself.',
+    hindi: 'हे भारत! जब-जब धर्म की हानि और अधर्म की वृद्धि होती है, तब-तब मैं धर्म की स्थापना के लिए स्वयं प्रकट होता हूँ।'
+  },
+  {
+    sanskrit: 'असतो मा सद्गमय । तमसो मा ज्योतिर्गमय । मृत्योर्माऽमृतं गमय ॥',
+    source: 'Brihadaranyaka Upanishad · 1.3.28',
+    english: 'Lead us from the unreal to the Real; lead us from darkness into Divine Light; lead us from mortality to Immortality.',
+    hindi: 'हे प्रभो! हमें असत्य से सत्य की ओर ले चलो, अंधकार से प्रकाश की ओर ले चलो, और मृत्यु से अमरता की ओर ले चलो।'
+  }
+];
 
 // Dual-Layer Accurate Image Frame: blurred ambient backdrop + accurately fitted foreground so no deity head or temple spire is ever cropped off
 export const SacredImageFrame = ({
@@ -164,9 +368,9 @@ export const SacredImageFrame = ({
   imgClassName = '',
   mode = 'contain-blur' // 'contain-blur' fits 100% of image inside frame with glowing blurred backdrop; 'cover-top' covers frame anchored near top
 }) => {
-  const [imgSrc, setImgSrc] = useState(src || fallbackSrc);
+  const [imgSrc, setImgSrc] = useState(cleanExternalUrl(src) || fallbackSrc);
   useEffect(() => {
-    setImgSrc(src || fallbackSrc);
+    setImgSrc(cleanExternalUrl(src) || fallbackSrc);
   }, [src, fallbackSrc]);
 
   const handleError = () => {
@@ -198,6 +402,256 @@ export const SacredImageFrame = ({
             : 'object-contain object-center p-1 drop-shadow-[0_8px_20px_rgba(0,0,0,0.6)]'
         } ${imgClassName}`}
       />
+    </div>
+  );
+};
+
+// Inline YouTube Embed & Sacred Cinema Video Player (Plays Directly on Your Site Without Redirecting!)
+export const SacredVideoPlayer = ({ item, darkMode, lang = 'English' }) => {
+  const cleanedVideoUrl = cleanExternalUrl(item?.videoUrl || '');
+  const ytId = extractYouTubeId(cleanedVideoUrl);
+  const ytEmbedUrl = getYouTubeEmbedUrl(cleanedVideoUrl);
+  const isDirectVideoFile =
+    cleanedVideoUrl.startsWith('data:video/') ||
+    /\.(mp4|webm|ogg)(\?.*)?$/i.test(cleanedVideoUrl);
+
+  // Default directly to inline 'youtube' embed player when a YouTube video is present!
+  const [playerMode, setPlayerMode] = useState(ytEmbedUrl ? 'youtube' : 'cinema');
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentLineIdx, setCurrentLineIdx] = useState(0);
+  const [elapsedSec, setElapsedSec] = useState(0);
+  const [chimeActive, setChimeActive] = useState(true);
+
+  useEffect(() => {
+    setPlayerMode(getYouTubeEmbedUrl(item?.videoUrl) ? 'youtube' : 'cinema');
+  }, [item?.id, item?.videoUrl]);
+
+  const lines = useMemo(() => {
+    const raw = getBodyForLanguage(item, lang) || item.description || item.title;
+    return raw
+      .split(/\n+/)
+      .map((l) => l.trim())
+      .filter((l) => l.length > 2);
+  }, [item, lang]);
+
+  const totalSec = Math.max(lines.length * 5, 30);
+
+  useEffect(() => {
+    setIsPlaying(false);
+    setCurrentLineIdx(0);
+    setElapsedSec(0);
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    return () => {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, [item?.id, lang]);
+
+  useEffect(() => {
+    if (!isPlaying) return;
+    const interval = setInterval(() => {
+      setElapsedSec((prev) => {
+        const next = prev + 1;
+        if (next >= totalSec) {
+          setIsPlaying(false);
+          return 0;
+        }
+        const nextLine = Math.min(lines.length - 1, Math.floor((next / totalSec) * lines.length));
+        setCurrentLineIdx(nextLine);
+        if (chimeActive && next % 5 === 0) {
+          playSacredSound('bead');
+        }
+        return next;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isPlaying, totalSec, lines.length, chimeActive]);
+
+  useEffect(() => {
+    if (!isPlaying || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    try {
+      window.speechSynthesis.cancel();
+      const textToSpeak = lines[currentLineIdx] || item.title;
+      const utt = new SpeechSynthesisUtterance(textToSpeak);
+      const langObj = SUPPORTED_LANGUAGES.find((l) => l.id === lang);
+      utt.lang = langObj?.locale || (lang === 'English' ? 'en-IN' : 'hi-IN');
+      utt.rate = 0.92;
+      window.speechSynthesis.speak(utt);
+    } catch (e) {}
+  }, [isPlaying, currentLineIdx, lines, lang, item?.title]);
+
+  const togglePlay = () => {
+    if (!isPlaying) {
+      if (chimeActive) playSacredSound('bell');
+      setIsPlaying(true);
+    } else {
+      setIsPlaying(false);
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    }
+  };
+
+  const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+
+  return (
+    <div className={`p-4 rounded-2xl border space-y-3 ${darkMode ? 'bg-[#1F140E] border-amber-500/30' : 'bg-amber-50/80 border-amber-900/15'}`}>
+      {/* Top Bar: Inline Mode Switcher (No external redirect!) */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs font-extrabold uppercase tracking-wider text-[#EA580C] flex items-center gap-1.5">
+            <Play className="w-4 h-4 fill-[#EA580C]" /> In-App Sacred Video Player
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          {ytEmbedUrl && (
+            <button
+              type="button"
+              onClick={() => {
+                setIsPlaying(false);
+                if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+                setPlayerMode('youtube');
+              }}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold shadow flex items-center gap-1.5 transition-all ${
+                playerMode === 'youtube'
+                  ? 'bg-red-600 text-white'
+                  : 'bg-amber-500/15 text-[#EA580C] hover:bg-amber-500/25'
+              }`}
+            >
+              <span>▶️ YouTube Embed</span>
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setPlayerMode('cinema')}
+            className="px-3 py-1.5 rounded-xl bg-[#EA580C] hover:bg-orange-600 text-white text-xs font-bold shadow flex items-center gap-1 transition-all"
+          >
+            🎬 Sacred Cinema Player (Instant Play)
+          </button>
+        </div>
+      </div>
+
+      {/* Inline Video Player Surface (Plays directly on the site without redirecting!) */}
+      {isDirectVideoFile ? (
+        <video
+          src={cleanedVideoUrl}
+          controls
+          playsInline
+          className="w-full rounded-2xl max-h-96 bg-black border border-amber-500/30"
+        />
+      ) : playerMode === 'youtube' && ytEmbedUrl ? (
+        <div className="relative w-full overflow-hidden rounded-2xl aspect-video bg-black border border-amber-500/30 shadow-2xl">
+          <iframe
+            key={ytId}
+            src={ytEmbedUrl}
+            title={item.title}
+            referrerPolicy="strict-origin-when-cross-origin"
+            className="w-full h-full border-0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+          />
+        </div>
+      ) : (
+        <div className="relative w-full overflow-hidden rounded-2xl aspect-video bg-[#120905] border border-amber-500/30 shadow-2xl flex flex-col justify-between p-5 sm:p-7 text-white select-none">
+          <img
+            src={cleanExternalUrl(item.imageUrl)}
+            alt={item.title}
+            onError={(e) => {
+              e.target.onerror = null;
+              if (item.fallbackImageUrl) e.target.src = item.fallbackImageUrl;
+            }}
+            className={`absolute inset-0 w-full h-full object-cover object-center transition-transform duration-1000 ${
+              isPlaying ? 'scale-110 opacity-45' : 'scale-100 opacity-35'
+            }`}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/65 to-black/50 pointer-events-none" />
+          <div
+            className={`pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 rounded-full border-2 border-dashed border-amber-400/25 ${
+              isPlaying ? 'animate-spin-slow opacity-80' : 'opacity-25'
+            }`}
+          />
+          <div className="relative z-10 flex items-center justify-between gap-2">
+            <span className="px-3 py-1 rounded-full bg-black/65 border border-amber-400/40 text-amber-300 text-xs font-bold flex items-center gap-1.5">
+              <span className={isPlaying ? 'animate-diya-flicker' : ''}>🪔</span>
+              <span>{isPlaying ? 'Playing Sacred Recitation & Visual Darshan...' : 'Click Play for In-App Video & Audio Recitation'}</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => setChimeActive(!chimeActive)}
+              className="px-2.5 py-1 rounded-full bg-black/65 border border-amber-400/30 text-amber-200 text-[11px] font-bold"
+            >
+              {chimeActive ? '🔔 528Hz Chime On' : '🔕 Chime Muted'}
+            </button>
+          </div>
+
+          <div className="relative z-10 my-auto text-center max-w-2xl mx-auto space-y-3 px-2">
+            {!isPlaying && (
+              <button
+                type="button"
+                onClick={togglePlay}
+                className="mx-auto w-20 h-20 rounded-full bg-gradient-to-br from-[#EA580C] to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white shadow-2xl border-4 border-amber-200 flex items-center justify-center transform hover:scale-110 active:scale-95 transition-all animate-pulse-glow"
+                aria-label="Play Sacred Video"
+              >
+                <Play className="w-9 h-9 fill-white ml-1" />
+              </button>
+            )}
+            <p className="font-serif text-base sm:text-xl md:text-2xl font-bold text-amber-100 drop-shadow leading-relaxed line-clamp-3">
+              {lines[currentLineIdx] || item.title}
+            </p>
+            <div className="text-[11px] text-amber-300/80 font-semibold">
+              Verse Segment {currentLineIdx + 1} of {lines.length} · {lang} Audio &amp; Subtitle Stream
+            </div>
+          </div>
+
+          <div className="relative z-10 space-y-2 bg-black/65 backdrop-blur-md p-3 rounded-xl border border-white/10">
+            <input
+              type="range"
+              min={0}
+              max={totalSec}
+              value={elapsedSec}
+              onChange={(e) => {
+                const sec = Number(e.target.value);
+                setElapsedSec(sec);
+                setCurrentLineIdx(Math.min(lines.length - 1, Math.floor((sec / totalSec) * lines.length)));
+              }}
+              className="w-full accent-[#EA580C] h-1.5 rounded-lg cursor-pointer"
+            />
+            <div className="flex items-center justify-between text-xs font-bold flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={togglePlay}
+                  className="px-3.5 py-1.5 rounded-lg bg-[#EA580C] hover:bg-orange-600 text-white flex items-center gap-1.5"
+                >
+                  {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 fill-white" />}
+                  <span>{isPlaying ? 'Pause' : 'Play Video'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentLineIdx((prev) => Math.max(0, prev - 1))}
+                  className="px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-amber-200"
+                >
+                  ◀ Prev Verse
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentLineIdx((prev) => Math.min(lines.length - 1, prev + 1))}
+                  className="px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-amber-200"
+                >
+                  Next Verse ▶
+                </button>
+              </div>
+              <span className="text-amber-200/90 font-mono">
+                {fmt(elapsedSec)} / {fmt(totalSec)}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -2426,6 +2880,968 @@ Chanted silently or softly at the three sacred junctions of the day (Sandhyas):
 
 INITIAL_SACRED_ITEMS.push(...INITIAL_SACRED_ITEMS_PART2);
 
+
+export const EXTRA_SEO_SACRED_ITEMS = [
+  {
+    id: 'dwadasa-jyotirlinga-complete-guide',
+    title: 'The 12 Jyotirlingas of Lord Shiva: Complete Stotram, Locations & Temple Guide',
+    category: 'Temples',
+    sanskritBadge: 'द्वादश ज्योतिर्लिङ्ग · 12 Jyotirlingas',
+    contentType: 'PDF',
+    pdfFileName: '12-Jyotirlingas-Complete-Stotram-Guide.pdf',
+    pdfUrl: '#auto-pdf',
+    videoUrl: 'https://www.youtube.com/watch?v=lUTHR0n6J0w',
+    description: 'Complete guide to all 12 sacred Jyotirlinga temples of Lord Shiva across India — Somnath, Mallikarjuna, Mahakaleshwar, Omkareshwar, Kedarnath, Bhimashankar, Kashi Vishwanath, Trimbakeshwar, Vaidyanath, Nageshwar, Rameshwaram, and Grishneshwar — with the Dwadasa Jyotirlinga Stotram.',
+    views: 34210,
+    likes: 11240,
+    language: 'Sanskrit',
+    author: 'Shiva Mahapurana (Koti Rudra Samhita) & Adi Shankaracharya',
+    isFeatured: true,
+    status: 'approved',
+    isApproved: true,
+    imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/Shiva_nataraja_hg.jpg?width=900',
+    tags: ['12-jyotirlinga', 'shiva', 'somnath', 'mahakaleshwar', 'kedarnath', 'kashi-vishwanath', 'pdf-guide'],
+    body: {
+      English: `According to the Koti Rudra Samhita of the Shiva Mahapurana, when Lord Brahma and Lord Vishnu debated supremacy, Lord Shiva manifested as an infinite, beginningless and endless pillar of cosmic light (Jyotirlinga — Stambha). Wherever Lord Shiva subsequently manifested as a self-born Lingam of divine light for the liberation of devotees, those twelve supreme shrines became revered as the Dwadasa Jyotirlingas.
+
+1. The Complete Dwadasa Jyotirlinga Stotram (By Jagadguru Adi Shankaracharya):
+"Saurashtre Somanatham cha Shrishaile Mallikarjunam |
+Ujjayinyam Mahakalam Omkaram-amaleshwaram || 1 ||
+Paralyam Vaidyanatham cha Dakinyam Bhimashankaram |
+Setubandhe tu Ramesham Nagesham Darukavane || 2 ||
+Varanasyam tu Vishvesham Tryambakam Gautami-tate |
+Himalaye tu Kedaram Ghushmesham cha Shivalaye || 3 ||
+Etani Jyotirlingani sayam pratah pathen-narah |
+Sapta-janma-kritam papam smaranena vinashyati || 4 ||"
+
+2. Complete Directory & Spiritual Significance of All 12 Jyotirlingas:
+1. Somnath (Prabhas Patan, Veraval, Gujarat): The First (Adi) Jyotirlinga on the shore of the Arabian Sea, worshipped by Chandra Deva to regain his luminosity.
+2. Mallikarjuna (Srisailam, Andhra Pradesh): Situated on Shri Shaila mountain along the Krishna River; uniquely both a Jyotirlinga and a Maha Shaktipeeth.
+3. Mahakaleshwar (Ujjain, Madhya Pradesh): Beside the Shipra River; the only Dakshinamurti (south-facing) Jyotirlinga, renowned for its dawn Bhasma Aarti.
+4. Omkareshwar & Mamaleshwar (Khandwa, Madhya Pradesh): On the sacred Om-shaped island in the Narmada River.
+5. Kedarnath (Rudraprayag, Uttarakhand Himalayas): At 3,583 meters near the Mandakini River; where Lord Shiva blessed the Pandavas.
+6. Bhimashankar (Pune, Sahyadri Hills, Maharashtra): Source of the Bhima River.
+7. Kashi Vishwanath (Varanasi, Uttar Pradesh): On the western bank of Mother Ganga; where Lord Shiva whispers the liberating Taraka Mantra.
+8. Trimbakeshwar (Nashik, Maharashtra): At the origin of the Godavari River; features a three-faced Lingam embodying Brahma, Vishnu, and Rudra.
+9. Vaidyanath Dham (Deoghar, Jharkhand): Where Lord Shiva manifested as Vaidyanatha (the Divine Physician).
+10. Nageshwar (Dwarka, Gujarat): Protects devotees from all worldly fear.
+11. Ramanathaswamy (Rameswaram, Tamil Nadu): Consecrated by Lord Sri Rama on the shore of the Indian Ocean; one of the four All-India Char Dhams.
+12. Grishneshwar (Verul/Ellora, Maharashtra): The twelfth Jyotirlinga near Ellora Caves.`,
+      Hindi: `शिव महापुराण के कोटिरुद्र संहिता के अनुसार, जहाँ-जहाँ देवाधिदेव महादेव स्वयं ज्योतिपुंज (अग्नि-स्तंभ) के रूप में भक्तों के कल्याणार्थ प्रकट हुए, वे बारह पावन तीर्थ 'द्वादश ज्योतिर्लिंग' कहलाते हैं।
+
+१. द्वादश ज्योतिर्लिंग स्तोत्रम्:
+सौराष्ट्रे सोमनाथं च श्रीशैले मल्लिकार्जुनम् । उज्जयिन्यां महाकालमोङ्कारममलेश्वरम् ॥ १ ॥
+परल्यां वैद्यनाथं च डाकिन्यां भीमशङ्करम् । सेतुबन्धे तु रामेशं नागेशं दारुकावने ॥ २ ॥
+वाराणस्यां तु विश्वेशं त्र्यम्बकं गौतमीतटे । हिमालये तु केदारं घुश्मेशं च शिवालये ॥ ३ ॥
+एतानि ज्योतिर्लिङ्गानि सायं प्रातः पठेन्नरः । सप्तजन्मकृतं पापं स्मरणेन विनश्यति ॥ ४ ॥
+
+२. बारह ज्योतिर्लिंगों का स्थान एवं माहात्म्य:
+१. सोमनाथ (प्रभास पाटन, गुजरात) · २. मल्लिकार्जुन (श्रीशैलम, आंध्र प्रदेश) · ३. महाकालेश्वर (उज्जैन, मध्य प्रदेश) · ४. ओंकारेश्वर-ममलेश्वर (खण्डवा, मध्य प्रदेश) · ५. केदारनाथ (उत्तराखंड हिमालय) · ६. भीमशंकर (पुणे, महाराष्ट्र) · ७. काशी विश्वनाथ (वाराणसी, उत्तर प्रदेश) · ८. त्र्यम्बकेश्वर (नासिक, महाराष्ट्र) · ९. वैद्यनाथ धाम (देवघर, झारखंड) · १०. नागेश्वर (द्वारका, गुजरात) · ११. रामेश्वरम (तमिलनाडु) · १२. घृष्णेश्वर (वेरुल/एलोरा, महाराष्ट्र)।`,
+      Sanskrit: `सौराष्ट्रे सोमनाथं च श्रीशैले मल्लिकार्जुनम् ।
+उज्जयिन्यां महाकालमोङ्कारममलेश्वरम् ॥ १ ॥
+परल्यां वैद्यनाथं च डाकिन्यां भीमशङ्करम् ।
+सेतुबन्धे तु रामेशं नागेशं दारुकावने ॥ २ ॥
+वाराणस्यां तु विश्वेशं त्र्यम्बकं गौतमीतटे ।
+हिमालये तु केदारं घुश्मेशं च शिवालये ॥ ३ ॥
+एतानि ज्योतिर्लिङ्गानि सायं प्रातः पठेन्नरः ।
+सप्तजन्मकृतं पापं स्मरणेन विनश्यति ॥ ४ ॥`
+    }
+  },
+  {
+    id: 'konark-sun-temple-lingaraj-odisha',
+    title: 'Konark Sun Temple & Lingaraj Temple (Odisha): The Golden Triangle of Kalinga',
+    category: 'Temples',
+    sanskritBadge: 'मन्दिर · Kalinga Architecture',
+    contentType: 'PDF',
+    pdfFileName: 'Konark-Sun-Temple-Lingaraj-Bhubaneswar-Guide.pdf',
+    pdfUrl: '#auto-pdf',
+    description: 'Explore the sacred Golden Triangle of Odisha (Bhubaneswar, Konark, and Puri): the 13th-century Konark Surya Devalaya chariot with 24 sundial wheels and the 11th-century Ekamra Kshetra Lingaraj Temple.',
+    views: 26420,
+    likes: 8910,
+    language: 'English',
+    author: 'Kapila Samhita, Ekamra Purana & Kalinga Shilpa Shastra',
+    isFeatured: true,
+    status: 'approved',
+    isApproved: true,
+    imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/Sri_Jagannath_Temple,_Puri._India.jpg?width=900',
+    tags: ['konark', 'lingaraj', 'bhubaneswar', 'odisha', 'surya-mandir', 'kalinga', 'pdf'],
+    body: {
+      English: `Together with Shree Jagannath Dham in Puri, the Lingaraj Temple in Bhubaneswar (ancient Ekamra Kshetra — the "Temple City of India") and the Konark Sun Temple (Arka Kshetra / Padma Kshetra) form the sacred Swarna Tribhuja (Golden Triangle) of Odisha, representing the zenith of Kalinga Nagara temple architecture.
+
+1. Konark Sun Temple (Arka Kshetra — The Celestial Chariot of Surya Deva):
+• Built in 1250 CE by Emperor Langula Narasimha Deva I of the Eastern Ganga Dynasty with 1,200 master sculptors led by Bisu Maharana and his 12-year-old son Dharmapada.
+• Designed as the colossal celestial chariot of the Sun God Surya pulled by 7 galloping stone horses (7 days of the week / 7 colors of light) on 24 intricately carved stone wheels (12 months / 24 fortnights / 24 hours) that function as precision astronomical sundials accurate to a single minute!
+
+2. Shree Lingaraj Temple, Bhubaneswar (Ekamra Kshetra — Harihara Synthesis):
+• Built in the 11th century CE by King Jajati Keshari of the Somavamshi Dynasty, rising 180 feet in classic Kalinga Pancharatha Rekha Deula style.
+• The Swayambhu Lingam inside the Garbhagriha is revered as "Harihara" (the unified form of Lord Vishnu and Lord Shiva), where both Bilva leaves and Tulsi leaves are offered daily.`,
+      Hindi: `ओडिशा का 'स्वर्ण त्रिभुज' (जगन्नाथ पुरी = शंख क्षेत्र, कोणार्क = अर्क क्षेत्र, और भुवनेश्वर = एकाम्र क्षेत्र) भारतीय कलिंग मंदिर स्थापत्य और सनातन उपासना का अद्वितीय संगम है।
+
+१. कोणार्क सूर्य मंदिर (अर्क क्षेत्र): १३वीं शताब्दी (१२५० ई.) में गंग वंश के सम्राट लांगूल नरसिंह देव प्रथम द्वारा निर्मित यह मंदिर भगवान सूर्य के विशाल रथ के रूप में है, जिसे ७ अश्व खींच रहे हैं और जिसके २४ नक्काशीदार पहिए सटीक धूपघड़ी (Sundial) का कार्य करते हैं।
+२. श्री लिंगराज मंदिर, भुवनेश्वर (एकाम्र क्षेत्र): ११वीं शताब्दी में सोमवंशी राजा ययाति केसरी द्वारा निर्मित १८० फीट ऊँचा यह मंदिर 'हरिहर' (भगवान विष्णु और शिव के संयुक्त स्वरूप) को समर्पित है।`,
+      Sanskrit: `जपाकुसुमसङ्काशं काश्यपेयं महाद्युतिम् ।
+तमोऽरिं सर्वपापघ्नं प्रणतोऽस्मि दिवाकरम् ॥ १ ॥`
+    }
+  },
+  {
+    id: 'shiva-tandava-stotram-ravana',
+    title: 'Shiva Tandava Stotram: Complete 17 Verses by Ravana with Hindi & English Meaning',
+    category: 'Mantras',
+    sanskritBadge: 'मन्त्र · Shiva Tandava Stotram',
+    contentType: 'PDF',
+    pdfFileName: 'Shiva-Tandava-Stotram-Complete.pdf',
+    pdfUrl: '#auto-pdf',
+    videoUrl: 'https://www.youtube.com/watch?v=lUTHR0n6J0w',
+    description: 'Read the complete Shiva Tandava Stotram (Jatatavigalajjala Pravahapavitasthale) composed by Dashanana Ravana in praise of Lord Shiva in the Panchachamara meter, with full Sanskrit, Hindi, and English meaning.',
+    views: 38940,
+    likes: 12450,
+    language: 'Sanskrit',
+    author: 'Ravana (Lankeshwara)',
+    isFeatured: true,
+    status: 'approved',
+    isApproved: true,
+    imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/Lord_Shiva_Nataraja_at_the_British_Museum.jpg?width=900',
+    tags: ['shiva-tandava-stotram', 'jatatavigalajjala', 'shiva', 'nataraja', 'ravana', 'pdf', 'video'],
+    body: {
+      English: `Composed in the rhythmic 16-syllable Panchachamara meter mirroring the cosmic beat of Shiva's Damaru, the Shiva Tandava Stotram invokes the supreme grace of Lord Mahadeva.
+
+1. Verse 1:
+"Jatatavigalajjala-pravahapavitasthale Gale'valambya lambitam bhujangatungamalikam |
+Damaddamaddamaddamanninaadavad-damarvayam Chakara chandatandavam tanotu nah Shivah shivam || 1 ||"
+Meaning: From whose forest-like matted locks flows the purifying stream of Mother Ganga; around whose neck hangs the lofty garland of great serpents; and who performed the fierce, auspicious Tandava dance to the resounding 'Damad-Damad-Damad-Damad' beat of His Damaru—may that Lord Shiva shower auspiciousness upon us all!
+
+2. Verse 2:
+"Jatakatahasambhrama-bhramannilimpanirjhari Vilolavichivallari-virajamanamurdhani |
+Dhagaddhagaddhagajjvala-lalata-pattapavake Kishorachandrashekhare ratih pratikshanam mama || 2 ||"
+Meaning: May my devotion abide every single moment in Lord Shiva, whose crown is adorned by the surging waves of the celestial Ganga, on whose forehead blazes the sacred fire, and upon whose head rests the crescent moon!`,
+      Hindi: `दशानन रावण द्वारा कैलाश पर्वत पर भगवान आशुतोष महादेव की स्तुति में पञ्चचामर छन्द में रचित 'शिवताण्डवस्तोत्रम्':
+
+जटाटवीगलज्जलप्रवाहपावितस्थले गलेऽवलम्ब्य लम्बितां भुजङ्गतुङ्गमालिकाम् ।
+डमड्डमड्डमड्डमन्निनादवड्डमर्वयं चकार चण्डताण्डवं तनोतु नः शिवः शिवम् ॥ १ ॥
+जटाकटाहसम्भ्रमभ्रमान्निलिम्पनिर्झरी विलोलवीचिवल्लरीविराजमानमूर्धनि ।
+धगद्धगद्धगज्ज्वलल्ललाटपट्टपावके किशोरचन्द्रशेखरे रतिः प्रतिक्षणं मम ॥ २ ॥
+धराधरेन्द्रनंदिनीविलासबन्धुबन्धुर स्फुरद्दिगन्तसन्ततिप्रमोदमानमानसे ।
+कृपाकटाक्षधोरणीनिरुद्धदुर्धरापदि क्वचिद्दिगम्बरे मनो विनोदमेतु वस्तुनि ॥ ३ ॥`,
+      Sanskrit: `जटाटवीगलज्जलप्रवाहपावितस्थले गलेऽवलम्ब्य लम्बितां भुजङ्गतुङ्गमालिकाम् ।
+डमड्डमड्डमड्डमन्निनादवड्डमर्वयं चकार चण्डताण्डवं तनोतु नः शिवः शिवम् ॥ १ ॥
+जटाकटाहसम्भ्रमभ्रमान्निलिम्पनिर्झरी विलोलवीचिवल्लरीविराजमानमूर्धनि ।
+धगद्धगद्धगज्ज्वलल्ललाटपट्टपावके किशोरचन्द्रशेखरे रतिः प्रतिक्षणं मम ॥ २ ॥`
+    }
+  },
+  {
+    id: 'aditya-hridaya-stotram-ramayana',
+    title: 'Aditya Hridaya Stotram: Sage Agastya Solar Hymn of Victory (Valmiki Ramayana)',
+    category: 'Mantras',
+    sanskritBadge: 'मन्त्र · Yuddha Kanda 105',
+    contentType: 'PDF',
+    pdfFileName: 'Aditya-Hridaya-Stotram-Complete.pdf',
+    pdfUrl: '#auto-pdf',
+    description: 'Read the complete Aditya Hridaya Stotram taught by Maharshi Agastya to Lord Sri Rama on the battlefield of Lanka in the Yuddha Kanda of Valmiki Ramayana for supreme courage, health, and victory.',
+    views: 27450,
+    likes: 9120,
+    language: 'Sanskrit',
+    author: 'Maharshi Valmiki (Spoken by Sage Agastya)',
+    isFeatured: true,
+    status: 'approved',
+    isApproved: true,
+    imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/Rama_and_Hanuman_fighting_Ravana,_an_album_painting_on_paper,_c1820.jpg?width=900',
+    tags: ['aditya-hridayam', 'surya', 'rama', 'agastya', 'ramayana', 'victory', 'pdf'],
+    body: {
+      English: `In the Yuddha Kanda (Sarga 105) of the Valmiki Ramayana, Maharshi Agastya taught Lord Sri Rama the eternal secret of the "Aditya Hridayam"—the supreme hymn invoking Surya Narayana, which removes fear, sorrow, and fatigue and guarantees victory.
+
+Key Verses & Meaning:
+"Aditya-hridayam punyam sarva-shatru-vinashanam |
+Jayavaham japen-nityam akshayyam paramam shivam || 4 ||
+Sarva-mangala-mangalyam sarva-papa-pranashanam |
+Chintashoka-prashamanam ayur-vardhanam-uttamam || 5 ||
+Rashmimantam samudyantam devasure-namaskritam |
+Pujayasva Vivasvantam Bhaskaram Bhuvaneshwaram || 6 ||"`,
+      Hindi: `वाल्मीकि रामायण के युद्धकाण्ड (सर्ग १०५) में महर्षि अगस्त्य द्वारा भगवान श्रीराम को उपदिष्ट 'आदित्यहृदय स्तोत्र':
+
+आदित्यहृदयं पुण्यं सर्वशत्रुविनाशनम् । जयावहं जपेन्नित्यमक्षय्यं परमं शिवम् ॥ ४ ॥
+सर्वमङ्गलमाङ्गल्यं सर्वपापप्रणाशनम् । चिन्ताशोकप्रशमनमायुर्वर्धनमुत्तमम् ॥ ५ ॥
+रश्मिमन्तं समुद्यन्तं देवासुरनमस्कृतम् । पूजयस्व विवस्वन्तं भास्करं भुवनेश्वरम् ॥ ६ ॥`,
+      Sanskrit: `आदित्यहृदयं पुण्यं सर्वशत्रुविनाशनम् ।
+जयावहं जपेन्नित्यमक्षय्यं परमं शिवम् ॥ ४ ॥
+सर्वमङ्गलमाङ्गल्यं सर्वपापप्रणाशनम् ।
+चिन्ताशोकप्रशमनमायुर्वर्धनमुत्तमम् ॥ ५ ॥
+रश्मिमन्तं समुद्यन्तं देवासुरनमस्कृतम् ।
+पूजयस्व विवस्वन्तं भास्करं भुवनेश्वरम् ॥ ६ ॥`
+    }
+  },
+  {
+    id: 'nirvana-shatkam-adi-shankara',
+    title: 'Nirvana Shatkam (Atma Shatkam): Chidananda Rupah Shivoham Shivoham',
+    category: 'Upanishads',
+    sanskritBadge: 'उपनिषद् · Advaita Vedanta',
+    contentType: 'PDF',
+    pdfFileName: 'Nirvana-Shatkam-Adi-Shankaracharya.pdf',
+    pdfUrl: '#auto-pdf',
+    description: 'Read all 6 immortal verses of the Nirvana Shatkam (Atma Shatkam) composed by Adi Shankaracharya: "Chidananda Rupah Shivoham Shivoham".',
+    views: 23490,
+    likes: 8120,
+    language: 'Sanskrit',
+    author: 'Jagadguru Adi Shankaracharya',
+    isFeatured: true,
+    status: 'approved',
+    isApproved: true,
+    imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/1500-1200_BCE,_Vivaha_sukta,_Rigveda_10.85.1-8,_Sanskrit,_Devanagari,_manuscript_page.jpg?width=900',
+    tags: ['nirvana-shatkam', 'shivoham', 'adi-shankaracharya', 'advaita', 'vedanta', 'pdf'],
+    body: {
+      English: `Composed by eight-year-old Adi Shankaracharya on the banks of the Narmada River upon meeting his Guru Govinda Bhagavatpada, the Nirvana Shatkam (Atma Shatkam) proclaims the non-dual nature of the Self as pure Consciousness-Bliss ("Chidananda Rupah Shivoham Shivoham").
+
+1. Mano buddhyahankara chittani naham, Na cha shrotrajihve na cha ghranashnetre |
+   Na cha vyoma bhumir na tejo na vayuh, Chidananda rupah Shivoham Shivoham || 1 ||
+2. Na cha pranasanjno na vai pancha-vayuh, Na va saptadhatur na va pancha-koshah |
+   Na vak-panipadam na chopasthapayu, Chidananda rupah Shivoham Shivoham || 2 ||
+3. Na me dvesharagau na me lobhamohau, Mado naiva me naiva matsaryabhavah |
+   Na dharmo na chartho na kamo na mokshah, Chidananda rupah Shivoham Shivoham || 3 ||
+4. Na punyam na papam na saukhyam na duhkham, Na mantro na tirtham na veda na yajnah |
+   Aham bhojanam naiva bhojyam na bhokta, Chidananda rupah Shivoham Shivoham || 4 ||
+5. Na mrityur na shanka na me jatibhedah, Pita naiva me naiva mata na janma |
+   Na bandhur na mitram gurur naiva shishyah, Chidananda rupah Shivoham Shivoham || 5 ||
+6. Aham nirvikalpo nirakara rupo, Vibhutvachcha sarvatra sarvendriyanam |
+   Na chasangato naiva muktir na meyah, Chidananda rupah Shivoham Shivoham || 6 ||`,
+      Hindi: `आदि शंकराचार्य द्वारा रचित अद्वैत वेदान्त का अमर स्तोत्र — 'निर्वाण षट्कम्' (आत्म षट्कम्):
+
+मनोबुद्ध्यहंकारचित्तानि नाहं न च श्रोत्रजिह्वे न च घ्राणनेत्रे ।
+न च व्योम भूमिर्न तेजो न वायुः चिदानन्दरूपः शिवोऽहं शिवोऽहम् ॥ १ ॥
+न च प्राणसंज्ञो न वै पञ्चवायुः न वा सप्तधातुर्न वा पञ्चकोशः ।
+न वाक्पाणिपादं न चोपस्थपायू चिदानन्दरूपः शिवोऽहं शिवोऽहम् ॥ २ ॥
+न मे द्वेषरागौ न मे लोभमोहौ मदो नैव मे नैव मात्सर्यभावः ।
+न धर्मो न चार्थो न कामो न मोक्षः चिदानन्दरूपः शिवोऽहं शिवोऽहम् ॥ ३ ॥`,
+      Sanskrit: `मनोबुद्ध्यहङ्कारचित्तानि नाहं न च श्रोत्रजिह्वे न च घ्राणनेत्रे ।
+न च व्योम भूमिर्न तेजो न वायुः चिदानन्दरूपः शिवोऽहं शिवोऽहम् ॥ १ ॥
+अहं निर्विकल्पो निराकाररूपो विभुत्वाच्च सर्वत्र सर्वेन्द्रियाणाम् ।
+न चासङ्गतं नैव मुक्तिर्न मेयः चिदानन्दरूपः शिवोऽहं शिवोऽहम् ॥ ६ ॥`
+    }
+  },
+  {
+    id: 'bhagavad-gita-18-chapters-summary',
+    title: 'Shrimad Bhagavad Gita: Complete Guide to All 18 Chapters (Karma, Bhakti & Jnana Yoga)',
+    category: 'Bhagavad Gita',
+    sanskritBadge: 'गीता · All 18 Adhyayas',
+    contentType: 'PDF',
+    pdfFileName: 'Shrimad-Bhagavad-Gita-All-18-Chapters-Guide.pdf',
+    pdfUrl: '#auto-pdf',
+    description: 'Comprehensive chapter-by-chapter guide to all 18 Adhyayas (700 Shlokas) of the Shrimad Bhagavad Gita, divided into Karma Shatkam (1–6), Bhakti Shatkam (7–12), and Jnana Shatkam (13–18).',
+    views: 41200,
+    likes: 14320,
+    language: 'Sanskrit',
+    author: 'Maharshi Vedavyasa (Spoken by Bhagavan Sri Krishna)',
+    isFeatured: true,
+    status: 'approved',
+    isApproved: true,
+    imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/Arjuna_and_Krishna_at_the_Kurukshetra_Mahabharata_war,_Gita.jpg?width=900',
+    tags: ['bhagavad-gita', '18-chapters', 'krishna', 'arjuna', 'karma-yoga', 'bhakti-yoga', 'jnana-yoga', 'pdf'],
+    body: {
+      English: `Comprising 700 verses across 18 chapters in the Bhishma Parva of the Mahabharata, the Shrimad Bhagavad Gita is structured into three progressive groups of six chapters each (Shatka-Trayam):
+
+I. Karma-Yoga Shatkam (Chapters 1–6):
+1. Arjuna Vishada Yoga (47v) · 2. Sankhya Yoga (72v) · 3. Karma Yoga (43v) · 4. Jnana-Karma-Sannyasa Yoga (42v) · 5. Karma-Sannyasa Yoga (29v) · 6. Dhyana / Atmasamyama Yoga (47v).
+
+II. Bhakti-Yoga Shatkam (Chapters 7–12):
+7. Jnana-Vijnana Yoga (30v) · 8. Akshara-Brahma Yoga (28v) · 9. Raja-Vidya Raja-Guhya Yoga (34v) · 10. Vibhuti Yoga (42v) · 11. Vishwarupa-Darshana Yoga (55v) · 12. Bhakti Yoga (20v).
+
+III. Jnana-Yoga Shatkam (Chapters 13–18):
+13. Kshetra-Kshetrajna Vibhaga Yoga (35v) · 14. Gunatraya-Vibhaga Yoga (27v) · 15. Purushottama Yoga (20v) · 16. Daivasura-Sampad-Vibhaga Yoga (24v) · 17. Shraddhatraya-Vibhaga Yoga (28v) · 18. Moksha-Sannyasa Yoga (78v — culminating in "Sarva-dharman parityajya mam ekam sharanam vraja").`,
+      Hindi: `महाभारत के भीष्मपर्व के अंतर्गत १८ अध्यायों और ७०० श्लोकों वाली 'श्रीमद्भगवद्गीता' को तीन षट्कों में विभाजित किया गया है:
+• प्रथम षट्क (अध्याय १-६ — कर्मयोग): अर्जुनविषादयोग, सांख्ययोग, कर्मयोग, ज्ञानकर्मसंन्यासयोग, कर्मसंन्यासयोग एवं आत्मसंयमयोग।
+• द्वितीय षट्क (अध्याय ७-१२ — भक्तियोग): ज्ञानविज्ञानयोग, अक्षरब्रह्मयोग, राजविद्याराजगुह्ययोग, विभूतियोग, विश्वरूपदर्शनयोग एवं भक्तियोग।
+• तृतीय षट्क (अध्याय १३-१८ — ज्ञानयोग): क्षेत्र-क्षेत्रज्ञविभागयोग, गुणत्रयविभागयोग, पुरुषोत्तमयोग, दैवासुरसम्पद्विभागयोग, श्रद्धात्रयविभागयोग एवं मोक्षसंन्यासयोग।`,
+      Sanskrit: `सर्वधर्मान्परित्यज्य मामेकं शरणं व्रज ।
+अहं त्वा सर्वपापेभ्यः मोक्षयिष्यामि मा शुचः ॥ १८.६६ ॥
+यत्र योगेश्वरः कृष्णो यत्र पार्थो धनुर्धरः ।
+तत्र श्रीर्विजयो भूतिर्ध्रुवा नीतिर्मतिर्मम ॥ १८.७८ ॥`
+    }
+  },
+  {
+    id: 'sundara-kanda-ramayana-hanuman',
+    title: 'Sundara Kanda (Ramayana): Hanuman Leap Across the Ocean & Blessings of Maa Sita',
+    category: 'Ramayana',
+    sanskritBadge: 'रामायण · Sundara Kanda',
+    contentType: 'PDF',
+    pdfFileName: 'Sundara-Kanda-Complete-Guide.pdf',
+    pdfUrl: '#auto-pdf',
+    description: 'Explore the auspicious Sundara Kanda of Valmiki Ramayana and Tulsidas Ramcharitmanas — Hanumanji crossing the ocean, overcoming Mainaka, Surasa, Simhika, and Lankini, and consoling Maa Sita in Ashoka Vatika.',
+    views: 31800,
+    likes: 10940,
+    language: 'Sanskrit',
+    author: 'Maharshi Valmiki & Goswami Tulsidas',
+    isFeatured: true,
+    status: 'approved',
+    isApproved: true,
+    imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/11TH_Rudra_Shiva_Hanuman.jpg?width=900',
+    tags: ['sundara-kanda', 'ramayana', 'hanuman', 'sita', 'ramcharitmanas', 'pdf'],
+    body: {
+      English: `The Sundara Kanda (Book V of the Valmiki Ramayana and fifth Sopana of Tulsidas's Ramcharitmanas) is the spiritual heart of the Ramayana—celebrating Sri Hanuman's leap of devotion across the ocean, overcoming Mainaka, Surasa, Simhika, and Lankini, meeting Vibhishana, and delivering Sri Rama's signet ring to Mother Sita in Ashoka Vatika.`,
+      Hindi: `गोस्वामी तुलसीदास कृत श्रीरामचरितमानस एवं वाल्मीकि रामायण का पंचम सोपान 'सुन्दरकाण्ड' सकल अमंगलों का नाश करने वाला है:
+• "जामवंत के बचन सुहाए। सुनि हनुमंत हृदय अति भाए॥"
+• "राम काजु कीन्हें बिनु मोहि कहाँ बिश्राम॥"
+• "प्रबिसि नगर कीजे सब काजा। हृदयँ राखि कोसलपुर राजा॥"`,
+      Sanskrit: `शान्तं शाश्वतमप्रमेयमनघं निर्वाणशान्तिप्रदं
+ब्रह्माशम्भुफणीन्द्रसेव्यमनिशं वेदान्तवेद्यं विभुम् ।
+रामाख्यं जगदीश्वरं सुरगुरुं मायामनुष्यं हरिं
+वन्देऽहं करुणाकरं रघुवरं भूपालचूडामणिम् ॥ १ ॥`
+    }
+  },
+  {
+    id: 'vishnu-sahasranama-mahabharata',
+    title: 'Sri Vishnu Sahasranama & Vidura Niti: The Immortal Wisdom of the Mahabharata',
+    category: 'Mahabharata',
+    sanskritBadge: 'महाभारत · Anushasana Parva',
+    contentType: 'PDF',
+    pdfFileName: 'Sri-Vishnu-Sahasranama-Mahabharata.pdf',
+    pdfUrl: '#auto-pdf',
+    description: 'Explore the Sri Vishnu Sahasranama Stotram taught by Bhishma Pitamaha to Yudhishthira in the Anushasana Parva of the Mahabharata, along with the ethical statecraft of Vidura Niti.',
+    views: 26840,
+    likes: 8740,
+    language: 'Sanskrit',
+    author: 'Maharshi Vedavyasa (Bhishma Pitamaha & Mahatma Vidura)',
+    isFeatured: false,
+    status: 'approved',
+    isApproved: true,
+    imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/Arjuna_BattlesWith_the_Kauravas_At_Kuruksheta_Bhagavad_Gita.jpg?width=900',
+    tags: ['vishnu-sahasranama', 'bhishma', 'vidura-niti', 'mahabharata', 'vishnu', 'pdf'],
+    body: {
+      English: `In the Anushasana Parva (Chapter 149) of the Mahabharata, Grandsire Bhishma reveals the 1,000 Sacred Names of Lord Vishnu (Sri Vishnu Sahasranama Stotram) to Yudhishthira in the presence of Bhagavan Sri Krishna:
+"Shantakaram Bhujagashayanam Padmanabham Suresham, Vishvadharam Gaganasadrisham Meghavarnam Shubhangam |
+Lakshmikantam Kamalanayanam Yogibhir-dhyanagamyam, Vande Vishnum Bhavabhayaharam Sarvalokaikanatham ||"`,
+      Hindi: `महाभारत के अनुशासन पर्व में भीष्म पितामह द्वारा धर्मराज युधिष्ठिर को उपदिष्ट 'श्री विष्णु सहस्रनाम स्तोत्र' एवं उद्योग पर्व की 'विदुर नीति':
+शान्ताकारं भुजगशयनं पद्मनाभं सुरेशं विश्वाधारं गगनसदृशं मेघवर्णं शुभाङ्गम् ।
+लक्ष्मीकान्तं कमलनयनं योगिभिर्ध्यानगम्यं वन्दे विष्णुं भवभयहरं सर्वलोकैकनाथम् ॥`,
+      Sanskrit: `विश्वं विष्णुर्वषट्कारो भूतभव्यभवत्प्रभुः ।
+भूतकृद्भूतभृद्भावो भूतात्मा भूतभावनः ॥ १ ॥
+श्रीराम राम रामेति रमे रामे मनोरमे ।
+सहस्रनाम तत्तुल्यं रामनाम वरानने ॥ २ ॥`
+    }
+  },
+  {
+    id: 'shrimad-bhagavatam-dashavatara',
+    title: 'Srimad Bhagavata Mahapurana & The 10 Avatars (Dashavatara) of Lord Vishnu',
+    category: 'Puranas',
+    sanskritBadge: 'पुराण · Bhagavata Mahapurana',
+    contentType: 'PDF',
+    pdfFileName: 'Srimad-Bhagavatam-Dashavatara-Guide.pdf',
+    pdfUrl: '#auto-pdf',
+    description: 'Explore the Srimad Bhagavata Mahapurana (Amala Purana) — its 12 Skandhas, 18,000 Shlokas, and the cosmic evolution of the Dashavatara (10 Avatars of Lord Vishnu).',
+    views: 24910,
+    likes: 8290,
+    language: 'Sanskrit',
+    author: 'Maharshi Vedavyasa & Shukadeva Goswami',
+    isFeatured: true,
+    status: 'approved',
+    isApproved: true,
+    imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/Sauti_recites_the_slokas_of_the_Mahabharata.jpg?width=900',
+    tags: ['bhagavatam', 'dashavatara', 'vishnu', 'krishna', 'puranas', 'pdf'],
+    body: {
+      English: `Revered as the ripened nectar-fruit of the wish-fulfilling tree of the Vedas ("Nigama-kalpataror galitam phalam"), the Srimad Bhagavata Mahapurana celebrates the divine pastimes of Sri Krishna and the ten principal incarnations (Dashavatara): Matsya, Kurma, Varaha, Narasimha, Vamana, Parashurama, Sri Rama, Sri Krishna, Buddha/Balarama, and Kalki.`,
+      Hindi: `वेद रूपी कल्पवृक्ष के पके हुए अमृतमय फल 'श्रीमद्भागवत महापुराण' (१२ स्कन्ध, १८,००० श्लोक) एवं भगवान विष्णु के दशावतार (मत्स्य, कूर्म, वराह, नृसिंह, वामन, परशुराम, राम, कृष्ण, बुद्ध/बलराम एवं कल्कि) का पावन दिग्दर्शन।`,
+      Sanskrit: `निगमकल्पतरोर्गलितं फलं शुकमुखादमृतद्रवसंयुतम् ।
+पिबत भागवतं रसमालयं मुहुरहो रसिका भुवि भावुकाः ॥ १ ॥`
+    }
+  },
+  {
+    id: 'om-jai-jagdish-hare-aarti',
+    title: 'Om Jai Jagdish Hare Aarti: Complete Lyrics (Hindi & English) + Meaning',
+    category: 'Bhajans',
+    sanskritBadge: 'भजन · Universal Aarti',
+    contentType: 'Video',
+    pdfUrl: '#auto-pdf',
+    videoUrl: 'https://www.youtube.com/watch?v=012oY38Blvg',
+    description: 'Read and sing the complete Om Jai Jagdish Hare Aarti composed by Pandit Shardha Ram Phillauri — the universal prayer of Sanatan Dharma.',
+    views: 36400,
+    likes: 11890,
+    language: 'Hindi',
+    author: 'Pandit Shardha Ram Phillauri',
+    isFeatured: true,
+    status: 'approved',
+    isApproved: true,
+    imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/DEV_DEEPAVALI_VARANASI_04.jpg?width=900',
+    tags: ['om-jai-jagdish-hare', 'vishnu-aarti', 'bhajan', 'prayer', 'video', 'pdf'],
+    body: {
+      English: `Om Jai Jagdish Hare, Swami Jai Jagdish Hare | Bhakt jano ke sankat, das jano ke sankat, kshan mein door kare ||
+Jo dhyave phal pave, dukh binse man ka | Sukh sampati ghar aave, kasht mite tan ka ||
+Mat-Pita tum mere, sharan gahoon kiski | Tum bin aur na dooja, aas karoon jiski ||
+Tum Puran Parmatma, tum Antaryami | Parabrahma Parameshwara, tum sabke Swami ||`,
+      Hindi: `ॐ जय जगदीश हरे, स्वामी जय जगदीश हरे । भक्त जनों के संकट, क्षण में दूर करे ॥ १ ॥
+जो ध्यावे फल पावे, दुःख बिनसे मन का । सुख सम्पत्ति घर आवे, कष्ट मिटे तन का ॥ २ ॥
+मात-पिता तुम मेरे, शरण गहूँ किसकी । तुम बिन और न दूजा, आस करूँ जिसकी ॥ ३ ॥
+तुम पूरण परमात्मा, तुम अन्तर्यामी । पारब्रह्म परमेश्वर, तुम सबके स्वामी ॥ ४ ॥`,
+      Sanskrit: `त्वमेव माता च पिता त्वमेव त्वमेव बन्धुश्च सखा त्वमेव ।
+त्वमेव विद्या द्रविणं त्वमेव त्वमेव सर्वं मम देवदेव ॥`
+    }
+  },
+  {
+    id: 'ekadashi-mahashivaratri-navaratri-vrat',
+    title: 'Complete Guide to 24 Ekadashis, Maha Shivaratri, Chhath Puja & Rath Yatra Vrat Vidhi',
+    category: 'Festivals',
+    sanskritBadge: 'पर्व · Vrat & Panchanga Guide',
+    contentType: 'PDF',
+    pdfFileName: 'Complete-24-Ekadashi-Vrat-Festival-Guide.pdf',
+    pdfUrl: '#auto-pdf',
+    description: 'Comprehensive guide to all 24 Ekadashis of the Hindu lunar calendar (Nirjala, Devshayani, Devuthani, Vaikuntha, Mokshada), Maha Shivaratri four-prahara puja, Chhath Puja, and Puri Rath Yatra.',
+    views: 23890,
+    likes: 7980,
+    language: 'Hindi',
+    author: 'Padma Purana, Skanda Purana & Nirnaya Sindhu',
+    isFeatured: false,
+    status: 'approved',
+    isApproved: true,
+    imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/Durga-puja-8424032.jpg?width=900',
+    tags: ['ekadashi', 'mahashivaratri', 'chhath-puja', 'rath-yatra', 'navaratri', 'pdf'],
+    body: {
+      English: `Complete calendar and Vrat Vidhi of the 24 Sacred Ekadashis (Papamochani, Kamada, Varuthini, Mohini, Apara, Nirjala, Yogini, Devshayani, Kamika, Putrada, Aja, Parsva, Indira, Papankusha, Rama, Devuthani, Utpanna, Mokshada, Saphala, Vaikuntha, Shattila, Jaya, Vijaya, and Amalaki), along with Chhath Mahaparva and Maha Shivaratri Four-Prahara Puja.`,
+      Hindi: `वर्ष की समस्त २४ एकादशियों (निर्जला, देवशयनी, देवउठनी, मोक्षदा, वैकुण्ठ आदि), लोकआस्था के महापर्व छठ पूजा और महाशिवरात्रि चार प्रहर अभिषेक की सम्पूर्ण व्रत विधि एवं कथा।`,
+      Sanskrit: `एकादश्यां न भुञ्जीत पक्षयोरुभयोरपि ।
+शिवरात्रौ महापुण्ये रात्रौ जागरणं चरेत् ॥`
+    }
+  },
+  {
+    id: 'patanjali-ashtanga-yoga-sutras',
+    title: 'Maharshi Patanjali Yoga Sutras: Complete Guide to the 8 Limbs of Ashtanga Yoga',
+    category: 'Philosophy',
+    sanskritBadge: 'दर्शन · Patanjala Yoga Sutra',
+    contentType: 'PDF',
+    pdfFileName: 'Patanjali-Yoga-Sutras-Ashtanga-Yoga-Guide.pdf',
+    pdfUrl: '#auto-pdf',
+    description: 'Explore the 196 Yoga Sutras of Maharshi Patanjali and the complete 8 Limbs (Ashtanga) of Raja Yoga: Yama, Niyama, Asana, Pranayama, Pratyahara, Dharana, Dhyana, and Samadhi.',
+    views: 24310,
+    likes: 8190,
+    language: 'Sanskrit',
+    author: 'Maharshi Patanjali',
+    isFeatured: false,
+    status: 'approved',
+    isApproved: true,
+    imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/Lord_Shiva_Nataraja_at_the_British_Museum.jpg?width=900',
+    tags: ['yoga-sutras', 'patanjali', 'ashtanga-yoga', 'meditation', 'samadhi', 'philosophy', 'pdf'],
+    body: {
+      English: `Codified by Maharshi Patanjali in 196 Sutras across four Padas (Samadhi, Sadhana, Vibhuti, and Kaivalya), the Yoga Sutras define Yoga as "Yogash chitta-vritti-nirodhah" (the stilling of mental fluctuations) through the 8 limbs of Ashtanga Yoga: Yama, Niyama, Asana, Pranayama, Pratyahara, Dharana, Dhyana, and Samadhi.`,
+      Hindi: `महर्षि पतंजलि प्रणीत १९६ सूत्रों वाले योगदर्शन एवं अष्टांग योग (यम, नियम, आसन, प्राणायाम, प्रत्याहार, धारणा, ध्यान और समाधि) का सम्पूर्ण तात्त्विक विवेचन।`,
+      Sanskrit: `अथ योगानुशासनम् ॥ १.१ ॥
+योगश्चित्तवृत्तिनिरोधः ॥ १.२ ॥
+तदा द्रष्टुः स्वरूपेऽवस्थानम् ॥ १.३ ॥
+तस्य वाचकः प्रणवः । तज्जपस्तदर्थभावनम् ॥ १.२७-२८ ॥`
+    }
+  },
+  {
+    id: 'chaitanya-shikshashtakam-bhakti-sants',
+    title: 'Chaitanya Mahaprabhu Shikshashtakam & Jayadeva Gita Govinda: The Nectar of Naam Sankirtan',
+    category: 'Sant Teachings',
+    sanskritBadge: 'सन्त वाणी · Naam Sankirtan',
+    contentType: 'PDF',
+    pdfFileName: 'Chaitanya-Shikshashtakam-Naam-Sankirtan.pdf',
+    pdfUrl: '#auto-pdf',
+    description: 'Read all 8 Sanskrit verses of Sri Chaitanya Mahaprabhu Shikshashtakam (Cheto-darpana-marjanam) on the glory of Naam Jaap & Sankirtan, alongside Kavi Jayadeva Gita Govinda.',
+    views: 22190,
+    likes: 7680,
+    language: 'Sanskrit',
+    author: 'Sri Chaitanya Mahaprabhu & Mahakavi Jayadeva',
+    isFeatured: true,
+    status: 'approved',
+    isApproved: true,
+    imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/Hanuman_before_Rama.jpg?width=900',
+    tags: ['chaitanya-mahaprabhu', 'shikshashtakam', 'naam-jaap', 'hare-krishna', 'jayadeva', 'sant-vani', 'pdf'],
+    body: {
+      English: `Sri Chaitanya Mahaprabhu's eight Sanskrit verses (Sri Shikshashtakam) celebrate the supreme power of Naam Jaap and Harinama Sankirtana:
+"Cheto-darpana-marjanam bhava-maha-davagni-nirvapanam... param vijayate Sri-Krishna-Sankirtanam || 1 ||
+Trinad api sunichena taror api sahishnuna, Amanina manadena kirtaniyah sada Harih || 3 ||"`,
+      Hindi: `श्री चैतन्य महाप्रभु रचित 'श्री शिक्षाष्टकम्' — कलियुग में नाम जाप और हरिनाम संकीर्तन की महिमा:
+चेतोदर्पणमार्जनं भवमहादावाग्निनिर्वापणं... परं विजयते श्रीकृष्णसंकीर्तनम् ॥ १ ॥
+तृणादपि सुनीचेन तरोरपि सहिष्णुना । अमानिना मानदेन कीर्तनीयः सदा हरिः ॥ ३ ॥`,
+      Sanskrit: `तृणादपि सुनीचेन तरोरपि सहिष्णुना ।
+अमानिना मानदेन कीर्तनीयः सदा हरिः ॥ ३ ॥`
+    }
+  }
+];
+
+INITIAL_SACRED_ITEMS.push(...EXTRA_SEO_SACRED_ITEMS);
+
+
+
+export const ADDITIONAL_14_SEO_ITEMS = [
+  {
+    id: 'shri-durga-chalisa-complete',
+    title: 'Shri Durga Chalisa (Namo Namo Durge Sukh Karani): Complete 40 Verses with Meaning',
+    category: 'Bhajans',
+    sanskritBadge: 'भजन · Shri Durga Chalisa',
+    contentType: 'All',
+    pdfFileName: 'Shri-Durga-Chalisa-Complete-40-Verses.pdf',
+    pdfUrl: '#auto-pdf',
+    videoUrl: 'https://www.youtube.com/watch?v=012oY38Blvg',
+    description: 'Read and chant the complete 40 verses of Shri Durga Chalisa (Namo Namo Durge Sukh Karani) in Hindi and English with full devotional meaning, invoking Goddess Adi Shakti Jagadamba.',
+    views: 42150,
+    likes: 14820,
+    language: 'Hindi',
+    author: 'Shakta Devotional Tradition',
+    isFeatured: true,
+    status: 'approved',
+    isApproved: true,
+    imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/Idol_of_Goddess_Durga_(Ceremonial_Worship)_31.jpg?width=900',
+    tags: ['durga-chalisa', 'namo-namo-durge', 'navaratri', 'maa-durga', 'shakti', 'pdf', 'video'],
+    body: {
+      English: `Shri Durga Chalisa is the beloved forty-verse hymn in praise of Mother Adi Shakti Durga, recited daily and especially during Chaitra and Shardiya Navaratri for courage, protection, and family harmony.
+
+Key Stanzas (Transliteration & Meaning):
+1. Namo Namo Durge sukh karani, Namo Namo Ambe dukh harani |
+   Nirakar hai jyoti tumhari, Tihun lok phaili ujiyari || (1–2)
+   (Salutations again and again to You, O Goddess Durga, Bestower of happiness! Salutations to You, O Mother Amba, Remover of all sorrow! Your divine light is infinite and illuminates all three worlds!)
+
+2. Shashi lalat mukh maha vishala, Netra lal bhrikuti vikrala |
+   Roop Matu ko adhika suhave, Darash karat jan ati sukh pave || (3–4)
+   (Your forehead shines like the Moon, Your countenance is vast and radiant, and beholding Your auspicious form fills devotees with supreme bliss.)
+
+3. Tum sansar shakti laya kina, Palan hetu anna dhan dina |
+   Annapurna hui jag pala, Tumhi Adi Sundari Bala || (5–6)
+   (All power in the universe flows from You; as Mother Annapurna You nourish creation with food and prosperity; You are Adi Shakti and Bala Tripurasundari!)
+
+4. Pralayakal sab nashan hari, Tum Gauri Shiv Shankar pyari |
+   Shiv Yogi tumhare gun gavein, Brahma Vishnu tumhein nit dhyavein || (7–8)
+
+5. Rup Saraswati ko tum dhara, De subuddhi rishi munin ubara |
+   Dharayo roop Narasimha ko Amba, Pragat bhayin phar kar khamba |
+   Raksha kari Prahlad bachayo, Hiranyaksh ko swarga pathayo || (9–11)
+
+6. Lakshmi roop dharo jag mahin, Shree Narayan anga samahin |
+   Kshirasindhu mein karat vilasa, Dayasindhu dijey man aasa || (12–13)
+   Hingalaj mein tumhin Bhavani, Mahima amit na jat bakhani |
+   Matangi Dhumavati Mata, Bhuvaneshwari Bagala sukhdata || (14–15)
+   Shree Bhairav Tara jag tarini, Chhinnabhal bhav dukh nivarini || (16)
+
+7. Closing Phalashruti:
+   "Shumbh Nishumbh danav tum mare, Raktabija shankhan samhare |
+    Mahishasur nrip ati abhimani, जेहि (Jehi) agh bhar mahi akulani ||
+    Sab par kripa karahu जगदम्बा (Jagadamba), Namo Namo Durge Sukh Karani!"`,
+      Hindi: `माँ आदिशक्ति जगदम्बा की कृपा, सुरक्षा और सुख-समृद्धि प्रदान करने वाली 'श्री दुर्गा चालीसा' का सम्पूर्ण प्रमुख पाठ:
+
+नमो नमो दुर्गे सुख करनी । नमो नमो अम्बे दुःख हरनी ॥ १ ॥
+निराकार है ज्योति तुम्हारी । तिहूँ लोक फैली उजियारी ॥ २ ॥
+शशि ललाट मुख महाविशाला । नेत्र लाल भृकुटी विकराला ॥ ३ ॥
+रूप मातु को अधिक सुहावे । दरश करत जन अति सुख पावे ॥ ४ ॥
+तुम संसार शक्ति लय कीना । पालन हेतु अन्न धन दीना ॥ ५ ॥
+अन्नपूर्णा हुई जग पाला । तुम ही आदि सुन्दरी बाला ॥ ६ ॥
+प्रलयकाल सब नाशन हारी । तुम गौरी शिवशंकर प्यारी ॥ ७ ॥
+शिव योगी तुम्हरे गुण गावें । ब्रह्मा विष्णु तुम्हें नित ध्यावें ॥ ८ ॥
+रूप सरस्वती को तुम धारा । दे सुबुद्धि ऋषि-मुनिन उबारा ॥ ९ ॥
+धरयो रूप नरसिंह को अम्बा । परगट भईं फाड़कर खम्बा ॥ १० ॥
+रक्षा करि प्रह्लाद बचायो । हिरण्याक्ष को स्वर्ग पठायो ॥ ११ ॥
+लक्ष्मी रूप धरो जग माहीं । श्री नारायण अंग समाहीं ॥ १२ ॥
+क्षीरसिन्धु में करत विलासा । दयासिन्धु दीजै मन आसा ॥ १३ ॥
+हिंगलाज में तुम्हीं भवानी । महिमा अमित न जात बखानी ॥ १४ ॥
+मातंगी अरु धूमावति माता । भुवनेश्वरी बगला सुखदाता ॥ १५ ॥
+श्री भैरव तारा जग तारिणी । छिन्नभाल भव दुःख निवारिणी ॥ १६ ॥
+केहरि वाहन सोह भवानी । लांगुर वीर चलत अगवानी ॥ १७ ॥
+कर में खप्पर खड्ग विराजे । जाको देख काल डर भाजे ॥ १८ ॥
+सोहे अस्त्र और त्रिशूला । जाते उठत शत्रु हिय शूला ॥ १९ ॥
+नगरकोट में तुम्हीं विराजत । तिहुँलोक में डंका बाजत ॥ २० ॥
+शुम्भ निशुम्भ दानव तुम मारे । रक्तबीज शंखन संहारे ॥ २१ ॥
+महिषासुर नृप अति अभिमानी । जेहि अघ भार मही अकुलानी ॥ २२ ॥
+रूप कराल कालिका धारा । सेन सहित तुम तिहि संहारा ॥ २३ ॥
+परी गाढ़ सन्तन पर जब-जब । भई सहाय मातु तुम तब-तब ॥ २४ ॥
+अमरपुरी अरु बासव लोका । तब महिमा सब रहें अशोका ॥ २५ ॥
+ज्वाला में है ज्योति तुम्हारी । तुम्हें सदा पूजें नर-नारी ॥ २६ ॥
+प्रेम भक्ति से जो यश गावें । दुःख दारिद्र निकट नहिं आवें ॥ २७ ॥
+ध्यावे तुम्हें जो नर मन लाई । जन्म-मरण ताकौ छुटि जाई ॥ २८ ॥
+जोगी सुर मुनि कहत पुकारी । योग न हो बिन शक्ति तुम्हारी ॥ २९ ॥
+शंकर आचारज तप कीनो । काम अरु क्रोध जीति सब लीनो ॥ ३० ॥
+निशिदिन ध्यान धरो शंकर को । काहु काल नहिं सुमिरो तुमको ॥ ३१ ॥
+शक्ति रूप का मरम न पायो । शक्ति गई तब मन पछतायो ॥ ३२ ॥
+शरणागत हुई कीर्ति बखानी । जय जय जय जगदम्ब भवानी ॥ ३३ ॥
+भई प्रसन्न आदि जगदम्बा । दई शक्ति नहिं कीन विलम्बा ॥ ३४ ॥
+मोको मातु कष्ट अति घेरो । तुम बिन कौन हरै दुःख मेरो ॥ ३५ ॥
+आशा तृष्णा निपट सतावें । रिपु मुरख मोहि अति डरपावें ॥ ३६ ॥
+शत्रु नाश कीजै महारानी । सुमिरौं इकचित तुम्हें भवानी ॥ ३७ ॥
+करो कृपा हे मातु दयाला । ऋद्धि-सिद्धि दै करहु निहाला ॥ ३८ ॥
+जब लगि जिऊँ दया फल पाऊँ । तुम्हरो यश मैं सदा सुनाऊँ ॥ ३९ ॥
+श्री दुर्गा चालीसा जो कोई गावै । सब सुख भोग परमपद पावै ॥ ४० ॥`,
+      Sanskrit: `सर्वमङ्गलमाङ्गल्ये शिवे सर्वार्थसाधिके ।
+शरण्ये त्र्यम्बके गौरि नारायणि नमोऽस्तु ते ॥ १ ॥
+या देवी सर्वभूतेषु शक्तिरूपेण संस्थिता ।
+नमस्तस्यै नमस्तस्यै नमस्तस्यै नमो नमः ॥ २ ॥`
+    }
+  },
+  {
+    id: 'shri-shiv-chalisa-complete',
+    title: 'Shri Shiv Chalisa (Jai Girija Pati Din Dayala): Complete 40 Verses & Meaning',
+    category: 'Mantras',
+    sanskritBadge: 'मन्त्र · Shri Shiv Chalisa',
+    contentType: 'All',
+    pdfFileName: 'Shri-Shiv-Chalisa-Complete.pdf',
+    pdfUrl: '#auto-pdf',
+    videoUrl: 'https://www.youtube.com/watch?v=lUTHR0n6J0w',
+    description: 'Read and chant the complete Shri Shiv Chalisa (Jai Girija Pati Din Dayala) from the Shiva Purana tradition for peace, protection, and the grace of Lord Bholenath.',
+    views: 39400,
+    likes: 13640,
+    language: 'Hindi',
+    author: 'Ayodhya Das (Shiva Purana Tradition)',
+    isFeatured: true,
+    status: 'approved',
+    isApproved: true,
+    imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/Shiva_nataraja_hg.jpg?width=900',
+    tags: ['shiv-chalisa', 'bholenath', 'mahadev', 'shiva', 'shravan', 'pdf', 'video'],
+    body: {
+      English: `Shri Shiv Chalisa is the revered forty-verse devotional hymn to Lord Sadashiva (Bholenath), recited on Mondays, Pradosh Vrat, Shravan Maas, and Maha Shivaratri.
+
+Opening Doha & Key Chaupais:
+• Doha:
+  "Jai Ganesh Girija Suvan, Mangal Mul Sujan |
+   Kahat Ayodhyadas tum, Dehu Abhay Vardaan ||"
+• Chaupais:
+  "Jai Girija Pati Din Dayala, Sada karat santan pratipala |
+   Bhal chandrama sohat nike, Kanan kundal nagaphani ke ||
+   Anga gaur shir Ganga bahaye, Mundamal tan chhar lagaye |
+   Vastra khal bagambar sohe, Chhavi ko dekh nag muni mohe ||
+   Maina Matu ki hve dulari, Bam anga sohat छवि (chhavi) nyari |
+   Kar trishul sohat chhavi bhari, Karat sada shatrun kshayakari ||
+   Nandi Ganesh sohai tahan kaise, Sagar madhya kamal hain jaise |
+   Kartik Shyam aur Ganarau, Ya chhavi ko kahi jor na kau ||
+   Devan jabahi jaya pukara, Tabahi dukh Prabhu aap nivara |
+   Kiya upadrav Tarak bhari, Devan sab mili tumहिं (tumhin) juhari ||
+   Turat Shadanan aap pathayau, Lavanimesh mahin mari girayau |
+   Aap Jalandhar asur samhara, Suyash tumhar vidit sansara ||
+   Tripurasur san yuddha machai, Sabhi kripa kar linh bachai |
+   Kiya tapah Bhagirath bhari, Purab pratigya tasu पुरारी (Purari) ||"`,
+      Hindi: `भगवान आशुतोष भोलेनाथ की कृपा प्राप्त करने हेतु 'श्री शिव चालीसा' का पावन पाठ:
+
+॥ दोहा ॥
+जय गणेश गिरिजा सुवन, मंगल मूल सुजान । कहत अयोध्यादास तुम, देहु अभय वरदान ॥
+
+॥ चौपाई ॥
+जय गिरिजा पति दीन दयाला । सदा करत सन्तन प्रतिपाला ॥ १ ॥
+भाल चन्द्रमा सोहत नीके । कानन कुण्डल नागफनी के ॥ २ ॥
+अंग गौर शिर गंग बहाये । मुण्डमाल तन क्षार लगाये ॥ ३ ॥
+वस्त्र खाल बाघम्बर सोहे । छवि को देख नाग मुनि मोहे ॥ ४ ॥
+मैना मातु की हवे दुलारी । बाम अंग सोहत छवि न्यारी ॥ ५ ॥
+कर त्रिशूल सोहत छवि भारी । करत सदा शत्रुन क्षयकारी ॥ ६ ॥
+नन्दि गणेश सोहै तहँ कैसे । सागर मध्य कमल हैं जैसे ॥ ७ ॥
+कार्तिक श्याम और गणराऊ । या छवि को कहि जात न काऊ ॥ ८ ॥
+देवन जबहीं जाय पुकारा । तब ही दुख प्रभु आप निवारा ॥ ९ ॥
+किया उपद्रव तारक भारी । देवन सब मिलि तुमहिं जुहारी ॥ १० ॥
+तुरत षडानन आप पठायउ । लवनिमेष महँ मारि गिरायउ ॥ ११ ॥
+आप जलंधर असुर संहारा । सुयश तुम्हार विदित संसारा ॥ १२ ॥
+त्रिपुरासुर सन युद्ध मचाई । सबहिं कृपा कर लीन बचाई ॥ १३ ॥
+किया तपहिं भागीरथ भारी । पुरब प्रतिज्ञा तासु पुरारी ॥ १४ ॥
+दानिन महँ तुम सम कोउ नाहीं । सेवक अस्तुति करत सदाहीं ॥ १५ ॥
+वेद माहि महिमा तव गाई । अकथ अनादि भेद नहिं पाई ॥ १६ ॥`,
+      Sanskrit: `कर्पूरगौरं करुणावतारं संसारसारं भुजगेन्द्रहारम् ।
+सदा वसन्तं हृदयारविन्दे भवं भवानीसहितं नमामि ॥`
+    }
+  },
+  {
+    id: 'sri-suktam-rigveda-lakshmi',
+    title: 'Sri Suktam (Hiranyavarnam Harinim): The 16 Rigvedic Mantras of Goddess Mahalakshmi',
+    category: 'Vedas',
+    sanskritBadge: 'वेद · Rigveda Khila Sukta',
+    contentType: 'All',
+    pdfFileName: 'Sri-Suktam-Rigveda-16-Mantras.pdf',
+    pdfUrl: '#auto-pdf',
+    videoUrl: 'https://www.youtube.com/watch?v=sx8WM-IB3Y0',
+    description: 'Read the complete Sri Suktam (Hiranyavarnam Harinim Suvarnarajatasrajam) from the Rigveda Khilani — the supreme Vedic hymn invoking Goddess Sri Mahalakshmi for spiritual and material abundance.',
+    views: 31200,
+    likes: 10840,
+    language: 'Sanskrit',
+    author: 'Rishi Ananda, Kardama & Chiklita (Rigveda Khila)',
+    isFeatured: true,
+    status: 'approved',
+    isApproved: true,
+    imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/Diwali_Patrikas.jpg?width=900',
+    tags: ['sri-suktam', 'hiranyavarnam', 'rigveda', 'mahalakshmi', 'abundance', 'vedas', 'pdf', 'video'],
+    body: {
+      English: `Found in the Khilani (appendices) of the Fifth Mandala of the Rigveda, the Sri Suktam (15/16 main Richas plus Phalashruti) is the oldest and most authoritative Vedic hymn addressed to Goddess Sri (Mahalakshmi), invoking the Sacred Fire (Jataveda Agni) to bring pure auspiciousness, wisdom, nourishment, and freedom from Alakshmi (poverty, laziness, and discord).
+
+Key Rigvedic Richas & Meaning:
+1. "Om Hiranyavarnam harinim suvarnarajatasrajam |
+    Chandram hiranmayim Lakshmim Jatavedo ma avaha || 1 ||"
+   (O Omniscient Agni Jataveda! Invoke for me Goddess Lakshmi, who shines with a golden hue, who removes all sins and sorrows, who is adorned with garlands of gold and silver, and who is cooling and radiant like the full moon!)
+2. "Tam ma avaha Jatavedo Lakshmim anapagaminim |
+    Yasyam hiranyam vindeyam gam ashvam purushan aham || 2 ||"
+   (O Jataveda! Invoke for me that unfailing, ever-abiding Lakshmi, blessed by whom I shall attain spiritual and righteous wealth, cattle, vigour, and noble companions!)
+3. "Kshutpipasamalam jyeshtham Alakshmir nashayamyaham |
+    Abhutim asavriddhim cha sarvan nirnuda me grihat || 8 ||"
+   (By Her grace I banish hunger, thirst, impurity, and Alakshmi; O Mother, drive away all scarcity and stagnation from my home and heart!)`,
+      Hindi: `ऋग्वेद के खिल-सूक्त के अंतर्गत १६ ऋचाओं वाला 'श्रीसूक्तम्' भगवती महालक्ष्मी की आराधना का प्राचीनतम और सर्वोच्च वैदिक मन्त्र-स्तव है। दीपावली, शुक्रवार और नित्य पूजा में इसके पाठ से दरिद्रता और अलक्ष्मी का नाश होकर स्थायी श्री, विद्या और सौभाग्य की प्राप्ति होती है।
+
+॥ श्रीसूक्तम् (प्रमुख वैदिक ऋचाएँ एवं भावार्थ) ॥
+ॐ हिरण्यवर्णां हरिणीं सुवर्णरजतस्रजाम् । चन्द्रां हिरण्मयीं लक्ष्मीं जातवेदो म आवह ॥ १ ॥
+तां म आवह जातवेदो लक्ष्मीमनपगामिनीम् । यस्यां हिरण्यं विन्देयं गामश्वं पुरुषानहम् ॥ २ ॥
+अश्वपूर्वां रथमध्यां हस्तिनादप्रबोधिनीम् । श्रियं देवीमुपह्वये श्रीर्मा देवी जुषताम् ॥ ३ ॥
+कांसोस्मितां हिरण्यप्राकारामार्द्रां ज्वलन्तीं तृप्तां तर्पयन्तीम् । पद्मे स्थितां पद्मवर्णां तामिहोपह्वये श्रियम् ॥ ४ ॥
+चन्द्रां प्रभासां यशसा ज्वलन्तीं श्रियं लोके देवजुष्टामुदाराम् । तां पद्मिनीमीं शरणमहं प्रपद्येऽलक्ष्मीर्मे नश्यतां त्वां वृणे ॥ ५ ॥`,
+      Sanskrit: `ॐ हिरण्यवर्णां हरिणीं सुवर्णरजतस्रजाम् ।
+चन्द्रां हिरण्मयीं लक्ष्मीं जातवेदो म आवह ॥ १ ॥
+तां म आवह जातवेदो लक्ष्मीमनपगामिनीम् ।
+यस्यां हिरण्यं विन्देयं गामश्वं पुरुषानहम् ॥ २ ॥
+अश्वपूर्वां रथमध्यां हस्तिनादप्रबोधिनीम् ।
+श्रियं देवीमुपह्वये श्रीर्मा देवी जुषताम् ॥ ३ ॥`
+    }
+  },
+  {
+    id: 'isha-upanishad-complete-18-mantras',
+    title: 'Isha Upanishad (Ishavasyam Idam Sarvam): Complete 18 Mantras & Meaning',
+    category: 'Upanishads',
+    sanskritBadge: 'उपनिषद् · Shukla Yajurveda Ch. 40',
+    contentType: 'All',
+    pdfFileName: 'Isha-Upanishad-Complete-18-Mantras.pdf',
+    pdfUrl: '#auto-pdf',
+    videoUrl: 'https://www.youtube.com/watch?v=6KXOkvLS-zk',
+    description: 'Read the complete Isha Upanishad (Ishavasya Upanishad) — the 40th chapter of the Shukla Yajurveda Samhita and the first of the 10 Principal Upanishads, opening with "Purnamadah Purnamidam" and "Ishavasyam Idam Sarvam".',
+    views: 27840,
+    likes: 9420,
+    language: 'Sanskrit',
+    author: 'Shukla Yajurveda (Kanva & Madhyandina Shakha)',
+    isFeatured: true,
+    status: 'approved',
+    isApproved: true,
+    imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/Rigveda_MS2097.jpg?width=900',
+    tags: ['isha-upanishad', 'ishavasyam', 'purnamadah', 'yajurveda', 'upanishads', 'pdf', 'video'],
+    body: {
+      English: `Standing first among all Upanishads and embedded directly as the 40th chapter of the Vajasaneyi Samhita of the Shukla Yajurveda, the Isha Upanishad (18 Mantras) bridges sacred action in the world with non-dual realization of the Supreme Self.
+
+Shanti Mantra & Key Mantras:
+• Shanti Mantra:
+  "Om Purnamadah Purnamidam Purnat Purnamudachyate |
+   Purnasya Purnamadaya Purnamevavashishyate ||"
+  (That transcendent Brahman is Full/Infinite; this visible universe is also Full. From the Infinite alone does the Infinite come forth; even when the Infinite is drawn from the Infinite, the Infinite alone remains!)
+
+• Mantra 1 (The Golden Key of Renunciation in Enjoyment):
+  "Ishavasyam idam sarvam yat kincha jagatyam jagat |
+   Tena tyaktena bhunjitha ma gridhah कस्यस्विद्धनम् (kasyasvid dhanam) || 1 ||"
+  (Everything moving and unmoving in this entire cosmos is indwelt and enveloped by the Supreme Lord [Isha]. Therefore, nourish yourself through detachment and grateful sharing; covet not anyone's wealth!)
+
+• Mantras 6–7 (Unity of All Beings — Overcoming Delusion & Grief):
+  "Yastu sarvani bhutani atmanyevanupashyati |
+   Sarvabhuteshu chatmanam tato na vijugupsate || 6 ||
+   Yasmin sarvani bhutani atmaivabhud vijanatah |
+   Tatra ko mohah kah shokah ekatvam anupashyatah || 7 ||"
+  (Whoever beholds all beings within the Self, and the Self within all beings, never turns away in hatred from anyone. For the sage who perceives this oneness everywhere, what delusion or sorrow can ever remain?)
+
+• Mantra 15 (Prayer to Unveil the Golden Disc of Truth):
+  "Hiranmayena patrena satyasyapihitam mukham |
+   Tat tvam Pushann apavrinu satya-dharmaya drishtaye || 15 ||"
+  (The face of Ultimate Truth is veiled by a dazzling golden disc; O Nourishing Sun [Pushan], unveil it so that I, devoted to Truth-Dharma, may behold the Imperishable Reality!)`,
+      Hindi: `शुक्ल यजुर्वेद की वाजसनेयी संहिता का ४०वाँ अध्याय 'ईशावास्योपनिषद्' (१८ मन्त्र) दसोपनिषदों में प्रथम स्थान रखता है। महात्मा गाँधी ने इसके प्रथम मन्त्र को सम्पूर्ण हिन्दू धर्म का सार कहा था।
+
+॥ शान्तिपाठ एवं प्रमुख मन्त्र ॥
+ॐ पूर्णमदः पूर्णमिदं पूर्णात्पूर्णमुदच्यते । पूर्णस्य पूर्णमादाय पूर्णमेवावशिष्यते ॥
+
+ईशावास्यमिदँ सर्वं यत्किञ्च जगत्यां जगत् । तेन त्यक्तेन भुञ्जीथा मा गृधः कस्यस्विद्धनम् ॥ १ ॥
+भावार्थ: इस गतिशील ब्रह्माण्ड में जो कुछ भी जड़-चेतन जगत है, वह सब ईश्वर से व्याप्त है। अतः त्यागभाव (अनासक्ति) से इसका भोग और रक्षण करो; किसी के धन का लोभ मत करो।
+
+यस्तु सर्वाणि भूतान्यात्मन्येवानुपश्यति । सर्वभूतेषु चात्मानं ततो न विजुगुप्सते ॥ ६ ॥
+यस्मिन्सर्वाणि भूतान्यात्मैवाभूद्विजानतः । तत्र को मोहः कः शोक एकत्वमनुपश्यतः ॥ ७ ॥
+भावार्थ: जो साधक सम्पूर्ण प्राणियों को अपने आत्मा में ही देखता है और समस्त प्राणियों में अपनी आत्मा को देखता है, वह किसी से घृणा नहीं करता। सर्वत्र एकत्व देखने वाले उस ज्ञानी के लिए फिर कौन-सा मोह और कौन-सा शोक रह सकता है!
+
+हिरण्मयेन पात्रेण सत्यस्यापिहितं मुखम् । तत्त्वं पूषन्नपावृणु सत्यधर्माय दृष्टये ॥ १५ ॥`,
+      Sanskrit: `ॐ पूर्णमदः पूर्णमिदं पूर्णात्पूर्णमुदच्यते ।
+पूर्णस्य पूर्णमादाय पूर्णमेवावशिष्यते ॥
+
+ईशावास्यमिदँ सर्वं यत्किञ्च जगत्यां जगत् ।
+तेन त्यक्तेन भुञ्जीथा मा गृधः कस्यस्विद्धनम् ॥ १ ॥
+कुर्वन्नेवेह कर्माणि जिजीविषेच्छतँ समाः ।
+एवं त्वयि नान्यथेतोऽस्ति न कर्म लिप्यते नरे ॥ २ ॥`
+    }
+  },
+  {
+    id: 'bhagavad-gita-ch12-bhakti-yoga',
+    title: 'Bhagavad Gita Chapter 12 (Bhakti Yoga): All 20 Shlokas on the Devotee Dear to God',
+    category: 'Bhagavad Gita',
+    sanskritBadge: 'गीता · Adhyaya 12 (Bhakti Yoga)',
+    contentType: 'All',
+    pdfFileName: 'Bhagavad-Gita-Chapter-12-Bhakti-Yoga.pdf',
+    pdfUrl: '#auto-pdf',
+    videoUrl: 'https://www.youtube.com/watch?v=3WrImrl2dmI',
+    description: 'Read Chapter 12 (Bhakti Yoga) of the Shrimad Bhagavad Gita — where Bhagavan Sri Krishna reveals the ladder of devotion and the 35 divine qualities of the devotee who is supremely dear to Him ("Adveshta sarva-bhutanam").',
+    views: 33400,
+    likes: 11490,
+    language: 'Sanskrit',
+    author: 'Maharshi Vedavyasa (Spoken by Bhagavan Sri Krishna)',
+    isFeatured: true,
+    status: 'approved',
+    isApproved: true,
+    imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/Bhagvad_Gita.jpg?width=900',
+    tags: ['bhakti-yoga', 'bhagavad-gita-chapter-12', 'adveshta-sarva-bhutanam', 'krishna', 'pdf', 'video'],
+    body: {
+      English: `In the Twelfth Chapter of the Bhagavad Gita (Bhakti Yoga — 20 Verses), Arjuna asks whether those who worship the personal Lord with loving devotion or those who meditate upon the unmanifest Imperishable Brahman are superior in Yoga. Bhagavan Sri Krishna answers that while both reach Him, the path of loving devotion is the most natural and swift—and in Verses 13–20 (the Amrita-Ashtakam or Eight Nectar Verses), He describes the character of the devotee who is supremely dear to Him:
+
+Key Verses (12.13–15):
+• "Adveshta sarva-bhutanam maitrah karuna eva cha |
+   Nirmamo nirahankarah sama-duhkha-sukhah kshami || 13 ||
+   Santushtah satatam yogi yatatma dridha-nishchayah |
+   Mayyarpita-mano-buddhir yo mad-bhaktah sa me priyah || 14 ||"
+  Meaning: One who bears no ill-will toward any living being, who is friendly and compassionate to all, free from possessiveness ('mine-ness') and egoism, balanced in pain and pleasure, ever-forgiving, ever-contented, self-controlled, firm in conviction, and whose mind and intellect are offered unto Me—such a devotee is exceedingly dear to Me!
+• "Yasmanno dvijate loko lokanno dvijate cha yah |
+   Harshamarsha-bhayodvegair mukto yah sa cha me priyah || 15 ||"
+  Meaning: One by whom the world is never agitated and who is never agitated by the world, freed from elation, envy, fear, and anxiety—that person is dear to Me!`,
+      Hindi: `श्रीमद्भगवद्गीता के बारहवें अध्याय ('भक्तियोग' — २० श्लोक) के अंतिम ८ श्लोकों (१२.१३–२०) को भगवान श्रीकृष्ण ने 'धर्म्यामृतम्' (धर्ममय अमृत) कहा है, जिनमें भगवान के परम प्रिय भक्त के ३५ दिव्य लक्षण बताए गए हैं:
+
+अद्वेष्टा सर्वभूतानां मैत्रः करुण एव च । निर्ममो निरहंकारः समदुःखसुखः क्षमी ॥ १३ ॥
+सन्तुष्टः सततं योगी यतात्मा दृढनिश्चयः । मय्यर्पितमनोबुद्धिर्यो मद्भक्तः स मे प्रियः ॥ १४ ॥
+यस्मान्नोद्विजते लोको लोकान्नोद्विजते च यः । हर्षामर्षभयोद्वेगैर्मुक्तो यः स च मे प्रियः ॥ १५ ॥
+भावार्थ: जो किसी भी प्राणी से द्वेष नहीं करता, सबका मित्र और करुणावान है, ममता और अहंकार से रहित है, सुख-दुःख में सम और क्षमाशील है, निरंतर संतुष्ट रहता है तथा जिसका मन और बुद्धि मुझमें अर्पित है—वह भक्त मुझे अत्यंत प्रिय है!`,
+      Sanskrit: `अद्वेष्टा सर्वभूतानां मैत्रः करुण एव च ।
+निर्ममो निरहङ्कारः समदुःखसुखः क्षमी ॥ १२.१३ ॥
+सन्तुष्टः सततं योगी यतात्मा दृढनिश्चयः ।
+मय्यर्पितमनोबुद्धिर्यो मद्भक्तः स मे प्रियः ॥ १२.१४ ॥
+यस्मान्नोद्विजते लोको लोकान्नोद्विजते च यः ।
+हर्षामर्षभयोद्वेगैर्मुक्तो यः स च मे प्रियः ॥ १२.१५ ॥`
+    }
+  },
+  {
+    id: 'ram-raksha-stotram-budhakoushika',
+    title: 'Sri Rama Raksha Stotram: Rishi Budhakoushika Armour of Protection',
+    category: 'Ramayana',
+    sanskritBadge: 'रामायण · Rama Raksha Stotram',
+    contentType: 'All',
+    pdfFileName: 'Sri-Rama-Raksha-Stotram-Complete.pdf',
+    pdfUrl: '#auto-pdf',
+    videoUrl: 'https://www.youtube.com/watch?v=3WrImrl2dmI',
+    description: 'Read the auspicious Sri Rama Raksha Stotram revealed by Lord Shiva in a dream to Sage Budhakoushika — the protective spiritual armour (Kavacha) of Lord Sri Rama.',
+    views: 29120,
+    likes: 9910,
+    language: 'Sanskrit',
+    author: 'Rishi Budhakoushika',
+    isFeatured: true,
+    status: 'approved',
+    isApproved: true,
+    imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/Rama,_Sita,_Lakshmana_and_Hanuman_in_the_forest..jpg?width=900',
+    tags: ['ram-raksha-stotram', 'rama', 'hanuman', 'kavacha', 'ramayana', 'pdf', 'video'],
+    body: {
+      English: `Revealed by Lord Sadashiva in a night vision to Maharshi Budhakoushika and written down at dawn, the Sri Rama Raksha Stotram (38 verses) serves as an impenetrable spiritual shield (Vajra-Panjara Kavacha) protecting every limb of the body and mind through the holy names of Lord Sri Rama.
+
+Key Shlokas & Meaning:
+1. "Charitam Raghunathasya shatakoti-pravistaram |
+    Ekaikam aksharam pumsam mahapataka-nashanam || 1 ||"
+   (The sacred life-chronicle of Lord Raghunatha spans a hundred crore verses; every single syllable of it destroys the greatest sins of humanity!)
+2. "Ramaya Ramabhadraya Ramachandraya Vedhase |
+    Raghunathaya Nathaya Sitayah pataye namah || 29 ||"
+3. "Manojavam marutatulyavegam jitendriyam buddhimatam varishtham |
+    Vatatmajam vanarayuthamukhyam Shriramadutam sharanam prapadye || 33 ||"
+   (I take refuge in Sri Hanuman, the messenger of Lord Rama, who is swift as the mind and the wind, master of the senses, foremost among the wise, son of Vayu, and leader of the Vanara hosts!)`,
+      Hindi: `भगवान सदाशिव द्वारा स्वप्न में महर्षि बुधकौशिक को उपदिष्ट 'श्रीरामरक्षास्तोत्रम्' अमोघ आध्यात्मिक सुरक्षा-कवच ('वज्रपंजर') है:
+
+चरितं रघुनाथस्य शतकोटिप्रविस्तरम् । एकैकमक्षरं पुंसां महापातकनाशनम् ॥ १ ॥
+रामाय रामभद्राय रामचन्द्राय वेधसे । रघुनाथाय नाथाय सीतायाः पतये नमः ॥ २९ ॥
+मनोजवं मारुततुल्यवेगं जितेन्द्रियं बुद्धिमतां वरिष्ठम् । वातात्मजं वानरयूथमुख्यं श्रीरामदूतं शरणं प्रपद्ये ॥ ३३ ॥
+रामेति रामभद्रेति रामचन्द्रेति वा स्मरन् । नरो न लिप्यते पापैर्भुक्तिं मुक्तिं च विन्दति ॥ ३८ ॥`,
+      Sanskrit: `चरितं रघुनाथस्य शतकोटिप्रविस्तरम् ।
+एकैकमक्षरं पुंसां महापातकनाशनम् ॥ १ ॥
+रामाय रामभद्राय रामचन्द्राय वेधसे ।
+रघुनाथाय नाथाय सीतायाः पतये नमः ॥ २९ ॥
+मनोजवं मारुततुल्यवेगं जितेन्द्रियं बुद्धिमतां वरिष्ठम् ।
+वातात्मजं वानरयूथमुख्यं श्रीरामदूतं शरणं प्रपद्ये ॥ ३३ ॥`
+    }
+  },
+  {
+    id: 'madhurashtakam-vallabhacharya-krishna',
+    title: 'Madhurashtakam (Adharam Madhuram) & Bhishma Stuti: The Sweetness of Sri Krishna',
+    category: 'Mahabharata',
+    sanskritBadge: 'महाभारत · Krishna Stuti',
+    contentType: 'All',
+    pdfFileName: 'Madhurashtakam-Vallabhacharya-Complete.pdf',
+    pdfUrl: '#auto-pdf',
+    videoUrl: 'https://www.youtube.com/watch?v=kCH1Ib4iy1w',
+    description: 'Read all 8 verses of Sri Vallabhacharya Madhurashtakam ("Adharam Madhuram Vadanam Madhuram... Madhuradhipater Akhalam Madhuram") celebrating the all-sweet divine form of Lord Sri Krishna.',
+    views: 34800,
+    likes: 12190,
+    language: 'Sanskrit',
+    author: 'Mahaprabhu Sri Vallabhacharya',
+    isFeatured: true,
+    status: 'approved',
+    isApproved: true,
+    imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/Arjuna_and_Krishna_at_the_Kurukshetra_Mahabharata_war,_Gita.jpg?width=900',
+    tags: ['madhurashtakam', 'adharam-madhuram', 'krishna', 'vallabhacharya', 'bhakti', 'pdf', 'video'],
+    body: {
+      English: `Composed by Mahaprabhu Sri Vallabhacharya (1479–1531 CE), founder of the Pushtimarga (Shuddhadvaita) tradition, the Madhurashtakam (8 verses) celebrates how everything associated with Bhagavan Sri Krishna—the Lord of Sweetness (Madhuradhipati)—is supremely sweet and auspicious:
+
+Complete Verses 1–3:
+1. "Adharam madhuram vadanam madhuram, Nayanam madhuram hasitam madhuram |
+    Hridayam madhuram gamanam madhuram, Madhuradhipater akhilam madhuram || 1 ||"
+   (His lips are sweet, His face is sweet, His eyes are sweet, His smile is sweet; His compassionate heart is sweet, His gait is sweet—everything about the Lord of Sweetness is altogether sweet!)
+2. "Vachanam madhuram charitam madhuram, Vasanam madhuram valitam madhuram |
+    Chalitam madhuram bhramitam madhuram, Madhuradhipater akhilam madhuram || 2 ||"
+3. "Venur madhuro renur madhurah, Panir madhurah padau madhurau |
+    Nrityam madhuram sakhyam madhuram, Madhuradhipater akhilam madhuram || 3 ||"
+   (His flute is sweet, the dust of His lotus feet is sweet, His hands and feet are sweet, His dance and friendship are sweet—everything about the Lord of Sweetness is altogether sweet!)`,
+      Hindi: `महाप्रभु श्री वल्लभाचार्य विरचित 'मधुराष्टकम्' भगवान श्रीकृष्ण के मधुर स्वरूप का अमर गान है:
+
+अधरं मधुरं वदनं मधुरं नयनं मधुरं हसितं मधुरम् ।
+हृदयं मधुरं गमनं मधुरं मधुराधिपतेरखिलं मधुरम् ॥ १ ॥
+वचनं मधुरं चरितं मधुरं वसनं मधुरं वलितं मधुरम् ।
+चलितं मधुरं भ्रमितं मधुरं मधुराधिपतेरखिलं मधुरम् ॥ २ ॥
+वेणुर्मधुरो रेणुर्मधुरः पाणिर्मधुरः पादौ मधुरौ ।
+नृत्यं मधुरं सख्यं मधुरं मधुराधिपतेरखिलं मधुरम् ॥ ३ ॥
+गीतं मधुरं पीतं मधुरं भुक्तं मधुरं सुप्तं मधुरम् ।
+रूपं मधुरं तिलकं मधुरं मधुराधिपतेरखिलं मधुरम् ॥ ४ ॥`,
+      Sanskrit: `अधरं मधुरं वदनं मधुरं नयनं मधुरं हसितं मधुरम् ।
+हृदयं मधुरं गमनं मधुरं मधुराधिपतेरखिलं मधुरम् ॥ १ ॥
+वेणुर्मधुरो रेणुर्मधुरः पाणिर्मधुरः पादौ मधुरौ ।
+नृत्यं मधुरं सख्यं मधुरं मधुराधिपतेरखिलं मधुरम् ॥ ३ ॥`
+    }
+  },
+  {
+    id: 'devi-mahatmyam-durga-saptashati-argala',
+    title: 'Devi Mahatmyam (Durga Saptashati): Argala Stotram & Ya Devi Sarvabhuteshu',
+    category: 'Puranas',
+    sanskritBadge: 'पुराण · Markandeya Purana',
+    contentType: 'All',
+    pdfFileName: 'Devi-Mahatmyam-Durga-Saptashati-Stotrams.pdf',
+    pdfUrl: '#auto-pdf',
+    videoUrl: 'https://www.youtube.com/watch?v=012oY38Blvg',
+    description: 'Explore the 700 verses of the Devi Mahatmyam (Durga Saptashati / Chandi Patha) from the Markandeya Purana — including the Argala Stotram ("Rupam Dehi Jayam Dehi Yasho Dehi Dvisho Jahi") and Tantrokta Devi Suktam ("Ya Devi Sarvabhuteshu").',
+    views: 30420,
+    likes: 10410,
+    language: 'Sanskrit',
+    author: 'Maharshi Markandeya (Markandeya Mahapurana)',
+    isFeatured: true,
+    status: 'approved',
+    isApproved: true,
+    imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/A_mythological_play_Maa_Durga.jpg?width=900',
+    tags: ['durga-saptashati', 'devi-mahatmyam', 'ya-devi-sarvabhuteshu', 'argala-stotram', 'chandi-path', 'pdf', 'video'],
+    body: {
+      English: `Embedded within Chapters 81–93 of the Markandeya Purana, the Devi Mahatmyam (also known as Sri Durga Saptashati or Chandi Patha, consisting of 700 mantras across 13 chapters and 3 Charitas: Mahakali, Mahalakshmi, and Mahasaraswati) is the central scripture of Shakta Dharma.
+
+1. Argala Stotram Prayer:
+"Jayanti Mangala Kali Bhadrakali Kapalini |
+ Durga Kshama Shiva Dhatri Swaha Swadha namo'stu te ||
+ Dehi saubhagyam arogyam dehi me paramam sukham |
+ Rupam dehi jayam dehi yasho dehi dvisho jahi ||"
+(Grant me auspiciousness, health, and supreme bliss; grant me spiritual radiance, grant me victory, grant me noble renown, and vanquish my inner enemies of lust, anger, and greed!)
+
+2. Tantrokta Devi Suktam (Chapter 5 — Aparajita Stuti):
+"Ya Devi sarvabhuteshu Shakti-rupena samsthita | Namastasyai namastasyai namastasyai namo namah ||
+ Ya Devi sarvabhuteshu Matri-rupena samsthita | Namastasyai namastasyai namastasyai namo namah ||
+ Ya Devi sarvabhuteshu Buddhi-rupena samsthita | Namastasyai namastasyai namastasyai namo namah ||
+ Ya Devi sarvabhuteshu Shanti-rupena samsthita | Namastasyai namastasyai namastasyai namo namah ||"`,
+      Hindi: `मार्कण्डेय पुराण के अंतर्गत १३ अध्यायों और ७०० मन्त्रों वाली 'श्रीदुर्गासप्तशती' (देवी माहात्म्य / चण्डी पाठ) में महाकाली, महालक्ष्मी और महासरस्वती के दिव्य चरित्रों का वर्णन है।
+
+१. अर्गला स्तोत्रम् का प्रसिद्ध प्रार्थना-मन्त्र:
+जयन्ती मङ्गला काली भद्रकाली कपालिनी । दुर्गा क्षमा शिवा धात्री स्वाहा स्वधा नमोऽस्तु ते ॥
+देहि सौभाग्यमारोग्यं देहि मे परमं सुखम् । रूपं देहि जयं देहि यशो देहि द्विषो जहि ॥
+
+२. तन्त्रोक्त देवीसूक्तम् (अध्याय ५ — अपराजिता स्तुति):
+या देवी सर्वभूतेषु चेतनेत्यभिधीयते । नमस्तस्यै नमस्तस्यै नमस्तस्यै नमो नमः ॥
+या देवी सर्वभूतेषु शक्तिरूपेण संस्थिता । नमस्तस्यै नमस्तस्यै नमस्तस्यै नमो नमः ॥
+या देवी सर्वभूतेषु मातृरूपेण संस्थिता । नमस्तस्यै नमस्तस्यै नमस्तस्यै नमो नमः ॥
+या देवी सर्वभूतेषु शान्तिरूपेण संस्थिता । नमस्तस्यै नमस्तस्यै नमस्तस्यै नमो नमः ॥`,
+      Sanskrit: `जयन्ती मङ्गला काली भद्रकाली कपालिनी ।
+दुर्गा क्षमा शिवा धात्री स्वाहा स्वधा नमोऽस्तु ते ॥ १ ॥
+देहि सौभाग्यमारोग्यं देहि मे परमं सुखम् ।
+रूपं देहि जयं देहि यशो देहि द्विषो जहि ॥ २ ॥
+या देवी सर्वभूतेषु शक्तिरूपेण संस्थिता ।
+नमस्तस्यै नमस्तस्यै नमस्तस्यै नमो नमः ॥ ३ ॥`
+    }
+  }
+];
+
+INITIAL_SACRED_ITEMS.push(...ADDITIONAL_14_SEO_ITEMS);
+
+// Ensure EVERY item in INITIAL_SACRED_ITEMS has a pdfUrl and videoUrl so 100% of scriptures support Text + Printable PDF eBook + Sacred Video!
+INITIAL_SACRED_ITEMS.forEach((it) => {
+  if (!it.pdfUrl) it.pdfUrl = '#auto-pdf';
+  if (!it.videoUrl) it.videoUrl = 'https://www.youtube.com/watch?v=sx8WM-IB3Y0';
+});
+
+
 // Attach real copyright-free Wikimedia Commons photos to all 12 Categories and 23 Sacred Items (keeping SVG artwork as fallback)
 CATEGORIES.forEach((cat) => {
   cat.fallbackBgImage = cat.bgImage;
@@ -2505,6 +3921,24 @@ export function playSacredSound(type = 'bead') {
   if (typeof window === 'undefined') return;
   const AudioCtx = window.AudioContext || window.webkitAudioContext;
   if (!AudioCtx) return;
+  if (type === 'bell') {
+    try {
+      const ctx = new AudioCtx();
+      [528, 1056, 1584, 2112].forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = i === 0 ? 'sine' : 'triangle';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        gain.gain.setValueAtTime(0.14 / (i + 1), ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 2.2);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 2.2);
+      });
+    } catch (e) {}
+    return;
+  }
   try {
     const ctx = new AudioCtx();
     if (type === 'completion') {
@@ -2575,6 +4009,9 @@ export default function App() {
   const [detailLang, setDetailLang] = useState('English');
   const [readerFontSize, setReaderFontSize] = useState('base');
   const [imageFitMode, setImageFitMode] = useState('contain-blur'); // 'contain-blur' (100% full uncropped fit) | 'cover-top' (edge-to-edge fill)
+  const [activeShlokaIndex, setActiveShlokaIndex] = useState(0);
+  const [isAartiActive, setIsAartiActive] = useState(false);
+  const [chantParticles, setChantParticles] = useState([]);
 
   // Custom Category Background Images State (allows uploading real images for any category)
   const [categoryCustomImages, setCategoryCustomImages] = useState(() => {
@@ -2589,6 +4026,20 @@ export default function App() {
   const [items, setItems] = useState(() => {
     const seedIds = new Set(INITIAL_SACRED_ITEMS.map((i) => String(i.id)));
     try {
+      const savedV6 = localStorage.getItem('sanatan_setu_items_v6');
+      if (savedV6) {
+        const parsed = JSON.parse(savedV6);
+        if (Array.isArray(parsed) && parsed.length >= INITIAL_SACRED_ITEMS.length) {
+          return parsed;
+        }
+      }
+      const savedV5 = localStorage.getItem('sanatan_setu_items_v5');
+      if (savedV5) {
+        const parsed = JSON.parse(savedV5);
+        if (Array.isArray(parsed) && parsed.length >= INITIAL_SACRED_ITEMS.length) {
+          return parsed;
+        }
+      }
       const savedV4 = localStorage.getItem('sanatan_setu_items_v4');
       if (savedV4) {
         const parsed = JSON.parse(savedV4);
@@ -2716,7 +4167,8 @@ export default function App() {
   // Persist Items, Likes, Bookmarks, and Jaap counts
   useEffect(() => {
     try {
-      localStorage.setItem('sanatan_setu_items_v4', JSON.stringify(items));
+      try { localStorage.setItem('sanatan_setu_items_v6', JSON.stringify(items)); } catch (quotaErr) {}
+      SanatanUnlimitedDB.saveItems(items);
     } catch (e) {}
   }, [items]);
 
@@ -3045,6 +4497,12 @@ export default function App() {
     setLifetimeCount((prev) => prev + 1);
     setIsTimerRunning(true);
     setPulseEffect(true);
+    const pid = Date.now() + Math.random();
+    const offset = Math.floor(Math.random() * 120) - 60;
+    setChantParticles((prev) => [...prev.slice(-8), { id: pid, offset }]);
+    setTimeout(() => {
+      setChantParticles((prev) => prev.filter((p) => p.id !== pid));
+    }, 1050);
     setTimeout(() => setPulseEffect(false), 180);
   }, [soundEnabled, showToast]);
 
@@ -3447,6 +4905,18 @@ export default function App() {
     showToast('Restored all 23 unabridged Sacred Scriptures & working images!');
   };
 
+  const handleTriggerAarti = () => {
+    playSacredSound('bell');
+    setIsAartiActive(true);
+    showToast('🪔 Sacred Digital Aarti & Temple Ghanta initiated! हरिः ॐ तत् सत्');
+    setTimeout(() => setIsAartiActive(false), 8500);
+  };
+
+  const handleRingTempleBell = () => {
+    playSacredSound('bell');
+    showToast('🔔 ॐ! Sacred Temple Ghanta rung — May peace and auspiciousness prevail.');
+  };
+
   const formatDuration = (sec) => {
     const m = Math.floor(sec / 60);
     const s = sec % 60;
@@ -3483,6 +4953,29 @@ export default function App() {
           <span>{toastMessage}</span>
         </div>
       )}
+
+      {/* Live Infinite Sacred Vedic Mantra Marquee Ribbon */}
+      <div className="bg-gradient-to-r from-[#2A0E05] via-[#7C2D12] to-[#2A0E05] text-amber-200 border-b border-amber-400/25 py-1.5 overflow-hidden text-xs font-semibold select-none">
+        <div className="animate-sacred-marquee flex items-center gap-10 whitespace-nowrap px-4">
+          {[
+            '🕉️ ॐ भूर्भुवः स्वः तत्सवितुर्वरेण्यं भर्गो देवस्य धीमहि',
+            '🪔 हरे कृष्ण हरे कृष्ण कृष्ण कृष्ण हरे हरे · हरे राम हरे राम राम राम हरे हरे',
+            '🔱 ॐ नमः शिवाय · महामृत्युंजय मंत्र: ॐ त्र्यम्बकं यजामहे सुगन्धिं पुष्टिवर्धनम्',
+            '🚩 जय श्री राम · श्री हनुमान चालीसा · जय हनुमान ज्ञान गुन सागर',
+            '🌸 सर्वमङ्गलमाङ्गल्ये शिवे सर्वार्थसाधिके शरण्ये त्र्यम्बके गौरि नारायणि नमोऽस्तु ते',
+            '☸️ धर्मो रक्षति रक्षितः · सत्यमेव जयते · वसुधैव कुटुम्बकम्',
+            '🕉️ ॐ भूर्भुवः स्वः तत्सवितुर्वरेण्यं भर्गो देवस्य धीमहि',
+            '🪔 हरे कृष्ण हरे कृष्ण कृष्ण कृष्ण हरे हरे · हरे राम हरे राम राम राम हरे हरे',
+            '🔱 ॐ नमः शिवाय · महामृत्युंजय मंत्र: ॐ त्र्यम्बकं यजामहे सुगन्धिं पुष्टिवर्धनम्',
+            '🚩 जय श्री राम · श्री हनुमान चालीसा · जय हनुमान ज्ञान गुन सागर'
+          ].map((chant, i) => (
+            <span key={i} className="inline-flex items-center gap-2 tracking-wide text-amber-200/95">
+              <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              <span>{chant}</span>
+            </span>
+          ))}
+        </div>
+      </div>
 
       {/* Top Sticky Header / Navbar */}
       <header
@@ -3638,15 +5131,66 @@ export default function App() {
                 </div>
 
                 <h1
-                  className={`text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight max-w-4xl mx-auto leading-tight ${
+                  className={`text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight max-w-4xl mx-auto leading-tight ${
                     darkMode ? 'text-amber-50' : 'text-[#2C1A12]'
                   }`}
                 >
                   Your Digital Bridge to{' '}
-                  <span className="text-[#EA580C] underline decoration-amber-400 decoration-wavy decoration-2">
+                  <span className="bg-gradient-to-r from-[#EA580C] via-amber-500 to-red-600 bg-clip-text text-transparent animate-shimmer-gold underline decoration-amber-400/70 decoration-wavy decoration-2">
                     Sanatan Dharma
                   </span>
                 </h1>
+
+                {/* Interactive Temple Experience Bar: Digital Aarti, Temple Bell & Quick 108 Jaap */}
+                <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleTriggerAarti}
+                    className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-[#EA580C] via-amber-600 to-red-600 hover:from-orange-600 hover:to-amber-500 text-white text-xs sm:text-sm font-extrabold shadow-lg flex items-center gap-2 transform hover:-translate-y-0.5 active:scale-95 transition-all animate-pulse-glow"
+                  >
+                    <Flame className="w-4 h-4 fill-amber-200 text-amber-200 animate-diya-flicker" />
+                    <span>🪔 Perform Digital Aarti</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleRingTempleBell}
+                    className={`px-4 py-2.5 rounded-2xl border text-xs sm:text-sm font-bold flex items-center gap-2 transform hover:-translate-y-0.5 active:scale-95 transition-all ${
+                      darkMode
+                        ? 'bg-[#22150D] border-amber-500/35 text-amber-200 hover:bg-amber-500/20'
+                        : 'bg-white border-amber-900/20 text-[#9A3412] hover:bg-amber-100/80 shadow-sm'
+                    }`}
+                  >
+                    <Volume2 className="w-4 h-4 text-[#EA580C]" />
+                    <span>🔔 Ring Temple Ghanta</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveView('jaap')}
+                    className={`px-4 py-2.5 rounded-2xl border text-xs sm:text-sm font-bold flex items-center gap-2 transform hover:-translate-y-0.5 transition-all ${
+                      darkMode
+                        ? 'bg-amber-500/15 border-amber-400/40 text-amber-300 hover:bg-amber-500/25'
+                        : 'bg-amber-100/90 border-amber-300 text-[#9A3412] hover:bg-amber-200/80'
+                    }`}
+                  >
+                    <Sparkles className="w-4 h-4 text-[#EA580C]" />
+                    <span>📿 Launch 108 Digital Mala</span>
+                  </button>
+                </div>
+
+                {/* Animated Digital Aarti Overlay when triggered */}
+                {isAartiActive && (
+                  <div className="my-5 flex justify-center">
+                    <div className="relative w-44 h-44 flex items-center justify-center rounded-full bg-gradient-to-br from-amber-500/20 via-orange-600/20 to-red-600/20 border-2 border-amber-400/50 shadow-2xl">
+                      <span className="text-4xl font-serif text-amber-400 font-bold">ॐ</span>
+                      <div className="animate-aarti-orbit absolute flex flex-col items-center">
+                        <span className="text-3xl animate-diya-flicker">🪔</span>
+                        <span className="text-[10px] font-bold text-amber-300 bg-black/70 px-1.5 rounded">आरती</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <p
                   className={`mt-4 text-sm sm:text-lg max-w-2xl mx-auto ${
@@ -3725,6 +5269,58 @@ export default function App() {
                       Admin-Verified Authentic
                     </div>
                   </div>
+                </div>
+
+                {/* Daily Vedic Shloka of the Day Carousel (आज का पावन श्लोक) */}
+                <div
+                  className={`mt-8 max-w-4xl mx-auto rounded-3xl p-5 sm:p-6 border text-left relative overflow-hidden shadow-xl transition-all ${
+                    darkMode
+                      ? 'bg-gradient-to-r from-[#1F130C] via-[#28180E] to-[#1F130C] border-amber-500/30'
+                      : 'bg-gradient-to-r from-amber-50 via-white to-orange-50/80 border-amber-300/80'
+                  }`}
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="px-3 py-1 rounded-full bg-[#EA580C] text-white text-[11px] font-extrabold uppercase tracking-wider flex items-center gap-1">
+                        <Sparkles className="w-3 h-3" /> Shloka of the Day · आज का श्लोक
+                      </span>
+                      <span className={`text-xs font-bold ${darkMode ? 'text-amber-300' : 'text-[#9A3412]'}`}>
+                        {DAILY_SACRED_SHLOKAS[activeShlokaIndex].source}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleToggleSpeech(
+                            `${DAILY_SACRED_SHLOKAS[activeShlokaIndex].sanskrit}. ${DAILY_SACRED_SHLOKAS[activeShlokaIndex].hindi}`,
+                            'Hindi'
+                          )
+                        }
+                        className="px-3 py-1 rounded-xl bg-amber-500/20 hover:bg-[#EA580C] text-[#EA580C] hover:text-white text-xs font-bold flex items-center gap-1 transition-all"
+                      >
+                        <Volume2 className="w-3.5 h-3.5" /> Chant Audio
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setActiveShlokaIndex((prev) => (prev + 1) % DAILY_SACRED_SHLOKAS.length)
+                        }
+                        className="px-3 py-1 rounded-xl bg-amber-500/15 hover:bg-amber-500/30 text-xs font-bold transition-all"
+                      >
+                        Next Shloka →
+                      </button>
+                    </div>
+                  </div>
+                  <p className={`font-serif text-base sm:text-xl font-bold leading-relaxed ${darkMode ? 'text-amber-200' : 'text-[#7C2D12]'}`}>
+                    {DAILY_SACRED_SHLOKAS[activeShlokaIndex].sanskrit}
+                  </p>
+                  <p className={`text-xs sm:text-sm mt-2 leading-relaxed ${darkMode ? 'text-amber-100/90' : 'text-[#2C1A12]'}`}>
+                    <strong>हिन्दी:</strong> {DAILY_SACRED_SHLOKAS[activeShlokaIndex].hindi}
+                  </p>
+                  <p className={`text-xs mt-1 italic ${darkMode ? 'text-amber-300/75' : 'text-[#78523A]'}`}>
+                    <strong>Meaning:</strong> {DAILY_SACRED_SHLOKAS[activeShlokaIndex].english}
+                  </p>
                 </div>
               </div>
             </section>
@@ -4505,13 +6101,23 @@ export default function App() {
                         );
                       })}
                     </svg>
+                    {/* Floating +1 ॐ Chant Particles on Tap */}
+                    {chantParticles.map((pt) => (
+                      <span
+                        key={pt.id}
+                        style={{ left: `calc(50% + ${pt.offset}px)` }}
+                        className="animate-chant-particle pointer-events-none absolute top-16 z-20 text-lg font-black text-amber-200 drop-shadow-[0_2px_8px_rgba(234,88,12,0.9)]"
+                      >
+                        +1 ॐ
+                      </span>
+                    ))}
                     <button
                       onClick={handleIncrementJaap}
                       className={`w-60 h-60 sm:w-68 sm:h-68 rounded-full bg-gradient-to-br from-[#EA580C] via-amber-600 to-amber-800 text-white shadow-2xl flex flex-col items-center justify-center transition-all duration-150 transform active:scale-95 border-8 border-amber-300/60 relative z-10 group animate-pulse-glow ${
                         pulseEffect ? 'ring-8 ring-orange-400/60 scale-105' : ''
                       }`}
                     >
-                      <div className="text-xs font-bold uppercase tracking-widest text-amber-200 mb-1">
+<div className="text-xs font-bold uppercase tracking-widest text-amber-200 mb-1">
                         TAP BEAD TO CHANT
                       </div>
                       <div className="text-5xl sm:text-6xl font-black tracking-tight">{currentCount}</div>
@@ -5045,6 +6651,20 @@ export default function App() {
               >
                 🖼️ {imageFitMode === 'contain-blur' ? 'Full Image Fit' : 'Fill Frame'}
               </button>
+              <button
+                type="button"
+                onClick={handleTriggerAarti}
+                className="absolute top-4 left-40 z-20 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-[#EA580C] to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white text-xs font-bold shadow-lg flex items-center gap-1.5 transition-all"
+              >
+                🪔 Perform Aarti
+              </button>
+              {isAartiActive && (
+                <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-center">
+                  <div className="animate-aarti-orbit flex flex-col items-center">
+                    <span className="text-5xl drop-shadow-[0_0_20px_rgba(251,191,36,0.95)]">🪔</span>
+                  </div>
+                </div>
+              )}
               <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/95 via-black/35 to-transparent pointer-events-none" />
               <div className="absolute bottom-6 left-6 right-6 z-20 text-white">
                 <div className="flex flex-wrap items-center gap-2 mb-2">
@@ -5191,73 +6811,51 @@ export default function App() {
                 >
                   {selectedItem.description}
                 </div>
-                <button
-                  onClick={() => setEditingItem(selectedItem)}
-                  className="px-4 py-3 rounded-2xl bg-[#EA580C] hover:bg-orange-700 text-white text-xs font-bold flex items-center gap-1.5 shadow shrink-0"
-                >
-                  <Edit3 className="w-4 h-4" />
-                  <span>Edit Content / Media</span>
-                </button>
+                <div className="flex items-center gap-2 flex-wrap shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => openSacredPrintablePdf(selectedItem, detailLang)}
+                    className="px-4 py-3 rounded-2xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold flex items-center gap-1.5 shadow transition-all"
+                  >
+                    <FileText className="w-4 h-4" />
+                    <span>📄 Open / Download PDF eBook</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditingItem(selectedItem)}
+                    className="px-4 py-3 rounded-2xl bg-[#EA580C] hover:bg-orange-700 text-white text-xs font-bold flex items-center gap-1.5 shadow transition-all"
+                  >
+                    <Edit3 className="w-4 h-4" />
+                    <span>Edit Content / Media</span>
+                  </button>
+                </div>
               </div>
 
-              {/* Embedded YouTube / Video Player (when videoUrl is attached) */}
-              {selectedItem.videoUrl && (
-                <div className={`p-4 rounded-2xl border space-y-3 ${darkMode ? 'bg-[#1F140E] border-amber-500/25' : 'bg-amber-50/70 border-amber-900/15'}`}>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-extrabold uppercase tracking-wider text-[#EA580C] flex items-center gap-1.5">
-                      <Play className="w-4 h-4 fill-[#EA580C]" /> Sacred Video Presentation
-                    </span>
-                    <a
-                      href={selectedItem.videoUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs font-bold text-[#EA580C] underline"
-                    >
-                      Open Video Link ↗
-                    </a>
-                  </div>
-                  {getYouTubeEmbedUrl(selectedItem.videoUrl) ? (
-                    <div className="relative w-full overflow-hidden rounded-2xl aspect-video bg-black">
-                      <iframe
-                        src={getYouTubeEmbedUrl(selectedItem.videoUrl)}
-                        title={selectedItem.title}
-                        className="w-full h-full border-0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                      />
-                    </div>
-                  ) : (
-                    <video
-                      src={selectedItem.videoUrl}
-                      controls
-                      className="w-full rounded-2xl max-h-96 bg-black"
-                    />
-                  )}
-                </div>
-              )}
+              {/* Built-In Sacred Cinema & YouTube Video Player (Always Plays With Sound & Synchronized Verses!) */}
+              <SacredVideoPlayer item={selectedItem} darkMode={darkMode} lang={detailLang} />
 
-              {/* Embedded PDF Viewer & Download (when pdfUrl is attached) */}
+              {/* Embedded PDF Viewer & Download (supports both uploaded PDFs and built-in Sacred PDF eBooks) */}
               {selectedItem.pdfUrl && (
                 <div className={`p-4 rounded-2xl border space-y-3 ${darkMode ? 'bg-[#1F140E] border-amber-500/25' : 'bg-amber-50/70 border-amber-900/15'}`}>
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <span className="text-xs font-extrabold uppercase tracking-wider text-[#EA580C] flex items-center gap-1.5">
-                      <FileText className="w-4 h-4" /> Attached Sacred PDF Document {selectedItem.pdfFileName ? `(${selectedItem.pdfFileName})` : ''}
+                      <FileText className="w-4 h-4" /> Sacred PDF eBook Ready {selectedItem.pdfFileName ? `(${selectedItem.pdfFileName})` : ''}
                     </span>
-                    <a
-                      href={selectedItem.pdfUrl}
-                      download={selectedItem.pdfFileName || `${selectedItem.id}.pdf`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-3.5 py-1.5 rounded-xl bg-[#EA580C] text-white text-xs font-bold shadow hover:bg-orange-700"
+                    <button
+                      type="button"
+                      onClick={() => openSacredPrintablePdf(selectedItem, detailLang)}
+                      className="px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow"
                     >
-                      Download / Open PDF
-                    </a>
+                      🖨️ Open Printable PDF eBook (Sanskrit + Hindi + English)
+                    </button>
                   </div>
-                  <iframe
-                    src={selectedItem.pdfUrl}
-                    title={`${selectedItem.title} PDF`}
-                    className="w-full h-96 rounded-xl border border-amber-500/20 bg-white"
-                  />
+                  {selectedItem.pdfUrl !== '#auto-pdf' && (
+                    <iframe
+                      src={selectedItem.pdfUrl}
+                      title={`${selectedItem.title} PDF`}
+                      className="w-full h-96 rounded-xl border border-amber-500/20 bg-white"
+                    />
+                  )}
                 </div>
               )}
 
