@@ -8,7 +8,7 @@ import {
   Check, AlertCircle, FileText
 } from 'lucide-react';
 
-
+// Change your default Admin Password here (or set VITE_ADMIN_PASSWORD in Vercel Environment Variables)
 export const DEFAULT_ADMIN_PASSCODE = '';
 
 // 27 Supported Languages: Top 15 Indian Languages + Top 12 World Languages
@@ -128,6 +128,79 @@ export const SanatanSetuLogo = ({ size = 44, className = '' }) => (
     </text>
   </svg>
 );
+
+// Advanced CSS Keyframe Animations for Vedic Mandala, Floating Particles, Card Reveal & Shimmer
+export const SacredAnimationsStyle = () => (
+  <style>{`
+    @keyframes floatSlow {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-6px); }
+    }
+    @keyframes spinSlow {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 18px rgba(234, 88, 12, 0.35), 0 0 36px rgba(245, 158, 11, 0.2); }
+      50% { box-shadow: 0 0 30px rgba(234, 88, 12, 0.65), 0 0 55px rgba(245, 158, 11, 0.4); }
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-float-slow { animation: floatSlow 4.5s ease-in-out infinite; }
+    .animate-spin-slow { animation: spinSlow 38s linear infinite; }
+    .animate-pulse-glow { animation: pulseGlow 3s ease-in-out infinite; }
+    .animate-fade-in-up { animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+  `}</style>
+);
+
+// Dual-Layer Accurate Image Frame: blurred ambient backdrop + accurately fitted foreground so no deity head or temple spire is ever cropped off
+export const SacredImageFrame = ({
+  src,
+  fallbackSrc,
+  alt,
+  className = '',
+  imgClassName = '',
+  mode = 'contain-blur' // 'contain-blur' fits 100% of image inside frame with glowing blurred backdrop; 'cover-top' covers frame anchored near top
+}) => {
+  const [imgSrc, setImgSrc] = useState(src || fallbackSrc);
+  useEffect(() => {
+    setImgSrc(src || fallbackSrc);
+  }, [src, fallbackSrc]);
+
+  const handleError = () => {
+    if (fallbackSrc && imgSrc !== fallbackSrc) {
+      setImgSrc(fallbackSrc);
+    }
+  };
+
+  return (
+    <div className={`relative overflow-hidden bg-[#1C0F0A] select-none ${className}`}>
+      {/* Layer 1: Softly blurred ambient background fill so there are never empty bars */}
+      <img
+        src={imgSrc}
+        alt=""
+        aria-hidden="true"
+        onError={handleError}
+        className="absolute inset-0 w-full h-full object-cover object-center scale-125 blur-xl opacity-65 pointer-events-none"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/25 pointer-events-none" />
+      {/* Layer 2: Crisp, accurately fitted foreground image */}
+      <img
+        src={imgSrc}
+        alt={alt}
+        loading="lazy"
+        onError={handleError}
+        className={`relative z-[1] w-full h-full transition-transform duration-700 ${
+          mode === 'cover-top'
+            ? 'object-cover object-[center_20%]'
+            : 'object-contain object-center p-1 drop-shadow-[0_8px_20px_rgba(0,0,0,0.6)]'
+        } ${imgClassName}`}
+      />
+    </div>
+  );
+};
 
 // Generates rich, unique, zero-latency Vedic SVG artwork for every Category & Sacred Item
 export function createSacredArtwork({
@@ -2501,6 +2574,7 @@ export default function App() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [detailLang, setDetailLang] = useState('English');
   const [readerFontSize, setReaderFontSize] = useState('base');
+  const [imageFitMode, setImageFitMode] = useState('contain-blur'); // 'contain-blur' (100% full uncropped fit) | 'cover-top' (edge-to-edge fill)
 
   // Custom Category Background Images State (allows uploading real images for any category)
   const [categoryCustomImages, setCategoryCustomImages] = useState(() => {
@@ -2992,6 +3066,41 @@ export default function App() {
     showToast('Old Jaap cancelled! Counter & timer reset to 0 — ready for your new Naam Jaap.');
   };
 
+  // Category Selection Handler — Resets conflicting filters, opens Category Showcase, and scrolls smoothly to content
+  const handleSelectCategory = useCallback((catId, openFirstDirectly = false) => {
+    setActiveView('home');
+    setSearchQuery('');
+    setSelectedLanguageFilter('All');
+    setSelectedMediaFormat('All');
+    setShowBookmarksOnly(false);
+    setSelectedCategory(catId);
+
+    const matching = approvedItems.filter((i) => catId === 'All' || i.category === catId);
+    if (openFirstDirectly && matching.length > 0) {
+      const first = matching[0];
+      setItems((prev) =>
+        prev.map((it) => (it.id === first.id ? { ...it, views: (it.views || 0) + 1 } : it))
+      );
+      setSelectedItem({ ...first, views: (first.views || 0) + 1 });
+      setDetailLang(first.language || 'English');
+      return;
+    }
+
+    if (catId !== 'All') {
+      const catObj = CATEGORIES.find((c) => c.id === catId);
+      showToast(`Opened ${catObj ? catObj.name : catId} (${matching.length} Sacred ${matching.length === 1 ? 'Scripture' : 'Scriptures'})`);
+    }
+
+    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+      setTimeout(() => {
+        const target = document.getElementById('library-items-section');
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 60);
+    }
+  }, [approvedItems, showToast]);
+
   // Item Open, Like, Bookmark, Share, and Speech Handlers
   const handleOpenItem = (item) => {
     setItems((prev) =>
@@ -3366,6 +3475,7 @@ export default function App() {
           : 'bg-[#FFFBEB] text-[#2C1A12] selection:bg-amber-200 selection:text-amber-900'
       }`}
     >
+      <SacredAnimationsStyle />
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 bg-[#2C1A12] text-amber-100 px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 border border-amber-500/40 text-sm">
@@ -3512,7 +3622,10 @@ export default function App() {
                   : 'bg-gradient-to-b from-amber-100/80 via-[#FFFBEB] to-[#FFFBEB] border-amber-900/10'
               }`}
             >
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+              {/* Animated Sacred Geometric Mandala Background Rings */}
+              <div className="pointer-events-none absolute -top-28 left-1/2 -translate-x-1/2 w-[540px] h-[540px] rounded-full border border-amber-500/15 animate-spin-slow opacity-50" />
+              <div className="pointer-events-none absolute -top-16 left-1/2 -translate-x-1/2 w-[420px] h-[420px] rounded-full border border-dashed border-orange-500/20 animate-spin-slow opacity-60" />
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10 animate-fade-in-up">
                 <div
                   className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold mb-5 border ${
                     darkMode
@@ -3662,64 +3775,81 @@ export default function App() {
               </div>
             </section>
 
-            {/* Browse by Category Section — Every Card Has Full Background Image */}
+            {/* Browse by Category Section — Fully Clickable Cards with Accurate Image Framing & Instant Content Drawer */}
             <section id="categories" aria-labelledby="browse-categories-heading" className="py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
                 <div>
                   <span className="text-xs font-bold uppercase tracking-widest text-[#EA580C]">
-                    Sacred Prasthanas &amp; Traditions
+                    Sacred Prasthanas &amp; Traditions (Click Any Category to Open Its Scriptures)
                   </span>
                   <h2 id="browse-categories-heading" className="text-2xl sm:text-3xl font-extrabold mt-1">
                     Browse by Category
                   </h2>
                 </div>
-                {selectedCategory !== 'All' && (
+                <div className="flex items-center gap-2 flex-wrap">
                   <button
-                    onClick={() => setSelectedCategory('All')}
-                    className="self-start sm:self-auto px-4 py-2 rounded-xl bg-[#EA580C] text-white text-xs font-bold shadow hover:bg-orange-700 transition-all"
+                    onClick={() => setImageFitMode((prev) => (prev === 'contain-blur' ? 'cover-top' : 'contain-blur'))}
+                    className={`px-3.5 py-2 rounded-xl text-xs font-bold border transition-all ${
+                      darkMode ? 'bg-[#1F140E] border-amber-500/30 text-amber-200' : 'bg-white border-amber-900/15 text-[#2C1A12]'
+                    }`}
                   >
-                    Show All Categories ({approvedItems.length})
+                    🖼️ Frame Fit: {imageFitMode === 'contain-blur' ? 'Full Uncropped (Accurate)' : 'Edge-to-Edge Fill'}
                   </button>
-                )}
+                  {selectedCategory !== 'All' && (
+                    <button
+                      onClick={() => setSelectedCategory('All')}
+                      className="px-4 py-2 rounded-xl bg-[#EA580C] text-white text-xs font-bold shadow hover:bg-orange-700 transition-all"
+                    >
+                      Show All Categories ({approvedItems.length})
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
                 {CATEGORIES.map((cat) => {
-                  const count = approvedItems.filter((i) => i.category === cat.id).length;
+                  const catItems = approvedItems.filter((i) => i.category === cat.id);
+                  const count = catItems.length;
                   const isSelected = selectedCategory === cat.id;
                   return (
-                    <button
+                    <div
                       key={cat.id}
-                      onClick={() => setSelectedCategory(isSelected ? 'All' : cat.id)}
-                      className={`group relative h-48 rounded-2xl overflow-hidden text-left p-5 flex flex-col justify-between transition-all duration-300 border-2 ${
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => handleSelectCategory(cat.id, false)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          handleSelectCategory(cat.id, false);
+                        }
+                      }}
+                      className={`group cursor-pointer relative h-56 rounded-2xl overflow-hidden text-left p-5 flex flex-col justify-between transition-all duration-300 border-2 hover:-translate-y-1.5 ${
                         isSelected
-                          ? 'border-[#EA580C] ring-4 ring-[#EA580C]/30 shadow-2xl scale-[1.02]'
-                          : 'border-amber-500/20 hover:border-amber-400 shadow-md hover:shadow-xl'
+                          ? 'border-[#EA580C] ring-4 ring-[#EA580C]/40 shadow-2xl scale-[1.02]'
+                          : 'border-amber-500/25 hover:border-amber-400 shadow-md hover:shadow-2xl'
                       }`}
                     >
-                      {/* Full-bleed Real Copyright-Free Category Background Image (with SVG fallback) */}
-                      <img
+                      {/* Accurate Dual-Layer Category Background Image Frame */}
+                      <SacredImageFrame
                         src={categoryCustomImages[cat.id] || cat.bgImage}
+                        fallbackSrc={cat.fallbackBgImage || cat.bgImage}
                         alt={`${cat.name} (${cat.sanskrit}) category background`}
-                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = cat.fallbackBgImage || cat.bgImage;
-                        }}
+                        mode={imageFitMode}
+                        className="absolute inset-0 w-full h-full"
+                        imgClassName="group-hover:scale-105"
                       />
                       {/* Sacred Dark Gradient Overlay for Crisp Readability */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 to-black/30 group-hover:via-black/45 transition-all" />
+                      <div className="absolute inset-0 z-[2] bg-gradient-to-t from-black/95 via-black/55 to-black/25 group-hover:via-black/45 transition-all pointer-events-none" />
 
-                      {/* Top Row: Code Badge & Item Count */}
+                      {/* Top Row: Code Badge, Custom Photo Upload & Item Count */}
                       <div className="relative z-10 flex justify-between items-center w-full">
-                        <span className="px-2.5 py-1 rounded-lg bg-amber-500/90 text-[#1C0D06] font-black text-xs tracking-wider shadow">
+                        <span className="px-2.5 py-1 rounded-lg bg-amber-500 text-[#1C0D06] font-black text-xs tracking-wider shadow">
                           {cat.code}
                         </span>
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                           <label
-                            onClick={(e) => e.stopPropagation()}
                             title="Upload custom copyright-free background photo for this category"
-                            className="px-2 py-1 rounded-lg bg-black/65 hover:bg-[#EA580C] text-amber-200 hover:text-white border border-amber-400/30 text-[10px] font-bold cursor-pointer transition-all"
+                            className="px-2 py-1 rounded-lg bg-black/70 hover:bg-[#EA580C] text-amber-200 hover:text-white border border-amber-400/30 text-[10px] font-bold cursor-pointer transition-all"
                           >
                             📷 Photo
                             <input
@@ -3729,13 +3859,13 @@ export default function App() {
                               className="hidden"
                             />
                           </label>
-                          <span className="px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-sm text-amber-200 border border-amber-400/30 text-xs font-semibold">
+                          <span className="px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-sm text-amber-200 border border-amber-400/30 text-xs font-semibold">
                             {count} {count === 1 ? 'Item' : 'Items'}
                           </span>
                         </div>
                       </div>
 
-                      {/* Bottom Row: Sanskrit Title, Category Name & Description */}
+                      {/* Bottom Row: Sanskrit Title, Category Name, Description & Quick Action Bar */}
                       <div className="relative z-10">
                         <div className="flex items-baseline gap-2">
                           <h3 className="text-lg font-extrabold text-white group-hover:text-amber-300 transition-colors">
@@ -3745,18 +3875,93 @@ export default function App() {
                             {cat.sanskrit}
                           </span>
                         </div>
-                        <p className="text-xs text-amber-100/85 mt-1 line-clamp-2 leading-relaxed">
+                        <p className="text-xs text-amber-100/90 mt-1 line-clamp-2 leading-relaxed">
                           {cat.description}
                         </p>
+                        <div className="mt-3 pt-2 border-t border-white/15 flex items-center justify-between text-[11px] font-bold">
+                          <span className="text-amber-300 group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
+                            View {count} {count === 1 ? 'Scripture' : 'Scriptures'} <ChevronRight className="w-3.5 h-3.5" />
+                          </span>
+                          {catItems.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenItem(catItems[0]);
+                              }}
+                              className="px-2.5 py-1 rounded-lg bg-[#EA580C] hover:bg-orange-500 text-white shadow transition-all"
+                            >
+                              Read Now
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    </button>
+                    </div>
                   );
                 })}
               </div>
+
+              {/* Active Category Instant Content Drawer (Opens Immediately Below Categories When Clicked!) */}
+              {selectedCategory !== 'All' && (
+                <div
+                  id="category-content-drawer"
+                  className={`mt-8 p-6 rounded-3xl border-2 border-[#EA580C] shadow-2xl animate-fade-in-up ${
+                    darkMode ? 'bg-[#1D120B] text-amber-50' : 'bg-amber-50/90 text-[#2C1A12]'
+                  }`}
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-amber-500/25">
+                    <div>
+                      <span className="text-xs font-black uppercase tracking-widest text-[#EA580C]">
+                        Active Category Opened
+                      </span>
+                      <h3 className="text-2xl font-black mt-0.5">
+                        {selectedCategory} ({CATEGORIES.find((c) => c.id === selectedCategory)?.sanskrit}) — {filteredItems.length} {filteredItems.length === 1 ? 'Scripture' : 'Scriptures'}
+                      </h3>
+                    </div>
+                    <button
+                      onClick={() => setSelectedCategory('All')}
+                      className="self-start sm:self-auto px-4 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-[#EA580C] text-xs font-bold flex items-center gap-1.5"
+                    >
+                      <X className="w-4 h-4" /> Close Category Filter
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    {filteredItems.map((it) => (
+                      <div
+                        key={it.id}
+                        onClick={() => handleOpenItem(it)}
+                        className={`p-4 rounded-2xl border cursor-pointer flex items-center gap-4 transition-all hover:-translate-y-0.5 hover:border-[#EA580C] hover:shadow-lg ${
+                          darkMode ? 'bg-[#140C08] border-amber-500/20' : 'bg-white border-amber-900/15'
+                        }`}
+                      >
+                        <SacredImageFrame
+                          src={it.imageUrl || fallbackArtworkForItem(it)}
+                          fallbackSrc={it.fallbackImageUrl || fallbackArtworkForItem(it)}
+                          alt={it.title}
+                          mode={imageFitMode}
+                          className="w-24 h-20 rounded-xl shrink-0"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-sm sm:text-base line-clamp-1 group-hover:text-[#EA580C]">
+                            {it.title}
+                          </h4>
+                          <p className={`text-xs mt-1 line-clamp-2 ${darkMode ? 'text-amber-200/75' : 'text-[#78523A]'}`}>
+                            {it.description}
+                          </p>
+                          <span className="inline-flex items-center gap-1 text-xs font-bold text-[#EA580C] mt-1.5">
+                            Open Unabridged Scripture <ChevronRight className="w-3.5 h-3.5" />
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </section>
 
             {/* Filter & Sacred Library Items Grid */}
-            <section aria-labelledby="library-items-heading" className="py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <section id="library-items-section" aria-labelledby="library-items-heading" className="py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-24">
               <div
                 className={`p-4 sm:p-5 rounded-2xl border mb-8 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 ${
                   darkMode ? 'bg-[#18100B] border-amber-500/20' : 'bg-amber-50/70 border-amber-900/10'
@@ -3891,25 +4096,22 @@ export default function App() {
                         itemScope
                         itemType="https://schema.org/Article"
                         onClick={() => handleOpenItem(item)}
-                        className={`rounded-2xl border overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-300 cursor-pointer flex flex-col group ${
+                        className={`rounded-2xl border overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 cursor-pointer flex flex-col group animate-fade-in-up ${
                           darkMode
-                            ? 'bg-[#18100B] border-amber-500/20 hover:border-amber-400/50'
+                            ? 'bg-[#18100B] border-amber-500/20 hover:border-amber-400/60'
                             : 'bg-white border-amber-900/10 hover:border-amber-400'
                         }`}
                       >
-                        <div className="h-52 overflow-hidden relative bg-[#2C1A12]">
-                          <img
-                            itemProp="image"
+                        <div className="h-56 overflow-hidden relative bg-[#1C0F0A]">
+                          <SacredImageFrame
                             src={item.imageUrl || fallbackArtworkForItem(item)}
+                            fallbackSrc={item.fallbackImageUrl || fallbackArtworkForItem(item)}
                             alt={item.title}
-                            loading="lazy"
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.src = fallbackArtworkForItem(item);
-                            }}
+                            mode={imageFitMode}
+                            className="w-full h-full"
+                            imgClassName="group-hover:scale-105"
                           />
-                          <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
+                          <div className="absolute top-3 left-3 z-10 flex flex-wrap gap-1.5">
                             <span className="px-2.5 py-1 rounded-lg bg-[#2C1A12]/85 backdrop-blur text-amber-200 text-xs font-bold border border-amber-400/20">
                               {item.sanskritBadge || item.category}
                             </span>
@@ -3932,7 +4134,7 @@ export default function App() {
                           <button
                             onClick={(e) => toggleBookmark(item.id, e)}
                             aria-label="Bookmark sacred text"
-                            className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur transition-all ${
+                            className={`absolute top-3 right-3 z-10 p-2 rounded-full backdrop-blur transition-all ${
                               isBookmarked
                                 ? 'bg-[#EA580C] text-white'
                                 : 'bg-black/50 text-white hover:bg-black/75'
@@ -3940,7 +4142,7 @@ export default function App() {
                           >
                             <Bookmark className="w-4 h-4" />
                           </button>
-                          <div className="absolute bottom-2.5 right-3 px-2.5 py-0.5 rounded-full bg-black/70 backdrop-blur text-emerald-300 text-[10px] font-bold flex items-center gap-1 border border-emerald-400/30">
+                          <div className="absolute bottom-2.5 right-3 z-10 px-2.5 py-0.5 rounded-full bg-black/70 backdrop-blur text-emerald-300 text-[10px] font-bold flex items-center gap-1 border border-emerald-400/30">
                             <CheckCircle2 className="w-3 h-3" /> Verified
                           </div>
                         </div>
@@ -4267,12 +4469,46 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Main Tap Counter Button */}
-                  <div className="my-6 flex justify-center">
+                  {/* Main Tap Counter Button with Animated 27-Bead Rudraksha Mala SVG Ring */}
+                  <div className="my-6 flex justify-center relative items-center">
+                    <svg
+                      viewBox="0 0 340 340"
+                      className="w-80 h-80 sm:w-96 sm:h-96 absolute pointer-events-none"
+                    >
+                      <circle
+                        cx="170"
+                        cy="170"
+                        r="154"
+                        fill="none"
+                        stroke="#f59e0b"
+                        strokeOpacity="0.25"
+                        strokeWidth="2"
+                        strokeDasharray="4 6"
+                      />
+                      {Array.from({ length: 27 }).map((_, idx) => {
+                        const angle = (idx / 27) * 2 * Math.PI - Math.PI / 2;
+                        const cx = 170 + 154 * Math.cos(angle);
+                        const cy = 170 + 154 * Math.sin(angle);
+                        const activeBeadIndex = Math.floor(((currentCount % 108) / 108) * 27);
+                        const isLit = (currentCount % 108) > 0 && idx <= activeBeadIndex;
+                        const isSumeru = idx === 0;
+                        return (
+                          <circle
+                            key={idx}
+                            cx={cx}
+                            cy={cy}
+                            r={isSumeru ? 8 : 5.5}
+                            fill={isLit ? '#fbbf24' : isSumeru ? '#ea580c' : '#78350f'}
+                            stroke={isLit || isSumeru ? '#fef08a' : '#b45309'}
+                            strokeWidth={isSumeru ? '2.5' : '1.5'}
+                          />
+                        );
+                      })}
+                    </svg>
                     <button
                       onClick={handleIncrementJaap}
-                      className={`w-64 h-64 sm:w-72 sm:h-72 rounded-full bg-gradient-to-br from-[#EA580C] via-amber-600 to-amber-800 text-white shadow-2xl flex flex-col items-center justify-center transition-all duration-150 transform active:scale-95 border-8 border-amber-300/60 relative group ${
-                        pulseEffect ? 'ring-8 ring-orange-400/50 scale-105' : ''
+                      className={`w-60 h-60 sm:w-68 sm:h-68 rounded-full bg-gradient-to-br from-[#EA580C] via-amber-600 to-amber-800 text-white shadow-2xl flex flex-col items-center justify-center transition-all duration-150 transform active:scale-95 border-8 border-amber-300/60 relative z-10 group animate-pulse-glow ${
+                        pulseEffect ? 'ring-8 ring-orange-400/60 scale-105' : ''
                       }`}
                     >
                       <div className="text-xs font-bold uppercase tracking-widest text-amber-200 mb-1">
@@ -4793,20 +5029,24 @@ export default function App() {
               <X className="w-5 h-5" />
             </button>
 
-            {/* Hero Image Banner */}
-            <div className="h-64 sm:h-80 relative bg-[#2C1A12]">
-              <img
-                itemProp="image"
+            {/* Hero Image Banner — Accurately Fitted Dual-Layer Frame with Fit/Fill Switcher */}
+            <div className="h-72 sm:h-96 relative bg-[#120A06]">
+              <SacredImageFrame
                 src={selectedItem.imageUrl || fallbackArtworkForItem(selectedItem)}
+                fallbackSrc={selectedItem.fallbackImageUrl || fallbackArtworkForItem(selectedItem)}
                 alt={selectedItem.title}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = fallbackArtworkForItem(selectedItem);
-                }}
+                mode={imageFitMode}
+                className="w-full h-full"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/45 to-transparent" />
-              <div className="absolute bottom-6 left-6 right-6 text-white">
+              <button
+                type="button"
+                onClick={() => setImageFitMode((prev) => (prev === 'contain-blur' ? 'cover-top' : 'contain-blur'))}
+                className="absolute top-4 left-4 z-20 px-3 py-1.5 rounded-full bg-black/65 hover:bg-black text-amber-200 text-xs font-bold border border-amber-400/30 transition-all"
+              >
+                🖼️ {imageFitMode === 'contain-blur' ? 'Full Image Fit' : 'Fill Frame'}
+              </button>
+              <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/95 via-black/35 to-transparent pointer-events-none" />
+              <div className="absolute bottom-6 left-6 right-6 z-20 text-white">
                 <div className="flex flex-wrap items-center gap-2 mb-2">
                   <span className="px-3 py-1 rounded-full bg-[#EA580C] text-xs font-bold uppercase tracking-wider">
                     {selectedItem.sanskritBadge || selectedItem.category}
