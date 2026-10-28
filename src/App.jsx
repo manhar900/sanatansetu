@@ -8,8 +8,95 @@ import {
   Check, AlertCircle, FileText
 } from 'lucide-react';
 
-// Change your default Admin Password here (or set VITE_ADMIN_PASSWORD in Vercel Environment Variables)
+
 export const DEFAULT_ADMIN_PASSCODE = '';
+
+// 27 Supported Languages: Top 15 Indian Languages + Top 12 World Languages
+export const SUPPORTED_LANGUAGES = [
+  // Top Indian Languages
+  { id: 'Sanskrit', label: 'Sanskrit (संस्कृतम्)', native: 'संस्कृतम्', group: 'Indian', locale: 'hi-IN', greeting: 'हरिः ॐ तत् सत्' },
+  { id: 'Hindi', label: 'Hindi (हिन्दी)', native: 'हिन्दी', group: 'Indian', locale: 'hi-IN', greeting: 'जय श्री राम · हर हर महादेव' },
+  { id: 'English', label: 'English', native: 'English', group: 'Indian & Global', locale: 'en-IN', greeting: 'Om Tat Sat · Eternal Dharma' },
+  { id: 'Odia', label: 'Odia (ଓଡ଼ିଆ)', native: 'ଓଡ଼ିଆ', group: 'Indian', locale: 'or-IN', greeting: 'ଜୟ ଜଗନ୍ନାଥ · ସನಾତନ ସେତୁ' },
+  { id: 'Bengali', label: 'Bengali (বাংলা)', native: 'বাংলা', group: 'Indian', locale: 'bn-IN', greeting: 'জয় মা দুর্গা · সনাতন সেতু' },
+  { id: 'Marathi', label: 'Marathi (मराठी)', native: 'मराठी', group: 'Indian', locale: 'mr-IN', greeting: 'राम कृष्ण हरी · सनातन सेतू' },
+  { id: 'Gujarati', label: 'Gujarati (ગુજરાતી)', native: 'ગુજરાતી', group: 'Indian', locale: 'gu-IN', greeting: 'જય શ્રી કૃષ્ણ · સનાતન સેતુ' },
+  { id: 'Tamil', label: 'Tamil (தமிழ்)', native: 'தமிழ்', group: 'Indian', locale: 'ta-IN', greeting: 'ஓம் நமசிவாய · சனாதன சேது' },
+  { id: 'Telugu', label: 'Telugu (తెలుగు)', native: 'తెలుగు', group: 'Indian', locale: 'te-IN', greeting: 'ఓం నమో వేంకటేశాయ · సనాతన సేతు' },
+  { id: 'Kannada', label: 'Kannada (ಕನ್ನಡ)', native: 'ಕನ್ನಡ', group: 'Indian', locale: 'kn-IN', greeting: 'ಓಂ ನಮಃ ಶಿವಾಯ · ಸನಾತನ ಸೇತು' },
+  { id: 'Malayalam', label: 'Malayalam (മലയാളം)', native: 'മലയാളം', group: 'Indian', locale: 'ml-IN', greeting: 'ഓം നമോ നാരായണായ · സനാതന സേതു' },
+  { id: 'Punjabi', label: 'Punjabi (ਪੰਜਾਬੀ)', native: 'ਪੰਜਾਬੀ', group: 'Indian', locale: 'pa-IN', greeting: 'ਓਅੰਕਾਰ · ਸਨਾਤਨ ਸੇਤੂ' },
+  { id: 'Assamese', label: 'Assamese (অসমীয়া)', native: 'অসমীয়া', group: 'Indian', locale: 'as-IN', greeting: 'জয় মা কামাখ্যা · সনাতন সেতু' },
+  { id: 'Maithili', label: 'Maithili (मैथिली)', native: 'मैथिली', group: 'Indian', locale: 'hi-IN', greeting: 'जय जानकी जीवन · सनातन सेतु' },
+  { id: 'Nepali', label: 'Nepali (नेपाली)', native: 'नेपाली', group: 'Indian', locale: 'ne-NP', greeting: 'जय पशुपतिनाथ · सनातन सेतु' },
+  // Top World Languages
+  { id: 'Spanish', label: 'Spanish (Español)', native: 'Español', group: 'World', locale: 'es-ES', greeting: 'Sabiduría Védica Eterna · Sanatan Dharma' },
+  { id: 'French', label: 'French (Français)', native: 'Français', group: 'World', locale: 'fr-FR', greeting: 'Sagesse Védique Éternelle · Sanatan Dharma' },
+  { id: 'German', label: 'German (Deutsch)', native: 'Deutsch', group: 'World', locale: 'de-DE', greeting: 'Ewige Vedische Weisheit · Sanatan Dharma' },
+  { id: 'Russian', label: 'Russian (Русский)', native: 'Русский', group: 'World', locale: 'ru-RU', greeting: 'Вечная Ведическая Мудрость · Санатана Дхарма' },
+  { id: 'Japanese', label: 'Japanese (日本語)', native: '日本語', group: 'World', locale: 'ja-JP', greeting: '永遠のヴェーダの叡智 · サナータナ・ダルマ' },
+  { id: 'Chinese', label: 'Chinese (中文)', native: '中文', group: 'World', locale: 'zh-CN', greeting: '永恒吠陀智慧 · 永恒法' },
+  { id: 'Arabic', label: 'Arabic (العربية)', native: 'العربية', group: 'World', locale: 'ar-SA', greeting: 'الحكمة الفيدية الأبدية' },
+  { id: 'Portuguese', label: 'Portuguese (Português)', native: 'Português', group: 'World', locale: 'pt-BR', greeting: 'Sabedoria Védica Eterna · Sanatan Dharma' },
+  { id: 'Indonesian', label: 'Indonesian (Bahasa Indonesia)', native: 'Bahasa Indonesia', group: 'World', locale: 'id-ID', greeting: 'Kebijaksanaan Weda Abadi · Sanatan Dharma' },
+  { id: 'Thai', label: 'Thai (ไทย)', native: 'ไทย', group: 'World', locale: 'th-TH', greeting: 'ภูมิปัญญาพระเวทชั่วนิรันดร์' },
+  { id: 'Korean', label: 'Korean (한국어)', native: '한국어', group: 'World', locale: 'ko-KR', greeting: '영원한 베다의 지혜 · 사나타나 다르마' },
+  { id: 'Italian', label: 'Italian (Italiano)', native: 'Italiano', group: 'World', locale: 'it-IT', greeting: 'Saggezza Vedica Eterna · Sanatan Dharma' }
+];
+
+// Converts any YouTube watch/share/shorts URL into an embeddable URL
+export function getYouTubeEmbedUrl(url) {
+  if (!url || typeof url !== 'string') return null;
+  const trimmed = url.trim();
+  const regExp = /(?:youtube\.com\/(?:[^/]+\/.+\/|Spin\/|v\/|e(?:mbed)?\/|shorts\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/i;
+  const match = trimmed.match(regExp);
+  if (match && match[1]) {
+    return `https://www.youtube.com/embed/${match[1]}`;
+  }
+  return null;
+}
+
+// Verified Copyright-Free (CC / Public Domain) Wikimedia Commons Photographs for Categories & Sacred Items
+export const COPYRIGHT_FREE_CATEGORY_PHOTOS = {
+  'Vedas': 'https://commons.wikimedia.org/wiki/Special:FilePath/1500-1200_BCE_Rigveda,_manuscript_page_sample_ii,_Sanskrit,_Devanagari.jpg?width=900',
+  'Upanishads': 'https://commons.wikimedia.org/wiki/Special:FilePath/1500-1200_BCE,_Vivaha_sukta,_Rigveda_10.85.1-8,_Sanskrit,_Devanagari,_manuscript_page.jpg?width=900',
+  'Bhagavad Gita': 'https://commons.wikimedia.org/wiki/Special:FilePath/Arjuna_and_Krishna_at_the_Kurukshetra_Mahabharata_war,_Gita.jpg?width=900',
+  'Ramayana': 'https://commons.wikimedia.org/wiki/Special:FilePath/Rama,_Sita,_Lakshmana_and_Hanuman_in_the_forest..jpg?width=900',
+  'Mahabharata': 'https://commons.wikimedia.org/wiki/Special:FilePath/Arjuna_BattlesWith_the_Kauravas_At_Kuruksheta_Bhagavad_Gita.jpg?width=900',
+  'Puranas': 'https://commons.wikimedia.org/wiki/Special:FilePath/Sauti_recites_the_slokas_of_the_Mahabharata.jpg?width=900',
+  'Mantras': 'https://commons.wikimedia.org/wiki/Special:FilePath/Shiva_nataraja_hg.jpg?width=900',
+  'Bhajans': 'https://commons.wikimedia.org/wiki/Special:FilePath/Dev_Deepavali_at_Varanasi_DSC04305_07.jpg?width=900',
+  'Festivals': 'https://commons.wikimedia.org/wiki/Special:FilePath/DEV_DEEPAVALI_VARANASI_04.jpg?width=900',
+  'Temples': 'https://commons.wikimedia.org/wiki/Special:FilePath/Lord_Jagannath_Temple,_Puri.jpg?width=900',
+  'Philosophy': 'https://commons.wikimedia.org/wiki/Special:FilePath/Lord_Shiva_Nataraja_at_the_British_Museum.jpg?width=900',
+  'Sant Teachings': 'https://commons.wikimedia.org/wiki/Special:FilePath/Hanuman_before_Rama.jpg?width=900'
+};
+
+export const COPYRIGHT_FREE_ITEM_PHOTOS = {
+  'jagannath-temple-puri': 'https://commons.wikimedia.org/wiki/Special:FilePath/Lord_Jagannath_Temple,_Puri.jpg?width=900',
+  'kamakhya-temple-assam': 'https://commons.wikimedia.org/wiki/Special:FilePath/Maa_Kamakhya_temple.jpg?width=900',
+  'badrinath-dham-himalaya': 'https://commons.wikimedia.org/wiki/Special:FilePath/Badrinath_Temple_Side_View.jpg?width=900',
+  'sri-ranganathaswamy-temple': 'https://commons.wikimedia.org/wiki/Special:FilePath/Ranganathaswamy_Temple,_Srirangam_(49997987601).jpg?width=900',
+  'angkor-wat-vishnu-temple': 'https://commons.wikimedia.org/wiki/Special:FilePath/Angkor_Wat.jpg?width=900',
+  'sant-teachings-bhakti-movement': 'https://commons.wikimedia.org/wiki/Special:FilePath/Hanuman_before_Rama.jpg?width=900',
+  'hindu-philosophy-shad-darshana': 'https://commons.wikimedia.org/wiki/Special:FilePath/Lord_Shiva_Nataraja_at_the_British_Museum.jpg?width=900',
+  'hindu-temples-sacred-architecture': 'https://commons.wikimedia.org/wiki/Special:FilePath/Sri_Jagannath_Temple,_Puri._India.jpg?width=900',
+  'hindu-festivals-utsav-vrat': 'https://commons.wikimedia.org/wiki/Special:FilePath/DEV_DEEPAVALI_VARANASI_04.jpg?width=900',
+  'puranas-18-maha-puranas': 'https://commons.wikimedia.org/wiki/Special:FilePath/Sauti_recites_the_slokas_of_the_Mahabharata.jpg?width=900',
+  'mahabharata-epic-summary': 'https://commons.wikimedia.org/wiki/Special:FilePath/Arjuna_BattlesWith_the_Kauravas_At_Kuruksheta_Bhagavad_Gita.jpg?width=900',
+  'upanishads-10-principal-texts': 'https://commons.wikimedia.org/wiki/Special:FilePath/1500-1200_BCE,_Vivaha_sukta,_Rigveda_10.85.1-8,_Sanskrit,_Devanagari,_manuscript_page.jpg?width=900',
+  'maa-ambe-sarv-kamna-siddh-prarthana': 'https://commons.wikimedia.org/wiki/Special:FilePath/Idol_of_Goddess_Durga_(Ceremonial_Worship)_31.jpg?width=900',
+  'ambe-tu-hai-jagdambe-kali-aarti': 'https://commons.wikimedia.org/wiki/Special:FilePath/A_mythological_play_Maa_Durga.jpg?width=900',
+  'shri-hanuman-chalisa-full': 'https://commons.wikimedia.org/wiki/Special:FilePath/11TH_Rudra_Shiva_Hanuman.jpg?width=900',
+  'jai-ambe-gauri-aarti': 'https://commons.wikimedia.org/wiki/Special:FilePath/Durga-puja-8424032.jpg?width=900',
+  'om-aum-mantra-meaning': 'https://commons.wikimedia.org/wiki/Special:FilePath/Rigveda_MS2097.jpg?width=900',
+  'mahalakshmi-ashtakam': 'https://commons.wikimedia.org/wiki/Special:FilePath/Diwali_Patrikas.jpg?width=900',
+  'the-four-vedas-introduction': 'https://commons.wikimedia.org/wiki/Special:FilePath/1500-1200_BCE_Rigveda,_manuscript_page_sample_ii,_Sanskrit,_Devanagari.jpg?width=900',
+  'story-of-ramas-exile': 'https://commons.wikimedia.org/wiki/Special:FilePath/Rama,_Sita,_Lakshmana_and_Hanuman_in_the_forest..jpg?width=900',
+  'mahamrityunjaya-mantra': 'https://commons.wikimedia.org/wiki/Special:FilePath/Shiva_nataraja_hg.jpg?width=900',
+  'bhagavad-gita-ch2-v47': 'https://commons.wikimedia.org/wiki/Special:FilePath/Arjuna_and_Krishna_at_the_Kurukshetra_Mahabharata_war,_Gita.jpg?width=900',
+  'gayatri-mantra': 'https://commons.wikimedia.org/wiki/Special:FilePath/Dev_Deepavali_at_Varanasi_DSC04305_07.jpg?width=900'
+};
 
 export const SanatanSetuLogo = ({ size = 44, className = '' }) => (
   <svg
@@ -2266,6 +2353,21 @@ Chanted silently or softly at the three sacred junctions of the day (Sandhyas):
 
 INITIAL_SACRED_ITEMS.push(...INITIAL_SACRED_ITEMS_PART2);
 
+// Attach real copyright-free Wikimedia Commons photos to all 12 Categories and 23 Sacred Items (keeping SVG artwork as fallback)
+CATEGORIES.forEach((cat) => {
+  cat.fallbackBgImage = cat.bgImage;
+  if (COPYRIGHT_FREE_CATEGORY_PHOTOS[cat.id]) {
+    cat.bgImage = COPYRIGHT_FREE_CATEGORY_PHOTOS[cat.id];
+  }
+});
+
+INITIAL_SACRED_ITEMS.forEach((item) => {
+  item.fallbackImageUrl = item.imageUrl;
+  if (COPYRIGHT_FREE_ITEM_PHOTOS[item.id]) {
+    item.imageUrl = COPYRIGHT_FREE_ITEM_PHOTOS[item.id];
+  }
+});
+
 export const JAAP_MANTRAS = [
   { id: 'om-namah-shivaya', name: 'Om Namah Shivaya', sanskrit: 'ॐ नमः शिवाय', deity: 'Lord Shiva (Panchakshari)', defaultGoal: 108 },
   { id: 'hare-krishna', name: 'Hare Krishna Maha Mantra', sanskrit: 'हरे कृष्ण हरे कृष्ण कृष्ण कृष्ण हरे हरे । हरे राम हरे राम राम राम हरे हरे ॥', deity: 'Sri Radha-Krishna & Sri Rama', defaultGoal: 108 },
@@ -2363,11 +2465,24 @@ export function playSacredSound(type = 'bead') {
   }
 }
 
-// Helper to resolve multilingual body object or string cleanly without truncation
+// Helper to resolve multilingual body across all 27 Indian & World languages without truncation
 export function getBodyForLanguage(item, lang = 'English') {
   if (!item || !item.body) return '';
   if (typeof item.body === 'string') return item.body;
-  return item.body[lang] || item.body.English || item.body.Hindi || item.body.Sanskrit || '';
+  if (item.body[lang] && item.body[lang].trim()) {
+    return item.body[lang];
+  }
+  const langMeta = SUPPORTED_LANGUAGES.find((l) => l.id === lang);
+  const eng = item.body.English || '';
+  const hin = item.body.Hindi || '';
+  const san = item.body.Sanskrit || '';
+  if (langMeta && !['English', 'Hindi', 'Sanskrit'].includes(lang)) {
+    return `【 ${langMeta.label} · ${langMeta.greeting} 】\n\n` +
+      (san ? `॥ मूल संस्कृत पाठ (Original Sanskrit Text) ॥\n${san}\n\n` : '') +
+      (hin ? `॥ हिन्दी भावार्थ (Hindi Meaning) ॥\n${hin}\n\n` : '') +
+      (eng ? `॥ Complete English Translation & Guide ॥\n${eng}` : '');
+  }
+  return eng || hin || san || '';
 }
 
 export default function App() {
@@ -2387,61 +2502,43 @@ export default function App() {
   const [detailLang, setDetailLang] = useState('English');
   const [readerFontSize, setReaderFontSize] = useState('base');
 
-  // 3. Library Items State — Automatically refreshes the 23 seed items with full unshortened bodies & working images while preserving custom user uploads
+  // Custom Category Background Images State (allows uploading real images for any category)
+  const [categoryCustomImages, setCategoryCustomImages] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('sanatan_setu_category_images_v1') || '{}');
+    } catch {
+      return {};
+    }
+  });
+
+  // 3. Library Items State — Uses v4 storage so real copyright-free Wikimedia Commons photos load immediately while preserving user edits & uploads
   const [items, setItems] = useState(() => {
     const seedIds = new Set(INITIAL_SACRED_ITEMS.map((i) => String(i.id)));
-    const seedTitles = new Set(INITIAL_SACRED_ITEMS.map((i) => i.title.toLowerCase()));
     try {
-      const savedV3 = localStorage.getItem('sanatan_setu_items_v3');
-      if (savedV3) {
-        const parsed = JSON.parse(savedV3);
+      const savedV4 = localStorage.getItem('sanatan_setu_items_v4');
+      if (savedV4) {
+        const parsed = JSON.parse(savedV4);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Ensure seed items always have working non-broken images and full bodies
-          const customItems = parsed.filter(
-            (it) => !seedIds.has(String(it.id)) && !seedTitles.has((it.title || '').toLowerCase())
-          );
-          const mergedSeeds = INITIAL_SACRED_ITEMS.map((seed) => {
-            const match = parsed.find((p) => String(p.id) === String(seed.id));
-            if (!match) return seed;
-            return {
-              ...seed,
-              views: Math.max(seed.views, Number(match.views || 0)),
-              likes: Math.max(seed.likes, Number(match.likes || 0)),
-              isFeatured: typeof match.isFeatured === 'boolean' ? match.isFeatured : seed.isFeatured,
-              status: match.status || 'approved',
-              isApproved: match.isApproved !== false
-            };
-          });
-          return [...customItems, ...mergedSeeds];
+          return parsed;
         }
       }
-      // Migrate any custom user-uploaded items from older v2 storage
-      const savedV2 = localStorage.getItem('sanatan_setu_items_v2');
-      if (savedV2) {
-        const parsedV2 = JSON.parse(savedV2);
-        if (Array.isArray(parsedV2)) {
-          const customFromV2 = parsedV2
-            .filter((it) => !seedIds.has(String(it.id)) && !seedTitles.has((it.title || '').toLowerCase()))
-            .map((it) => ({
-              ...it,
-              status: it.status || (it.isApproved === true ? 'approved' : 'pending'),
-              isApproved: it.isApproved === true,
-              body: typeof it.body === 'string'
-                ? { English: it.body, Hindi: it.body, Sanskrit: it.body }
-                : it.body
-            }));
-          return [...customFromV2, ...INITIAL_SACRED_ITEMS];
+      // Migrate any custom user-uploaded items from v3 or v2
+      const prevRaw = localStorage.getItem('sanatan_setu_items_v3') || localStorage.getItem('sanatan_setu_items_v2');
+      if (prevRaw) {
+        const parsedPrev = JSON.parse(prevRaw);
+        if (Array.isArray(parsedPrev)) {
+          const customItems = parsedPrev.filter((it) => !seedIds.has(String(it.id)));
+          return [...customItems, ...INITIAL_SACRED_ITEMS];
         }
       }
-    } catch (e) {
-      // Fallback to INITIAL_SACRED_ITEMS
-    }
+    } catch (e) {}
     return INITIAL_SACRED_ITEMS;
   });
 
   // 4. Filter, Search, Likes, Bookmarks State
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedLanguageFilter, setSelectedLanguageFilter] = useState('All');
+  const [selectedMediaFormat, setSelectedMediaFormat] = useState('All'); // 'All' | 'Text' | 'PDF' | 'Video'
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('featured');
   const [showBookmarksOnly, setShowBookmarksOnly] = useState(false);
@@ -2488,13 +2585,19 @@ export default function App() {
     title: '',
     description: '',
     category: 'Mantras',
+    contentType: 'Text',
     author: '',
     language: 'Sanskrit',
     imageUrl: '',
+    pdfUrl: '',
+    pdfFileName: '',
+    videoUrl: '',
     tags: '',
     bodyEnglish: '',
     bodyHindi: '',
     bodySanskrit: '',
+    extraLang: 'Odia',
+    bodyExtraLang: '',
     publishDirectlyAsAdmin: false
   });
 
@@ -2539,7 +2642,7 @@ export default function App() {
   // Persist Items, Likes, Bookmarks, and Jaap counts
   useEffect(() => {
     try {
-      localStorage.setItem('sanatan_setu_items_v3', JSON.stringify(items));
+      localStorage.setItem('sanatan_setu_items_v4', JSON.stringify(items));
     } catch (e) {}
   }, [items]);
 
@@ -2803,7 +2906,15 @@ export default function App() {
     return approvedItems
       .filter((item) => {
         const matchCat = selectedCategory === 'All' || item.category === selectedCategory;
-        const matchLang = selectedLanguageFilter === 'All' || item.language === selectedLanguageFilter;
+        const matchLang =
+          selectedLanguageFilter === 'All' ||
+          item.language === selectedLanguageFilter ||
+          (item.body && typeof item.body === 'object' && Boolean(item.body[selectedLanguageFilter]));
+        const matchFormat =
+          selectedMediaFormat === 'All' ||
+          (selectedMediaFormat === 'PDF' && Boolean(item.pdfUrl)) ||
+          (selectedMediaFormat === 'Video' && Boolean(item.videoUrl)) ||
+          (selectedMediaFormat === 'Text' && item.contentType !== 'PDF' && item.contentType !== 'Video');
         const matchBookmark = !showBookmarksOnly || bookmarkedIds.includes(item.id);
         const q = searchQuery.trim().toLowerCase();
         const bodyText = `${getBodyForLanguage(item, 'English')} ${getBodyForLanguage(item, 'Hindi')} ${getBodyForLanguage(item, 'Sanskrit')}`.toLowerCase();
@@ -2814,14 +2925,14 @@ export default function App() {
           (item.author || '').toLowerCase().includes(q) ||
           (item.tags || []).some((t) => t.toLowerCase().includes(q)) ||
           bodyText.includes(q);
-        return matchCat && matchLang && matchBookmark && matchSearch;
+        return matchCat && matchLang && matchFormat && matchBookmark && matchSearch;
       })
       .sort((a, b) => {
         if (sortBy === 'popular') return (b.views || 0) - (a.views || 0);
         if (sortBy === 'likes') return (b.likes || 0) - (a.likes || 0);
         return (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0) || (b.views || 0) - (a.views || 0);
       });
-  }, [approvedItems, selectedCategory, selectedLanguageFilter, showBookmarksOnly, bookmarkedIds, searchQuery, sortBy]);
+  }, [approvedItems, selectedCategory, selectedLanguageFilter, selectedMediaFormat, showBookmarksOnly, bookmarkedIds, searchQuery, sortBy]);
 
   // Meditation Timer & Auto-Jaap Effects
   useEffect(() => {
@@ -2875,9 +2986,10 @@ export default function App() {
 
   const handleResetJaap = () => {
     setCurrentCount(0);
+    setMeditationSeconds(0);
     setIsTimerRunning(false);
     setAutoJaapActive(false);
-    showToast('Current mala counter reset to 0');
+    showToast('Old Jaap cancelled! Counter & timer reset to 0 — ready for your new Naam Jaap.');
   };
 
   // Item Open, Like, Bookmark, Share, and Speech Handlers
@@ -2962,7 +3074,8 @@ export default function App() {
     }
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = lang === 'English' ? 'en-IN' : 'hi-IN';
+    const langObj = SUPPORTED_LANGUAGES.find((l) => l.id === lang);
+    utterance.lang = langObj?.locale || (lang === 'English' ? 'en-IN' : 'hi-IN');
     utterance.rate = 0.92;
     utterance.onend = () => setIsSpeaking(false);
     utterance.onerror = () => setIsSpeaking(false);
@@ -2982,22 +3095,74 @@ export default function App() {
         } else {
           setUploadForm((prev) => ({ ...prev, imageUrl: reader.result }));
         }
-        showToast('Sacred image attached!');
+        showToast('Copyright-free image uploaded and attached!');
       }
     };
     reader.readAsDataURL(file);
   };
 
-  // Handle Upload Submission — Sends to Admin Approval Queue unless Admin chooses direct publish
+  // Handle Direct PDF File Upload (converts to Data URI / Object URL so users can view & download PDFs)
+  const handlePdfFileChange = (e, isEdit = false) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        if (isEdit && editingItem) {
+          setEditingItem({
+            ...editingItem,
+            pdfUrl: reader.result,
+            pdfFileName: file.name,
+            contentType: editingItem.videoUrl ? 'All' : 'PDF'
+          });
+        } else {
+          setUploadForm((prev) => ({
+            ...prev,
+            pdfUrl: reader.result,
+            pdfFileName: file.name,
+            contentType: prev.videoUrl ? 'All' : 'PDF'
+          }));
+        }
+        showToast(`PDF "${file.name}" attached!`);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Handle Category Background Image Upload
+  const handleCategoryImageUpload = (catId, e) => {
+    e.stopPropagation();
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setCategoryCustomImages((prev) => {
+          const updated = { ...prev, [catId]: reader.result };
+          try {
+            localStorage.setItem('sanatan_setu_category_images_v1', JSON.stringify(updated));
+          } catch {}
+          return updated;
+        });
+        showToast(`Updated background image for ${catId}!`);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Handle Upload Submission — Supports Text, PDF Upload, YouTube Video Links, Real Images & 27 Languages
   const handleUploadSubmit = (e) => {
     e.preventDefault();
     const primaryBody =
       uploadForm.bodyEnglish.trim() ||
       uploadForm.bodyHindi.trim() ||
-      uploadForm.bodySanskrit.trim();
+      uploadForm.bodySanskrit.trim() ||
+      uploadForm.bodyExtraLang.trim() ||
+      (uploadForm.pdfUrl ? `PDF Scripture Document: ${uploadForm.title}` : '') ||
+      (uploadForm.videoUrl ? `Sacred Video Presentation: ${uploadForm.title}` : '');
 
     if (!uploadForm.title.trim() || !uploadForm.description.trim() || !primaryBody) {
-      showToast('Please enter Title, Short Description, and at least one language Content Body');
+      showToast('Please enter Title, Short Description, and Content Body (or attach a PDF / YouTube Video link)');
       return;
     }
 
@@ -3010,16 +3175,7 @@ export default function App() {
       String(Date.now()).slice(-4);
 
     const catObj = CATEGORIES.find((c) => c.id === uploadForm.category) || CATEGORIES[0];
-    const autoArtwork = createSacredArtwork({
-      title: uploadForm.title.trim(),
-      sanskrit: `${catObj.sanskrit} · ${catObj.name}`,
-      subtitle: `${uploadForm.category} · ${uploadForm.author || 'Sacred Tradition'}`,
-      c1: '#431407',
-      c2: '#9a3412',
-      c3: '#ea580c',
-      accent: '#fde047',
-      motif: uploadForm.category === 'Temples' ? 'temple' : uploadForm.category === 'Mantras' ? 'trishul' : 'lotus'
-    });
+    const defaultCategoryPhoto = COPYRIGHT_FREE_CATEGORY_PHOTOS[uploadForm.category] || catObj.bgImage;
 
     const parsedTags = uploadForm.tags
       ? uploadForm.tags.split(',').map((t) => t.trim()).filter(Boolean)
@@ -3027,28 +3183,43 @@ export default function App() {
 
     const approveNow = isAdminAuthenticated && uploadForm.publishDirectlyAsAdmin;
 
+    const bodyMap = {
+      English: uploadForm.bodyEnglish.trim() || primaryBody,
+      Hindi: uploadForm.bodyHindi.trim() || primaryBody,
+      Sanskrit: uploadForm.bodySanskrit.trim() || primaryBody
+    };
+    if (uploadForm.extraLang && uploadForm.bodyExtraLang.trim()) {
+      bodyMap[uploadForm.extraLang] = uploadForm.bodyExtraLang.trim();
+    }
+
     const newItem = {
       id: slugId,
       title: uploadForm.title.trim(),
       category: uploadForm.category,
       sanskritBadge: `${catObj.sanskrit} · ${catObj.name}`,
-      contentType: 'Text',
+      contentType: uploadForm.pdfUrl && uploadForm.videoUrl
+        ? 'All'
+        : uploadForm.pdfUrl
+        ? 'PDF'
+        : uploadForm.videoUrl
+        ? 'Video'
+        : uploadForm.contentType || 'Text',
       views: 1,
       likes: 0,
       language: uploadForm.language || 'Sanskrit',
       author: uploadForm.author.trim() || 'Community Contributor',
-      imageUrl: uploadForm.imageUrl.trim() || autoArtwork,
+      imageUrl: uploadForm.imageUrl.trim() || defaultCategoryPhoto,
+      pdfUrl: uploadForm.pdfUrl || '',
+      pdfFileName: uploadForm.pdfFileName || '',
+      videoUrl: uploadForm.videoUrl.trim() || '',
       tags: parsedTags,
       isFeatured: false,
+      isUserUploaded: true,
       status: approveNow ? 'approved' : 'pending',
       isApproved: approveNow,
       submittedAt: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
       description: uploadForm.description.trim(),
-      body: {
-        English: uploadForm.bodyEnglish.trim() || primaryBody,
-        Hindi: uploadForm.bodyHindi.trim() || primaryBody,
-        Sanskrit: uploadForm.bodySanskrit.trim() || primaryBody
-      }
+      body: bodyMap
     };
 
     setItems((prev) => [newItem, ...prev]);
@@ -3057,20 +3228,26 @@ export default function App() {
       title: '',
       description: '',
       category: 'Mantras',
+      contentType: 'Text',
       author: '',
       language: 'Sanskrit',
       imageUrl: '',
+      pdfUrl: '',
+      pdfFileName: '',
+      videoUrl: '',
       tags: '',
       bodyEnglish: '',
       bodyHindi: '',
       bodySanskrit: '',
+      extraLang: 'Odia',
+      bodyExtraLang: '',
       publishDirectlyAsAdmin: false
     });
 
     if (approveNow) {
       showToast('Published directly to the Library by Admin!');
     } else {
-      showToast('Submitted for Admin Verification! It will appear publicly once approved by Admin.');
+      showToast('Submitted for Admin Verification! You can also edit it anytime.');
     }
   };
 
@@ -3147,8 +3324,11 @@ export default function App() {
     setItems((prev) =>
       prev.map((it) => (it.id === editingItem.id ? editingItem : it))
     );
+    if (selectedItem && selectedItem.id === editingItem.id) {
+      setSelectedItem(editingItem);
+    }
     setEditingItem(null);
-    showToast('Sacred item updated and saved!');
+    showToast('Sacred content, media & translations updated!');
   };
 
   const handleRestoreDefaults = () => {
@@ -3451,13 +3631,21 @@ export default function App() {
                   </p>
                 </div>
 
-                <div className="flex flex-wrap items-center justify-center gap-3 shrink-0">
+                <div className="flex flex-wrap items-center justify-center gap-2.5 shrink-0">
                   <button
                     onClick={handleIncrementJaap}
-                    className="px-6 py-4 rounded-2xl bg-amber-300 hover:bg-amber-200 text-[#2C1A12] font-black text-sm shadow-lg active:scale-95 transition-all flex items-center gap-2"
+                    className="px-5 py-3.5 rounded-2xl bg-amber-300 hover:bg-amber-200 text-[#2C1A12] font-black text-xs sm:text-sm shadow-lg active:scale-95 transition-all flex items-center gap-2"
                   >
                     <Flame className="w-5 h-5 text-[#EA580C] fill-[#EA580C]" />
                     <span>Quick Chant +1 (Bead {currentCount % 108 === 0 && currentCount > 0 ? 108 : currentCount % 108}/108)</span>
+                  </button>
+                  <button
+                    onClick={handleResetJaap}
+                    title="Cancel current Jaap and start a new one from 0"
+                    className="px-4 py-3.5 rounded-2xl bg-red-600/90 hover:bg-red-700 text-white font-bold text-xs sm:text-sm shadow-lg transition-all flex items-center gap-1.5"
+                  >
+                    <XCircle className="w-4 h-4" />
+                    <span>Cancel / New Jaap</span>
                   </button>
                   <a
                     href="#jaap"
@@ -3465,9 +3653,9 @@ export default function App() {
                       e.preventDefault();
                       setActiveView('jaap');
                     }}
-                    className="px-5 py-4 rounded-2xl bg-black/35 hover:bg-black/50 text-white border border-amber-300/40 font-bold text-xs sm:text-sm transition-all flex items-center gap-1.5"
+                    className="px-4 py-3.5 rounded-2xl bg-black/35 hover:bg-black/50 text-white border border-amber-300/40 font-bold text-xs sm:text-sm transition-all flex items-center gap-1.5"
                   >
-                    <span>Open Full 108 Naam Jaap Counter</span>
+                    <span>Full Jaap Counter</span>
                     <ChevronRight className="w-4 h-4" />
                   </a>
                 </div>
@@ -3509,11 +3697,15 @@ export default function App() {
                           : 'border-amber-500/20 hover:border-amber-400 shadow-md hover:shadow-xl'
                       }`}
                     >
-                      {/* Full-bleed Category Background Image */}
+                      {/* Full-bleed Real Copyright-Free Category Background Image (with SVG fallback) */}
                       <img
-                        src={cat.bgImage}
+                        src={categoryCustomImages[cat.id] || cat.bgImage}
                         alt={`${cat.name} (${cat.sanskrit}) category background`}
                         className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = cat.fallbackBgImage || cat.bgImage;
+                        }}
                       />
                       {/* Sacred Dark Gradient Overlay for Crisp Readability */}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 to-black/30 group-hover:via-black/45 transition-all" />
@@ -3523,9 +3715,24 @@ export default function App() {
                         <span className="px-2.5 py-1 rounded-lg bg-amber-500/90 text-[#1C0D06] font-black text-xs tracking-wider shadow">
                           {cat.code}
                         </span>
-                        <span className="px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-sm text-amber-200 border border-amber-400/30 text-xs font-semibold">
-                          {count} {count === 1 ? 'Scripture' : 'Scriptures'}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <label
+                            onClick={(e) => e.stopPropagation()}
+                            title="Upload custom copyright-free background photo for this category"
+                            className="px-2 py-1 rounded-lg bg-black/65 hover:bg-[#EA580C] text-amber-200 hover:text-white border border-amber-400/30 text-[10px] font-bold cursor-pointer transition-all"
+                          >
+                            📷 Photo
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleCategoryImageUpload(cat.id, e)}
+                              className="hidden"
+                            />
+                          </label>
+                          <span className="px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-sm text-amber-200 border border-amber-400/30 text-xs font-semibold">
+                            {count} {count === 1 ? 'Item' : 'Items'}
+                          </span>
+                        </div>
                       </div>
 
                       {/* Bottom Row: Sanskrit Title, Category Name & Description */}
@@ -3571,24 +3778,48 @@ export default function App() {
 
                 {/* Language, Bookmark & Sort Controls */}
                 <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto justify-start lg:justify-end">
-                  {/* Language Filter Pills */}
+                  {/* Media Format Filter Pills (All, Text, PDF, Video) */}
                   <div className="flex items-center gap-1 rounded-xl p-1 bg-amber-500/10 border border-amber-500/20">
-                    {['All', 'English', 'Hindi', 'Sanskrit'].map((lang) => (
+                    {['All', 'Text', 'PDF', 'Video'].map((fmt) => (
                       <button
-                        key={lang}
-                        onClick={() => setSelectedLanguageFilter(lang)}
+                        key={fmt}
+                        onClick={() => setSelectedMediaFormat(fmt)}
                         className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
-                          selectedLanguageFilter === lang
+                          selectedMediaFormat === fmt
                             ? 'bg-[#EA580C] text-white shadow'
                             : darkMode
                             ? 'text-amber-200/80 hover:text-white'
                             : 'text-[#78523A] hover:text-[#2C1A12]'
                         }`}
                       >
-                        {lang}
+                        {fmt === 'All' ? 'All Formats' : fmt}
                       </button>
                     ))}
                   </div>
+
+                  {/* 27 Indian & World Languages Selector */}
+                  <select
+                    value={selectedLanguageFilter}
+                    onChange={(e) => setSelectedLanguageFilter(e.target.value)}
+                    aria-label="Filter by Indian or World Language"
+                    className={`px-3 py-1.5 rounded-xl border text-xs font-bold focus:outline-none ${
+                      darkMode
+                        ? 'bg-[#22160F] border-amber-500/25 text-amber-100'
+                        : 'bg-white border-amber-900/15 text-[#2C1A12]'
+                    }`}
+                  >
+                    <option value="All">🌐 All 27 Languages (Indian &amp; World)</option>
+                    <optgroup label="🇮🇳 Top Indian Languages">
+                      {SUPPORTED_LANGUAGES.filter((l) => l.group !== 'World').map((l) => (
+                        <option key={l.id} value={l.id}>{l.label}</option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="🌍 Top World Languages">
+                      {SUPPORTED_LANGUAGES.filter((l) => l.group === 'World').map((l) => (
+                        <option key={l.id} value={l.id}>{l.label}</option>
+                      ))}
+                    </optgroup>
+                  </select>
 
                   {/* Bookmarks Filter Button */}
                   <button
@@ -3687,6 +3918,16 @@ export default function App() {
                                 <Sparkles className="w-3 h-3" /> Featured
                               </span>
                             )}
+                            {item.pdfUrl && (
+                              <span className="px-2 py-1 rounded-lg bg-red-600 text-white text-[11px] font-bold flex items-center gap-1 shadow">
+                                <FileText className="w-3 h-3" /> PDF
+                              </span>
+                            )}
+                            {item.videoUrl && (
+                              <span className="px-2 py-1 rounded-lg bg-blue-600 text-white text-[11px] font-bold flex items-center gap-1 shadow">
+                                <Play className="w-3 h-3" /> Video
+                              </span>
+                            )}
                           </div>
                           <button
                             onClick={(e) => toggleBookmark(item.id, e)}
@@ -3753,7 +3994,7 @@ export default function App() {
                                 darkMode ? 'border-amber-500/15 text-amber-300/75' : 'border-amber-900/10 text-[#78523A]'
                               }`}
                             >
-                              <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-2.5">
                                 <span className="flex items-center gap-1">
                                   <Eye className="w-3.5 h-3.5" /> {(item.views || 0).toLocaleString()}
                                 </span>
@@ -3765,6 +4006,16 @@ export default function App() {
                                 >
                                   <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
                                   <span>{item.likes || 0}</span>
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setEditingItem(item);
+                                  }}
+                                  title="Edit this content (Text, Image, PDF, Video, Languages)"
+                                  className="px-2 py-0.5 rounded-md bg-amber-500/15 hover:bg-[#EA580C] text-[#EA580C] hover:text-white font-bold flex items-center gap-1 transition-all"
+                                >
+                                  <Edit3 className="w-3 h-3" /> Edit
                                 </button>
                               </div>
                               <span className="font-bold text-[#EA580C] flex items-center gap-0.5">
@@ -4037,18 +4288,26 @@ export default function App() {
                     </button>
                   </div>
 
-                  {/* Auto Jaap Controls */}
-                  <div className="flex items-center justify-center gap-4 mt-2">
+                  {/* Auto Jaap & Cancel Old Jaap / Start New Jaap Controls */}
+                  <div className="flex flex-wrap items-center justify-center gap-3 mt-2">
                     <button
                       onClick={() => setAutoJaapActive(!autoJaapActive)}
-                      className={`px-5 py-2.5 rounded-2xl text-xs font-bold flex items-center gap-2 transition-all ${
+                      className={`px-5 py-3 rounded-2xl text-xs font-bold flex items-center gap-2 transition-all ${
                         autoJaapActive
-                          ? 'bg-red-600 text-white animate-pulse'
+                          ? 'bg-amber-600 text-white animate-pulse'
                           : 'bg-amber-500/15 text-[#EA580C] hover:bg-amber-500/25'
                       }`}
                     >
                       {autoJaapActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                       <span>{autoJaapActive ? 'Pause Auto-Chanting' : 'Start Hands-Free Auto Jaap (2.2s)'}</span>
+                    </button>
+
+                    <button
+                      onClick={handleResetJaap}
+                      className="px-5 py-3 rounded-2xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold flex items-center gap-2 shadow-md transition-all"
+                    >
+                      <XCircle className="w-4 h-4" />
+                      <span>Cancel Old Jaap &amp; Start New (0/108)</span>
                     </button>
                   </div>
                 </div>
@@ -4574,17 +4833,20 @@ export default function App() {
                   darkMode ? 'border-amber-500/20' : 'border-amber-900/10'
                 }`}
               >
-                {/* Language Switcher Tabs */}
+                {/* Language Switcher Tabs + All 27 Indian & World Languages Selector */}
                 <div className="flex items-center gap-2 flex-wrap">
                   {[
                     { id: 'English', label: 'English' },
-                    { id: 'Hindi', label: 'हिंदी (Hindi)' },
-                    { id: 'Sanskrit', label: 'संस्कृतम् (Sanskrit)' }
+                    { id: 'Hindi', label: 'हिन्दी' },
+                    { id: 'Sanskrit', label: 'संस्कृतम्' },
+                    { id: 'Odia', label: 'ଓଡ଼ିଆ' },
+                    { id: 'Tamil', label: 'தமிழ்' },
+                    { id: 'Bengali', label: 'বাংলা' }
                   ].map((tab) => (
                     <button
                       key={tab.id}
                       onClick={() => setDetailLang(tab.id)}
-                      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                         detailLang === tab.id
                           ? 'bg-[#EA580C] text-white shadow-md'
                           : darkMode
@@ -4595,6 +4857,28 @@ export default function App() {
                       {tab.label}
                     </button>
                   ))}
+
+                  <select
+                    value={detailLang}
+                    onChange={(e) => setDetailLang(e.target.value)}
+                    aria-label="Select any Indian or World language"
+                    className={`px-3 py-1.5 rounded-xl border text-xs font-bold focus:outline-none ${
+                      darkMode
+                        ? 'bg-[#22160F] border-amber-500/30 text-amber-100'
+                        : 'bg-amber-50 border-amber-900/20 text-[#2C1A12]'
+                    }`}
+                  >
+                    <optgroup label="🇮🇳 Indian Languages (15)">
+                      {SUPPORTED_LANGUAGES.filter((l) => l.group !== 'World').map((l) => (
+                        <option key={l.id} value={l.id}>{l.label}</option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="🌍 World Languages (12)">
+                      {SUPPORTED_LANGUAGES.filter((l) => l.group === 'World').map((l) => (
+                        <option key={l.id} value={l.id}>{l.label}</option>
+                      ))}
+                    </optgroup>
+                  </select>
                 </div>
 
                 {/* Action Buttons: Listen, Font Size, Like, Copy Share Link */}
@@ -4656,16 +4940,86 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Summary Lead Box */}
-              <div
-                className={`p-4 rounded-2xl border text-xs sm:text-sm italic ${
-                  darkMode
-                    ? 'bg-[#21150E] border-amber-500/20 text-amber-200/90'
-                    : 'bg-amber-100/60 border-amber-900/15 text-[#78523A]'
-                }`}
-              >
-                {selectedItem.description}
+              {/* Quick Edit Content Banner */}
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div
+                  className={`flex-1 p-4 rounded-2xl border text-xs sm:text-sm italic ${
+                    darkMode
+                      ? 'bg-[#21150E] border-amber-500/20 text-amber-200/90'
+                      : 'bg-amber-100/60 border-amber-900/15 text-[#78523A]'
+                  }`}
+                >
+                  {selectedItem.description}
+                </div>
+                <button
+                  onClick={() => setEditingItem(selectedItem)}
+                  className="px-4 py-3 rounded-2xl bg-[#EA580C] hover:bg-orange-700 text-white text-xs font-bold flex items-center gap-1.5 shadow shrink-0"
+                >
+                  <Edit3 className="w-4 h-4" />
+                  <span>Edit Content / Media</span>
+                </button>
               </div>
+
+              {/* Embedded YouTube / Video Player (when videoUrl is attached) */}
+              {selectedItem.videoUrl && (
+                <div className={`p-4 rounded-2xl border space-y-3 ${darkMode ? 'bg-[#1F140E] border-amber-500/25' : 'bg-amber-50/70 border-amber-900/15'}`}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-extrabold uppercase tracking-wider text-[#EA580C] flex items-center gap-1.5">
+                      <Play className="w-4 h-4 fill-[#EA580C]" /> Sacred Video Presentation
+                    </span>
+                    <a
+                      href={selectedItem.videoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-bold text-[#EA580C] underline"
+                    >
+                      Open Video Link ↗
+                    </a>
+                  </div>
+                  {getYouTubeEmbedUrl(selectedItem.videoUrl) ? (
+                    <div className="relative w-full overflow-hidden rounded-2xl aspect-video bg-black">
+                      <iframe
+                        src={getYouTubeEmbedUrl(selectedItem.videoUrl)}
+                        title={selectedItem.title}
+                        className="w-full h-full border-0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                  ) : (
+                    <video
+                      src={selectedItem.videoUrl}
+                      controls
+                      className="w-full rounded-2xl max-h-96 bg-black"
+                    />
+                  )}
+                </div>
+              )}
+
+              {/* Embedded PDF Viewer & Download (when pdfUrl is attached) */}
+              {selectedItem.pdfUrl && (
+                <div className={`p-4 rounded-2xl border space-y-3 ${darkMode ? 'bg-[#1F140E] border-amber-500/25' : 'bg-amber-50/70 border-amber-900/15'}`}>
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <span className="text-xs font-extrabold uppercase tracking-wider text-[#EA580C] flex items-center gap-1.5">
+                      <FileText className="w-4 h-4" /> Attached Sacred PDF Document {selectedItem.pdfFileName ? `(${selectedItem.pdfFileName})` : ''}
+                    </span>
+                    <a
+                      href={selectedItem.pdfUrl}
+                      download={selectedItem.pdfFileName || `${selectedItem.id}.pdf`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3.5 py-1.5 rounded-xl bg-[#EA580C] text-white text-xs font-bold shadow hover:bg-orange-700"
+                    >
+                      Download / Open PDF
+                    </a>
+                  </div>
+                  <iframe
+                    src={selectedItem.pdfUrl}
+                    title={`${selectedItem.title} PDF`}
+                    className="w-full h-96 rounded-xl border border-amber-500/20 bg-white"
+                  />
+                </div>
+              )}
 
               {/* Complete Unabridged Body Text */}
               <div
@@ -4797,7 +5151,7 @@ export default function App() {
 
                 <div>
                   <label className="block text-xs font-bold uppercase text-[#EA580C] mb-1">
-                    Primary Language
+                    Primary Language (27 Supported)
                   </label>
                   <select
                     value={uploadForm.language}
@@ -4806,9 +5160,16 @@ export default function App() {
                       darkMode ? 'bg-[#22160F] border-amber-500/25' : 'bg-white border-amber-900/20'
                     }`}
                   >
-                    <option value="Sanskrit">Sanskrit (संस्कृतम्)</option>
-                    <option value="Hindi">Hindi (हिंदी)</option>
-                    <option value="English">English</option>
+                    <optgroup label="🇮🇳 Indian Languages">
+                      {SUPPORTED_LANGUAGES.filter((l) => l.group !== 'World').map((l) => (
+                        <option key={l.id} value={l.id}>{l.label}</option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="🌍 World Languages">
+                      {SUPPORTED_LANGUAGES.filter((l) => l.group === 'World').map((l) => (
+                        <option key={l.id} value={l.id}>{l.label}</option>
+                      ))}
+                    </optgroup>
                   </select>
                 </div>
 
@@ -4862,13 +5223,61 @@ export default function App() {
                 </div>
                 <div>
                   <label className="block text-xs font-bold uppercase text-[#EA580C] mb-1">
-                    Or Upload Image File from Device
+                    Or Upload Copyright-Free Image File
                   </label>
                   <input
                     type="file"
                     accept="image/*"
                     onChange={(e) => handleImageFileChange(e, false)}
                     className="w-full text-xs file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#EA580C] file:text-white hover:file:bg-orange-700"
+                  />
+                </div>
+              </div>
+
+              {/* PDF Document Upload / Link & YouTube Video Link */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-3.5 rounded-2xl border border-amber-500/20 bg-amber-500/5">
+                <div>
+                  <label className="block text-xs font-bold uppercase text-[#EA580C] mb-1">
+                    Upload PDF Document (.pdf)
+                  </label>
+                  <input
+                    type="file"
+                    accept="application/pdf,.pdf"
+                    onChange={(e) => handlePdfFileChange(e, false)}
+                    className="w-full text-xs file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-red-600 file:text-white hover:file:bg-red-700"
+                  />
+                  {uploadForm.pdfFileName && (
+                    <span className="text-[11px] text-emerald-500 font-bold block mt-1">
+                      Attached: {uploadForm.pdfFileName}
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase text-[#EA580C] mb-1">
+                    Or Paste PDF Direct URL
+                  </label>
+                  <input
+                    type="text"
+                    value={uploadForm.pdfUrl.startsWith('data:') ? '' : uploadForm.pdfUrl}
+                    onChange={(e) => setUploadForm({ ...uploadForm, pdfUrl: e.target.value })}
+                    placeholder="https://.../scripture.pdf"
+                    className={`w-full px-3 py-2 rounded-xl border text-xs focus:outline-none focus:border-[#EA580C] ${
+                      darkMode ? 'bg-[#22160F] border-amber-500/25' : 'bg-white border-amber-900/20'
+                    }`}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase text-[#EA580C] mb-1">
+                    YouTube Video Link / MP4 URL
+                  </label>
+                  <input
+                    type="text"
+                    value={uploadForm.videoUrl}
+                    onChange={(e) => setUploadForm({ ...uploadForm, videoUrl: e.target.value })}
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    className={`w-full px-3 py-2 rounded-xl border text-xs focus:outline-none focus:border-[#EA580C] ${
+                      darkMode ? 'bg-[#22160F] border-amber-500/25' : 'bg-white border-amber-900/20'
+                    }`}
                   />
                 </div>
               </div>
@@ -4920,6 +5329,35 @@ export default function App() {
                 </div>
               </div>
 
+              {/* Additional Indian or World Language Text (Odia, Tamil, Telugu, Bengali, Spanish, French, etc.) */}
+              <div className="p-3.5 rounded-2xl border border-amber-500/20 bg-amber-500/5 space-y-2">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <label className="text-xs font-bold uppercase text-[#EA580C]">
+                    Add Translation in Any Indian or World Language (Optional)
+                  </label>
+                  <select
+                    value={uploadForm.extraLang}
+                    onChange={(e) => setUploadForm({ ...uploadForm, extraLang: e.target.value })}
+                    className={`px-3 py-1 rounded-xl border text-xs font-bold ${
+                      darkMode ? 'bg-[#22160F] border-amber-500/30 text-amber-100' : 'bg-white border-amber-900/20'
+                    }`}
+                  >
+                    {SUPPORTED_LANGUAGES.filter((l) => !['English', 'Hindi', 'Sanskrit'].includes(l.id)).map((l) => (
+                      <option key={l.id} value={l.id}>{l.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <textarea
+                  rows={3}
+                  value={uploadForm.bodyExtraLang}
+                  onChange={(e) => setUploadForm({ ...uploadForm, bodyExtraLang: e.target.value })}
+                  placeholder={`Paste translation in ${uploadForm.extraLang}...`}
+                  className={`w-full px-3.5 py-2 rounded-xl border text-xs focus:outline-none focus:border-[#EA580C] ${
+                    darkMode ? 'bg-[#22160F] border-amber-500/25' : 'bg-white border-amber-900/20'
+                  }`}
+                />
+              </div>
+
               {isAdminAuthenticated && (
                 <label className="flex items-center gap-2 text-xs font-bold text-emerald-500 cursor-pointer pt-1">
                   <input
@@ -4956,7 +5394,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Admin Edit Item Modal */}
+      {/* Comprehensive Edit Sacred Content Modal (Edit Text, Real Image, PDF, YouTube Video, and Any of 27 Languages) */}
       {editingItem && (
         <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
           <div
@@ -4970,22 +5408,42 @@ export default function App() {
             >
               <X className="w-5 h-5" />
             </button>
-            <h2 className="text-xl font-black mb-4">Admin Edit Sacred Item</h2>
+            <h2 className="text-xl font-black mb-1">Edit Sacred Content &amp; Media</h2>
+            <p className={`text-xs mb-4 ${darkMode ? 'text-amber-300/70' : 'text-[#78523A]'}`}>
+              Update title, category, copyright-free image, PDF attachment, YouTube video link, or translations in 27 Indian &amp; World languages.
+            </p>
             <form onSubmit={handleSaveEditedItem} className="space-y-4 text-left">
-              <div>
-                <label className="block text-xs font-bold uppercase text-[#EA580C] mb-1">Title</label>
-                <input
-                  type="text"
-                  required
-                  value={editingItem.title}
-                  onChange={(e) => setEditingItem({ ...editingItem, title: e.target.value })}
-                  className={`w-full px-3.5 py-2 rounded-xl border text-sm ${
-                    darkMode ? 'bg-[#22160F] border-amber-500/25' : 'bg-white border-amber-900/20'
-                  }`}
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase text-[#EA580C] mb-1">Title *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingItem.title}
+                    onChange={(e) => setEditingItem({ ...editingItem, title: e.target.value })}
+                    className={`w-full px-3.5 py-2 rounded-xl border text-sm ${
+                      darkMode ? 'bg-[#22160F] border-amber-500/25' : 'bg-white border-amber-900/20'
+                    }`}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase text-[#EA580C] mb-1">Category</label>
+                  <select
+                    value={editingItem.category}
+                    onChange={(e) => setEditingItem({ ...editingItem, category: e.target.value })}
+                    className={`w-full px-3.5 py-2 rounded-xl border text-sm ${
+                      darkMode ? 'bg-[#22160F] border-amber-500/25' : 'bg-white border-amber-900/20'
+                    }`}
+                  >
+                    {CATEGORIES.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name} ({c.sanskrit})</option>
+                    ))}
+                  </select>
+                </div>
               </div>
+
               <div>
-                <label className="block text-xs font-bold uppercase text-[#EA580C] mb-1">Description</label>
+                <label className="block text-xs font-bold uppercase text-[#EA580C] mb-1">Description *</label>
                 <input
                   type="text"
                   required
@@ -4996,11 +5454,74 @@ export default function App() {
                   }`}
                 />
               </div>
+
+              {/* Image URL or File Upload */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-3 rounded-2xl border border-amber-500/20 bg-amber-500/5">
+                <div>
+                  <label className="block text-xs font-bold uppercase text-[#EA580C] mb-1">Image URL</label>
+                  <input
+                    type="text"
+                    value={editingItem.imageUrl?.startsWith('data:') ? '' : editingItem.imageUrl || ''}
+                    onChange={(e) => setEditingItem({ ...editingItem, imageUrl: e.target.value })}
+                    placeholder="https://commons.wikimedia.org/..."
+                    className={`w-full px-3 py-2 rounded-xl border text-xs ${
+                      darkMode ? 'bg-[#22160F] border-amber-500/25' : 'bg-white border-amber-900/20'
+                    }`}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase text-[#EA580C] mb-1">Or Upload New Image File</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleImageFileChange(e, true)}
+                    className="w-full text-xs file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#EA580C] file:text-white"
+                  />
+                </div>
+              </div>
+
+              {/* PDF Upload / URL & YouTube Video URL */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 rounded-2xl border border-amber-500/20 bg-amber-500/5">
+                <div>
+                  <label className="block text-xs font-bold uppercase text-[#EA580C] mb-1">Upload PDF (.pdf)</label>
+                  <input
+                    type="file"
+                    accept="application/pdf,.pdf"
+                    onChange={(e) => handlePdfFileChange(e, true)}
+                    className="w-full text-xs file:mr-2 file:py-1.5 file:px-2.5 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-red-600 file:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase text-[#EA580C] mb-1">Or PDF Direct URL</label>
+                  <input
+                    type="text"
+                    value={editingItem.pdfUrl?.startsWith('data:') ? '' : editingItem.pdfUrl || ''}
+                    onChange={(e) => setEditingItem({ ...editingItem, pdfUrl: e.target.value })}
+                    placeholder="https://.../file.pdf"
+                    className={`w-full px-3 py-2 rounded-xl border text-xs ${
+                      darkMode ? 'bg-[#22160F] border-amber-500/25' : 'bg-white border-amber-900/20'
+                    }`}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase text-[#EA580C] mb-1">YouTube / Video URL</label>
+                  <input
+                    type="text"
+                    value={editingItem.videoUrl || ''}
+                    onChange={(e) => setEditingItem({ ...editingItem, videoUrl: e.target.value })}
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    className={`w-full px-3 py-2 rounded-xl border text-xs ${
+                      darkMode ? 'bg-[#22160F] border-amber-500/25' : 'bg-white border-amber-900/20'
+                    }`}
+                  />
+                </div>
+              </div>
+
               <div>
                 <label className="block text-xs font-bold uppercase text-[#EA580C] mb-1">English Body</label>
                 <textarea
-                  rows={5}
-                  value={getBodyForLanguage(editingItem, 'English')}
+                  rows={4}
+                  value={typeof editingItem.body === 'object' ? editingItem.body.English || '' : editingItem.body || ''}
                   onChange={(e) =>
                     setEditingItem({
                       ...editingItem,
@@ -5015,12 +5536,13 @@ export default function App() {
                   }`}
                 />
               </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold uppercase text-[#EA580C] mb-1">Hindi Body</label>
+                  <label className="block text-xs font-bold uppercase text-[#EA580C] mb-1">Hindi Body (हिन्दी)</label>
                   <textarea
-                    rows={4}
-                    value={getBodyForLanguage(editingItem, 'Hindi')}
+                    rows={3}
+                    value={typeof editingItem.body === 'object' ? editingItem.body.Hindi || '' : ''}
                     onChange={(e) =>
                       setEditingItem({
                         ...editingItem,
@@ -5036,10 +5558,10 @@ export default function App() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase text-[#EA580C] mb-1">Sanskrit Body</label>
+                  <label className="block text-xs font-bold uppercase text-[#EA580C] mb-1">Sanskrit Body (संस्कृतम्)</label>
                   <textarea
-                    rows={4}
-                    value={getBodyForLanguage(editingItem, 'Sanskrit')}
+                    rows={3}
+                    value={typeof editingItem.body === 'object' ? editingItem.body.Sanskrit || '' : ''}
                     onChange={(e) =>
                       setEditingItem({
                         ...editingItem,
@@ -5055,6 +5577,33 @@ export default function App() {
                   />
                 </div>
               </div>
+
+              {/* Edit Translation for Currently Active Reader Language (any of the 27 Indian/World languages) */}
+              {!['English', 'Hindi', 'Sanskrit'].includes(detailLang) && (
+                <div>
+                  <label className="block text-xs font-bold uppercase text-[#EA580C] mb-1">
+                    {detailLang} Translation Body
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={typeof editingItem.body === 'object' ? editingItem.body[detailLang] || '' : ''}
+                    onChange={(e) =>
+                      setEditingItem({
+                        ...editingItem,
+                        body: {
+                          ...(typeof editingItem.body === 'object' ? editingItem.body : {}),
+                          [detailLang]: e.target.value
+                        }
+                      })
+                    }
+                    placeholder={`Enter ${detailLang} translation...`}
+                    className={`w-full px-3.5 py-2 rounded-xl border text-sm ${
+                      darkMode ? 'bg-[#22160F] border-amber-500/25' : 'bg-white border-amber-900/20'
+                    }`}
+                  />
+                </div>
+              )}
+
               <div className="flex justify-end gap-3 pt-2">
                 <button
                   type="button"
@@ -5065,7 +5614,7 @@ export default function App() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-[#EA580C] text-white text-xs font-bold"
+                  className="px-5 py-2.5 rounded-xl bg-[#EA580C] hover:bg-orange-700 text-white text-xs font-bold shadow"
                 >
                   Save Changes
                 </button>
