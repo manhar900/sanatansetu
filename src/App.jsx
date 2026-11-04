@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 
 // Change your default Admin Password here (or set VITE_ADMIN_PASSWORD in Vercel Environment Variables)
-export const DEFAULT_ADMIN_PASSCODE = 'admin108';
+export const DEFAULT_ADMIN_PASSCODE = '';
 
 // Traditional Handcrafted Vedic 8-Petal Lotus (Padma) Emblem — Zero AI Symbols
 export const SacredLotusIcon = ({ className = 'w-4 h-4' }) => (
