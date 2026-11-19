@@ -129,6 +129,8 @@ export function encodeUtf8Base64(str) {
   });
   const [isSyncingGlobal, setIsSyncingGlobal] = useState(false);
   const [lastGlobalSyncStatus, setLastGlobalSyncStatus] = useState('');
+
+  const [uploadForm, setUploadForm] = useState({
 // ... existing code ...
   // Global Cross-Browser Fetch Engine: Fetches `/sanatan-global-db.json` (and GitHub raw live file) so EVERY visitor on ANY browser/device sees Admin's latest edits, cover images, PDFs & YouTube videos!
   const fetchGlobalPublishedDatabase = useCallback(async () => {
@@ -259,14 +261,14 @@ export function encodeUtf8Base64(str) {
         });
 
         if (putRes.ok) {
-          setLastGlobalSyncStatus('✅ Globally Published to GitHub & All Browsers!');
-          showToast('🌍 Globally synced to GitHub! Every browser & device worldwide will now display your updated content.');
+          setLastGlobalSyncStatus('Globally Published to GitHub & All Browsers!');
+          showToast('Globally synced to GitHub! Every browser & device worldwide will now display your updated content.');
           return true;
         } else {
-          setLastGlobalSyncStatus(`⚠️ GitHub Sync Error: ${putRes.status}`);
+          setLastGlobalSyncStatus(`GitHub Sync Error: ${putRes.status}`);
         }
       } catch (err) {
-        setLastGlobalSyncStatus('⚠️ Network error while pushing to GitHub');
+        setLastGlobalSyncStatus('Network error while pushing to GitHub');
       } finally {
         setIsSyncingGlobal(false);
       }
@@ -332,11 +334,23 @@ export function encodeUtf8Base64(str) {
       SanatanUnlimitedDB.saveItems(items);
     } catch (e) {}
   }, [items]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('sanatan_setu_likes', JSON.stringify(likedIds));
 // ... existing code ...
+  // Separate Approved vs Pending items (moved above seoMetadata so uploaded approved items are indexed in JSON-LD & Sitemap)
+  const approvedItems = useMemo(
+    () => items.filter((item) => item.status !== 'rejected'),
+    [items]
+  );
+
   const pendingItems = useMemo(
     () => items.filter((item) => item.status === 'pending' || item.isApproved === false || Boolean(item.pendingEdit)),
     [items]
   );
+
+  // Dynamic XML Sitemap & robots.txt Generators (automatically includes all approved & uploaded content!)
 // ... existing code ...
   // Handle Direct Image File Upload (compresses to HD JPEG Data URI so images save cleanly everywhere)
   const handleImageFileChange = async (e, isEdit = false) => {
@@ -352,14 +366,42 @@ export function encodeUtf8Base64(str) {
       showToast('Copyright-free image compressed and attached!');
     }
   };
-// ... existing code ...
+
+  // Handle Direct PDF File Upload (converts to Data URI / Object URL so users can view & download PDFs)
+  const handlePdfFileChange = (e, isEdit = false) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        if (isEdit && editingItem) {
+          setEditingItem({
+            ...editingItem,
+            pdfUrl: reader.result,
+            pdfFileName: file.name,
+            contentType: editingItem.videoUrl ? 'All' : 'PDF'
+          });
+        } else {
+          setUploadForm((prev) => ({
+            ...prev,
+            pdfUrl: reader.result,
+            pdfFileName: file.name,
+            contentType: prev.videoUrl ? 'All' : 'PDF'
+          }));
+        }
+        showToast(`PDF "${file.name}" attached!`);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   // Handle Category Background Image Upload (Admin-only approval + Global Sync)
   const handleCategoryImageUpload = async (catId, e) => {
     e.stopPropagation();
     const file = e.target.files?.[0];
     if (!file) return;
     if (!isAdminAuthenticated) {
-      showToast('🔒 Only Admin can change category cover images. Please unlock Admin first.');
+      showToast('Only Admin can change category cover images. Please unlock Admin first.');
       setActiveView('admin');
       return;
     }
@@ -394,7 +436,31 @@ export function encodeUtf8Base64(str) {
 
   // Handle Upload Submission — Only Admin can publish directly; visitor submissions go to Pending Approval Queue
   const handleUploadSubmit = (e) => {
-// ... existing code ...
+    e.preventDefault();
+    const primaryBody =
+      uploadForm.bodyEnglish.trim() ||
+      uploadForm.bodyHindi.trim() ||
+      uploadForm.bodySanskrit.trim() ||
+      uploadForm.bodyExtraLang.trim() ||
+      (uploadForm.pdfUrl ? `PDF Scripture Document: ${uploadForm.title}` : '') ||
+      (uploadForm.videoUrl ? `Sacred Video Presentation: ${uploadForm.title}` : '');
+
+    if (!uploadForm.title.trim() || !uploadForm.description.trim() || !primaryBody) {
+      showToast('Please enter Title, Short Description, and Content Body (or attach a PDF / YouTube Video link)');
+      return;
+    }
+
+    const slugId =
+      uploadForm.title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '') +
+      '-' +
+      String(Date.now()).slice(-4);
+
+    const catObj = CATEGORIES.find((c) => c.id === uploadForm.category) || CATEGORIES[0];
+    const defaultCategoryPhoto = COPYRIGHT_FREE_CATEGORY_PHOTOS[uploadForm.category] || catObj.bgImage;
+
     const parsedTags = uploadForm.tags
       ? uploadForm.tags.split(',').map((t) => t.trim()).filter(Boolean)
       : [uploadForm.category.toLowerCase(), 'sacred-wisdom'];
@@ -448,7 +514,30 @@ export function encodeUtf8Base64(str) {
       return next;
     });
     setIsUploadOpen(false);
-// ... existing code ...
+    setUploadForm({
+      title: '',
+      description: '',
+      category: 'Mantras',
+      contentType: 'Text',
+      author: '',
+      language: 'Sanskrit',
+      imageUrl: '',
+      pdfUrl: '',
+      pdfFileName: '',
+      videoUrl: '',
+      tags: '',
+      bodyEnglish: '',
+      bodyHindi: '',
+      bodySanskrit: '',
+      extraLang: 'Odia',
+      bodyExtraLang: '',
+      publishDirectlyAsAdmin: false
+    });
+
+    setSelectedCategory('All');
+    setSelectedMediaFormat('All');
+    setSearchQuery('');
+    setShowBookmarksOnly(false);
     setActiveView('home');
     showToast(
       approveNow
@@ -456,6 +545,8 @@ export function encodeUtf8Base64(str) {
         : 'Submitted to Admin Pending Approval Queue! Only Admin can approve & publish.'
     );
   };
+
+  // Admin Moderation Handlers
 // ... existing code ...
   const handleApproveItem = (id) => {
     setItems((prev) => {
@@ -489,9 +580,33 @@ export function encodeUtf8Base64(str) {
       }
       return next;
     });
-    showToast('✅ Admin Approved! Changes are live and syncing globally.');
+    showToast('Admin Approved! Changes are live and syncing globally.');
   };
-// ... existing code ...
+
+  const handleMoveToPending = (id) => {
+    setItems((prev) =>
+      prev.map((it) =>
+        it.id === id ? { ...it, status: 'pending', isApproved: false } : it
+      )
+    );
+    showToast('Item moved to Pending Moderation Queue');
+  };
+
+  const handleToggleFeatured = (id) => {
+    setItems((prev) =>
+      prev.map((it) =>
+        it.id === id ? { ...it, isFeatured: !it.isFeatured } : it
+      )
+    );
+    showToast('Updated Featured status');
+  };
+
+  const handleDeleteItem = (id) => {
+    setItems((prev) => prev.filter((it) => it.id !== id));
+    if (selectedItem && selectedItem.id === id) setSelectedItem(null);
+    showToast('Item removed from repository');
+  };
+
   const handleSaveEditedItem = (e) => {
     e.preventDefault();
     if (!editingItem) return;
@@ -513,7 +628,7 @@ export function encodeUtf8Base64(str) {
         setSelectedItem(stampedItem);
       }
       setEditingItem(null);
-      showToast('✅ Admin saved changes! Syncing globally to GitHub...');
+      showToast('Admin saved changes! Syncing globally to GitHub...');
     } else {
       setItems((prev) =>
         prev.map((it) =>
@@ -523,9 +638,11 @@ export function encodeUtf8Base64(str) {
         )
       );
       setEditingItem(null);
-      showToast('🔒 Edit submitted for Admin Approval! Unlock Admin to approve & publish.');
+      showToast('Edit submitted for Admin Approval! Unlock Admin to approve & publish.');
     }
   };
+
+  const handleRestoreDefaults = () => {
 // ... existing code ...
                   <button
                     onClick={() => setAdminTab('published')}
@@ -665,7 +782,7 @@ export function encodeUtf8Base64(str) {
                         className="px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold shadow-lg flex items-center gap-2 transition-all"
                       >
                         <Globe className="w-4 h-4" />
-                        <span>{isSyncingGlobal ? 'Syncing to GitHub...' : '🚀 Push All Current Edits & Uploads Globally Now'}</span>
+                        <span>{isSyncingGlobal ? 'Syncing to GitHub...' : 'Push All Current Edits & Uploads Globally Now'}</span>
                       </button>
 
                       <button
@@ -690,7 +807,7 @@ export function encodeUtf8Base64(str) {
                         className="px-4 py-3 rounded-xl bg-[#EA580C] hover:bg-orange-700 text-white text-xs font-bold shadow flex items-center gap-2 transition-all"
                       >
                         <FileText className="w-4 h-4" />
-                        <span>⬇️ Download public/sanatan-global-db.json</span>
+                        <span>Download public/sanatan-global-db.json</span>
                       </button>
 
                       <button
