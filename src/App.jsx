@@ -17,9 +17,43 @@ export const GLOBAL_SYNC_DEFAULT_BRANCH = 'main';
 export const GLOBAL_SYNC_FILE_PATH = 'public/sanatan-global-db.json';
 
 // Traditional Handcrafted Vedic 8-Petal Lotus (Padma) Emblem — Zero AI Symbols
-export const SacredLotusIcon = ({ className = 'w-4 h-4' }) => (
 // ... existing code ...
-//Compresses uploaded cover images so they save instantaneously in both localStorage, IndexedDB, and Global Cloud Sync
+  async loadItems() {
+    try {
+      const db = await this.open();
+      return await new Promise((resolve) => {
+        const tx = db.transaction(this.storeName, 'readonly');
+        const req = tx.objectStore(this.storeName).get('all_items_v5');
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => resolve(null);
+      });
+    } catch (e) {
+      return null;
+    }
+  },
+  async saveEditsMap(editsMap) {
+    try {
+      const db = await this.open();
+      const tx = db.transaction(this.storeName, 'readwrite');
+      tx.objectStore(this.storeName).put(editsMap, 'edits_map_v1');
+    } catch (e) {}
+  },
+  async loadEditsMap() {
+    try {
+      const db = await this.open();
+      return await new Promise((resolve) => {
+        const tx = db.transaction(this.storeName, 'readonly');
+        const req = tx.objectStore(this.storeName).get('edits_map_v1');
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => resolve(null);
+      });
+    } catch (e) {
+      return null;
+    }
+  }
+};
+
+// Compresses uploaded cover images so they save cleanly in localStorage, IndexedDB, and Global GitHub Sync
 export function compressCoverImageFile(file, maxWidth = 1000, quality = 0.82) {
   return new Promise((resolve) => {
     const reader = new FileReader();
@@ -54,7 +88,7 @@ export function compressCoverImageFile(file, maxWidth = 1000, quality = 0.82) {
   });
 }
 
-// Helper for UTF-8 safe Base64 encoding/decoding for GitHub REST API commits
+// Helper for UTF-8 safe Base64 encoding for GitHub REST API commits
 export function encodeUtf8Base64(str) {
   const bytes = new TextEncoder().encode(str);
   let binary = '';
@@ -66,12 +100,11 @@ export function encodeUtf8Base64(str) {
 }
 
 // Verified Copyright-Free (CC / Public Domain) Wikimedia Commons Photographs for Categories & Sacred Items
-export const COPYRIGHT_FREE_CATEGORY_PHOTOS = {
 // ... existing code ...
   const [newPasscodeInput, setNewPasscodeInput] = useState('');
   const [adminTab, setAdminTab] = useState('pending'); // 'pending' | 'published' | 'cloud' | 'seo'
   const [editingItem, setEditingItem] = useState(null);
-  const [inlineAdminPasscode, setInlineAdminPasscode] = useState('');
+  const isDbHydratedRef = useRef(false);
 
   // Global Cross-Browser Sync Settings (GitHub Auto-Commit or Custom JSON Cloud Endpoint)
   const [globalSyncConfig, setGlobalSyncConfig] = useState(() => {
@@ -96,19 +129,7 @@ export const COPYRIGHT_FREE_CATEGORY_PHOTOS = {
   });
   const [isSyncingGlobal, setIsSyncingGlobal] = useState(false);
   const [lastGlobalSyncStatus, setLastGlobalSyncStatus] = useState('');
-
-  const [uploadForm, setUploadForm] = useState({
 // ... existing code ...
-  // Sync Dark Mode with localStorage & Document Root
-  useEffect(() => {
-    try {
-      localStorage.setItem('sanatan_setu_dark_mode', JSON.stringify(darkMode));
-      if (typeof document !== 'undefined') {
-        document.documentElement.classList.toggle('dark', darkMode);
-      }
-    } catch (e) {}
-  }, [darkMode]);
-
   // Global Cross-Browser Fetch Engine: Fetches `/sanatan-global-db.json` (and GitHub raw live file) so EVERY visitor on ANY browser/device sees Admin's latest edits, cover images, PDFs & YouTube videos!
   const fetchGlobalPublishedDatabase = useCallback(async () => {
     const urlsToTry = [];
@@ -186,7 +207,7 @@ export const COPYRIGHT_FREE_CATEGORY_PHOTOS = {
     return false;
   }, [globalSyncConfig.customCloudUrl, globalSyncConfig.githubRepo, globalSyncConfig.githubBranch]);
 
-  // Push Admin-Approved Changes Directly to GitHub Repository (`public/sanatan-global-db.json`) or Custom Cloud Endpoint so ALL Browsers Worldwide Update Automatically!
+  // Push Admin-Approved Changes Directly to GitHub Repository (`public/sanatan-global-db.json`) so ALL Browsers Worldwide Update Automatically!
   const pushGlobalDatabaseToCloud = useCallback(
     async (updatedItemsList, updatedEditsMap, updatedCategoryImages) => {
       const payloadObj = {
@@ -197,24 +218,6 @@ export const COPYRIGHT_FREE_CATEGORY_PHOTOS = {
         items: (updatedItemsList || items).filter((i) => i.isUserUploaded || i.updatedAt)
       };
 
-      // 1. Optional Custom Cloud Webhook/REST URL
-      if (globalSyncConfig.customCloudUrl && globalSyncConfig.customCloudUrl.startsWith('http')) {
-        try {
-          setIsSyncingGlobal(true);
-          const res = await fetch(globalSyncConfig.customCloudUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payloadObj)
-          });
-          if (res.ok) {
-            setLastGlobalSyncStatus('✅ Published to Global Cloud Endpoint!');
-          }
-        } catch (e) {} finally {
-          setIsSyncingGlobal(false);
-        }
-      }
-
-      // 2. Direct GitHub Repository Commit (`public/sanatan-global-db.json`) via GitHub Token
       const token = (globalSyncConfig.githubToken || '').trim();
       const repo = (globalSyncConfig.githubRepo || GLOBAL_SYNC_DEFAULT_REPO).trim();
       const branch = (globalSyncConfig.githubBranch || GLOBAL_SYNC_DEFAULT_BRANCH).trim();
@@ -260,9 +263,7 @@ export const COPYRIGHT_FREE_CATEGORY_PHOTOS = {
           showToast('🌍 Globally synced to GitHub! Every browser & device worldwide will now display your updated content.');
           return true;
         } else {
-          const errText = await putRes.text();
           setLastGlobalSyncStatus(`⚠️ GitHub Sync Error: ${putRes.status}`);
-          console.warn('GitHub sync response:', errText);
         }
       } catch (err) {
         setLastGlobalSyncStatus('⚠️ Network error while pushing to GitHub');
@@ -274,7 +275,7 @@ export const COPYRIGHT_FREE_CATEGORY_PHOTOS = {
     [categoryCustomImages, globalSyncConfig, items, showToast]
   );
 
-  // Hydrate & Merge Admin-Approved Edits from IndexedDB + Global Cloud Database on Mount
+  // Persist Items, Likes, Bookmarks, and Jaap counts + Hydrate from IndexedDB & Global Cloud DB
   useEffect(() => {
     let active = true;
     Promise.all([
@@ -283,23 +284,76 @@ export const COPYRIGHT_FREE_CATEGORY_PHOTOS = {
     ]).then(([idbItems, idbEditsMap]) => {
       if (!active) return;
       setItems((prev) => {
-// ... existing code ...
+        const editsObj = {
+          ...(JSON.parse(localStorage.getItem('sanatan_setu_edits_map_v1') || '{}')),
+          ...(idbEditsMap && typeof idbEditsMap === 'object' ? idbEditsMap : {})
+        };
+        const idbMap = new Map();
+        if (Array.isArray(idbItems)) {
+          idbItems.forEach((it) => {
+            if (it && it.id) idbMap.set(String(it.id), it);
+          });
+        }
+        const mergedPrev = prev.map((localIt) => {
+          const strId = String(localIt.id);
+          const editIt = editsObj[strId];
+          const idbIt = idbMap.get(strId);
+          let best = localIt;
+          if (idbIt && (idbIt.updatedAt || 0) >= (best.updatedAt || 0)) best = { ...best, ...idbIt };
+          if (editIt && (editIt.updatedAt || 0) >= (best.updatedAt || 0)) best = { ...best, ...editIt };
+          return best;
+        });
+        const existingIds = new Set(mergedPrev.map((i) => String(i.id)));
+        const extraFromIdb = (Array.isArray(idbItems) ? idbItems : [])
+          .filter((it) => it && it.id && !existingIds.has(String(it.id)))
+          .map((it) => ({
+            ...it,
+            isUserUploaded: true,
+            status: it.status === 'rejected' ? 'rejected' : 'approved',
+            isApproved: it.status !== 'rejected'
+          }));
         isDbHydratedRef.current = true;
-        const finalMerged = extraItems.length > 0 ? [...extraItems, ...updatedPrev] : updatedPrev;
-        SanatanUnlimitedDB.saveItems(finalMerged);
-        return finalMerged;
+        return extraFromIdb.length > 0 ? [...extraFromIdb, ...mergedPrev] : mergedPrev;
       });
-      // Immediately fetch global published database so any visitor on a brand-new browser gets Admin's latest changes
       fetchGlobalPublishedDatabase();
     }).catch(() => {
       isDbHydratedRef.current = true;
       fetchGlobalPublishedDatabase();
     });
+    return () => {
+      active = false;
+    };
+  }, [fetchGlobalPublishedDatabase]);
 
-    // Cross-tab synchronization: when Admin approves an edit in one tab, all other open tabs update immediately
-    const handleStorageSync = (e) => {
+  useEffect(() => {
+    if (!isDbHydratedRef.current) return;
+    try {
+      try { localStorage.setItem('sanatan_setu_items_v6', JSON.stringify(items)); } catch (quotaErr) {}
+      SanatanUnlimitedDB.saveItems(items);
+    } catch (e) {}
+  }, [items]);
 // ... existing code ...
-  // Handle Category Background Image Upload (Admin-only approval required + Global Cloud Sync)
+  const pendingItems = useMemo(
+    () => items.filter((item) => item.status === 'pending' || item.isApproved === false || Boolean(item.pendingEdit)),
+    [items]
+  );
+// ... existing code ...
+  // Handle Direct Image File Upload (compresses to HD JPEG Data URI so images save cleanly everywhere)
+  const handleImageFileChange = async (e, isEdit = false) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const compressed = await compressCoverImageFile(file);
+    if (compressed) {
+      if (isEdit && editingItem) {
+        setEditingItem({ ...editingItem, imageUrl: compressed });
+      } else {
+        setUploadForm((prev) => ({ ...prev, imageUrl: compressed }));
+      }
+      showToast('Copyright-free image compressed and attached!');
+    }
+  };
+// ... existing code ...
+  // Handle Category Background Image Upload (Admin-only approval + Global Sync)
   const handleCategoryImageUpload = async (catId, e) => {
     e.stopPropagation();
     const file = e.target.files?.[0];
@@ -319,11 +373,11 @@ export const COPYRIGHT_FREE_CATEGORY_PHOTOS = {
         pushGlobalDatabaseToCloud(items, undefined, updated);
         return updated;
       });
-      showToast(`Admin updated cover image for ${catId} permanently!`);
+      showToast(`Admin updated cover image for ${catId}!`);
     }
   };
 
-  // Helper to permanently persist an item in localStorage, IndexedDB, AND push to Global Cloud/GitHub so other browsers see it too!
+  // Permanently persists an Admin-approved item in localStorage, IndexedDB, and pushes to GitHub Global Sync
   const persistItemRecordPermanently = useCallback((itemRecord, updatedFullList) => {
     try {
       const existingEdits = JSON.parse(localStorage.getItem('sanatan_setu_edits_map_v1') || '{}');
@@ -338,9 +392,50 @@ export const COPYRIGHT_FREE_CATEGORY_PHOTOS = {
     } catch {}
   }, [categoryCustomImages, items, pushGlobalDatabaseToCloud]);
 
-  // Handle Upload Submission — Only Admin can approve directly; visitor uploads go to Admin Pending Queue
+  // Handle Upload Submission — Only Admin can publish directly; visitor submissions go to Pending Approval Queue
   const handleUploadSubmit = (e) => {
 // ... existing code ...
+    const parsedTags = uploadForm.tags
+      ? uploadForm.tags.split(',').map((t) => t.trim()).filter(Boolean)
+      : [uploadForm.category.toLowerCase(), 'sacred-wisdom'];
+
+    const approveNow = isAdminAuthenticated && uploadForm.publishDirectlyAsAdmin;
+
+    const bodyMap = {
+      English: uploadForm.bodyEnglish.trim() || primaryBody,
+      Hindi: uploadForm.bodyHindi.trim() || primaryBody,
+      Sanskrit: uploadForm.bodySanskrit.trim() || primaryBody
+    };
+    if (uploadForm.extraLang && uploadForm.bodyExtraLang.trim()) {
+      bodyMap[uploadForm.extraLang] = uploadForm.bodyExtraLang.trim();
+    }
+
+    const newItem = {
+      id: slugId,
+      title: uploadForm.title.trim(),
+      category: uploadForm.category,
+      sanskritBadge: `${catObj.sanskrit} · ${catObj.name}`,
+      contentType: uploadForm.pdfUrl && uploadForm.videoUrl
+        ? 'All'
+        : uploadForm.pdfUrl
+        ? 'PDF'
+        : uploadForm.videoUrl
+        ? 'Video'
+        : uploadForm.contentType || 'Text',
+      views: 1,
+      likes: 0,
+      language: uploadForm.language || 'Sanskrit',
+      author: uploadForm.author.trim() || 'Community Contributor',
+      imageUrl: uploadForm.imageUrl.trim() || defaultCategoryPhoto,
+      pdfUrl: uploadForm.pdfUrl || '',
+      pdfFileName: uploadForm.pdfFileName || '',
+      videoUrl: uploadForm.videoUrl.trim() || '',
+      tags: parsedTags,
+      isFeatured: false,
+      isUserUploaded: true,
+      status: approveNow ? 'approved' : 'pending',
+      isApproved: approveNow,
+      updatedAt: Date.now(),
       submittedAt: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
       description: uploadForm.description.trim(),
       body: bodyMap
@@ -353,14 +448,18 @@ export const COPYRIGHT_FREE_CATEGORY_PHOTOS = {
       return next;
     });
     setIsUploadOpen(false);
-    setInlineAdminPasscode('');
-    setUploadForm({
 // ... existing code ...
-  // Admin Moderation Handlers
+    setActiveView('home');
+    showToast(
+      approveNow
+        ? 'Admin approved & published content! Syncing globally...'
+        : 'Submitted to Admin Pending Approval Queue! Only Admin can approve & publish.'
+    );
+  };
 // ... existing code ...
   const handleApproveItem = (id) => {
     setItems((prev) => {
-      let approvedItemRef = null;
+      let approvedRef = null;
       const next = prev.map((it) => {
         if (it.id !== id) return it;
         const approvedVersion = it.pendingEdit
@@ -378,24 +477,25 @@ export const COPYRIGHT_FREE_CATEGORY_PHOTOS = {
               isApproved: true,
               updatedAt: Date.now()
             };
-        approvedItemRef = approvedVersion;
+        approvedRef = approvedVersion;
         if (selectedItem && selectedItem.id === id) {
           setSelectedItem(approvedVersion);
         }
         return approvedVersion;
       });
       SanatanUnlimitedDB.saveItems(next);
-      if (approvedItemRef) {
-        persistItemRecordPermanently(approvedItemRef, next);
+      if (approvedRef) {
+        persistItemRecordPermanently(approvedRef, next);
       }
       return next;
     });
-    showToast('✅ Admin Approved! Changes & content are now permanently live.');
+    showToast('✅ Admin Approved! Changes are live and syncing globally.');
   };
-
-  const handleRejectPendingEdit = (id) => {
 // ... existing code ...
-    if (canApproveDirectly) {
+  const handleSaveEditedItem = (e) => {
+    e.preventDefault();
+    if (!editingItem) return;
+    if (isAdminAuthenticated) {
       const stampedItem = {
         ...editingItem,
         pendingEdit: null,
@@ -405,7 +505,6 @@ export const COPYRIGHT_FREE_CATEGORY_PHOTOS = {
       };
       setItems((prev) => {
         const next = prev.map((it) => (it.id === stampedItem.id ? stampedItem : it));
-        try { localStorage.setItem('sanatan_setu_items_v6', JSON.stringify(next)); } catch {}
         SanatanUnlimitedDB.saveItems(next);
         persistItemRecordPermanently(stampedItem, next);
         return next;
@@ -414,26 +513,20 @@ export const COPYRIGHT_FREE_CATEGORY_PHOTOS = {
         setSelectedItem(stampedItem);
       }
       setEditingItem(null);
-      setInlineAdminPasscode('');
-      showToast('✅ Admin Approved: Cover image, YouTube video & content saved!');
+      showToast('✅ Admin saved changes! Syncing globally to GitHub...');
     } else {
-      // Non-admin user: stage edits in `pendingEdit` so the public page stays unchanged until Admin approves!
+      setItems((prev) =>
+        prev.map((it) =>
+          it.id === editingItem.id
+            ? { ...it, pendingEdit: { ...editingItem, updatedAt: Date.now() } }
+            : it
+        )
+      );
+      setEditingItem(null);
+      showToast('🔒 Edit submitted for Admin Approval! Unlock Admin to approve & publish.');
+    }
+  };
 // ... existing code ...
-                {/* Admin Navigation Tabs */}
-                <div className="flex flex-wrap gap-2 mb-6 border-b border-amber-500/20 pb-4">
-                  <button
-                    onClick={() => setAdminTab('pending')}
-                    className={`px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
-                      adminTab === 'pending'
-                        ? 'bg-[#EA580C] text-white shadow'
-                        : darkMode
-                        ? 'bg-[#18100B] text-amber-200'
-                        : 'bg-white text-[#78523A]'
-                    }`}
-                  >
-                    <Clock className="w-4 h-4" />
-                    <span>Pending Approval Queue ({pendingItems.length})</span>
-                  </button>
                   <button
                     onClick={() => setAdminTab('published')}
                     className={`px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
@@ -474,16 +567,8 @@ export const COPYRIGHT_FREE_CATEGORY_PHOTOS = {
                     <span>SEO Status &amp; index.html</span>
                   </button>
                 </div>
-
-                {/* Tab 1: Pending Approval Queue (Both New Uploads & Proposed Edits to Existing Items) */}
 // ... existing code ...
-                {/* Tab 2: Published Content Manager */}
-// ... existing code ...
-                    ))}
-                  </div>
-                )}
-
-                {/* Tab 3: Global Cross-Browser & Multi-Device Sync (Fixes "changes only visible in my current browser"!) */}
+                {/* Tab 3: Global Cross-Browser & Multi-Device Sync */}
                 {adminTab === 'cloud' && (
                   <div
                     className={`rounded-3xl p-6 sm:p-8 border space-y-6 ${
@@ -499,7 +584,7 @@ export const COPYRIGHT_FREE_CATEGORY_PHOTOS = {
                           Make Admin Edits, Cover Images &amp; YouTube Videos Live on Every Browser
                         </h3>
                         <p className={`text-xs mt-1 leading-relaxed ${darkMode ? 'text-amber-200/80' : 'text-[#78523A]'}`}>
-                          Why did changes only appear on one browser before? Because browsers isolate <code>localStorage</code> and <code>IndexedDB</code> per device. Connect your GitHub Personal Access Token once below (or download &amp; commit <code>public/sanatan-global-db.json</code>), and every Admin edit you make will automatically push to your repository and appear on **all browsers, phones, and computers worldwide**!
+                          Paste your GitHub Personal Access Token below once (with <strong>Contents: Read &amp; Write</strong> permission), or click <strong>Download public/sanatan-global-db.json</strong> and upload it to your GitHub <code>public/</code> folder so every visitor on any browser sees your Admin-approved updates!
                         </p>
                       </div>
                       {lastGlobalSyncStatus && (
@@ -550,7 +635,7 @@ export const COPYRIGHT_FREE_CATEGORY_PHOTOS = {
 
                     <div>
                       <label className="block text-xs font-bold uppercase text-[#EA580C] mb-1">
-                        GitHub Personal Access Token (Fine-Grained or Classic with &ldquo;Contents: Read &amp; Write&rdquo; permission)
+                        GitHub Personal Access Token (Contents: Read &amp; Write)
                       </label>
                       <input
                         type="password"
@@ -560,14 +645,11 @@ export const COPYRIGHT_FREE_CATEGORY_PHOTOS = {
                           setGlobalSyncConfig(updated);
                           try { localStorage.setItem('sanatan_global_sync_config_v1', JSON.stringify(updated)); } catch {}
                         }}
-                        placeholder="ghp_... or github_pat_... (Or set VITE_GITHUB_TOKEN in Vercel Environment Variables)"
+                        placeholder="github_pat_... or ghp_... (Or set VITE_GITHUB_TOKEN in Vercel Environment Variables)"
                         className={`w-full px-3.5 py-2.5 rounded-xl border text-xs ${
                           darkMode ? 'bg-[#22160F] border-amber-500/30 text-amber-50' : 'bg-amber-50/50 border-amber-900/20'
                         }`}
                       />
-                      <p className={`text-[11px] mt-1 ${darkMode ? 'text-amber-300/70' : 'text-[#78523A]'}`}>
-                        💡 Tip: You can also add <code>VITE_GITHUB_TOKEN</code> in your Vercel Project Settings → Environment Variables so you never have to type it again.
-                      </p>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-3 pt-2">
@@ -577,7 +659,7 @@ export const COPYRIGHT_FREE_CATEGORY_PHOTOS = {
                         onClick={async () => {
                           const ok = await pushGlobalDatabaseToCloud(items, undefined, categoryCustomImages);
                           if (!ok && !globalSyncConfig.githubToken) {
-                            showToast('Please enter your GitHub Token above (or click Download sanatan-global-db.json below).');
+                            showToast('Please paste your GitHub Token above (or click Download sanatan-global-db.json below).');
                           }
                         }}
                         className="px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold shadow-lg flex items-center gap-2 transition-all"
@@ -627,3 +709,7 @@ export const COPYRIGHT_FREE_CATEGORY_PHOTOS = {
                 {/* Tab 4: Live SEO Status & index.html Helper */}
                 {adminTab === 'seo' && (
 // ... existing code ...
+      </footer>
+    </div>
+  );
+}
