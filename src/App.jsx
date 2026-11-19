@@ -8,13 +8,19 @@ import {
   Check, AlertCircle, FileText
 } from 'lucide-react';
 
-// Change your default Admin Password here
-export const DEFAULT_ADMIN_PASSCODE = 'admin108';
+// ============================================================================
+// Sanatan Setu - Complete App.jsx with all features
+// Features: Dark mode, SEO suite, 27 languages, Smart Omnibox search,
+//   pushState navigation, Mantra Marquee, Aarti/Ghanta, Daily Shloka carousel,
+//   Rudraksha ring, SacredImageFrame, YouTube embed, PDF eBooks, Admin approval
+// ============================================================================
 
-// Global Cloud & GitHub Repository Configuration
+export const DEFAULT_ADMIN_PASSCODE = 'admin108';
 export const GLOBAL_SYNC_DEFAULT_REPO = 'manhar900/sanatansetu';
 export const GLOBAL_SYNC_DEFAULT_BRANCH = 'main';
 export const GLOBAL_SYNC_FILE_PATH = 'public/sanatan-global-db.json';
+
+const SECURE_PROTO = ['htt', 'ps://'].join('');
 
 // Traditional Handcrafted Vedic 8-Petal Lotus (Padma) Emblem
 export const SacredLotusIcon = ({ className = 'w-4 h-4' }) => (
@@ -23,12 +29,12 @@ export const SacredLotusIcon = ({ className = 'w-4 h-4' }) => (
   </svg>
 );
 
-// 27 Supported Languages
+// 27 Supported Languages: 15 Indian + 12 World
 export const SUPPORTED_LANGUAGES = [
   { id: 'Sanskrit', label: 'Sanskrit (संस्कृतम्)', native: 'संस्कृतम्', group: 'Indian', locale: 'hi-IN', greeting: 'हरिः ॐ तत् सत्' },
   { id: 'Hindi', label: 'Hindi (हिन्दी)', native: 'हिन्दी', group: 'Indian', locale: 'hi-IN', greeting: 'जय श्री राम · हर हर महादेव' },
   { id: 'English', label: 'English', native: 'English', group: 'Indian & Global', locale: 'en-IN', greeting: 'Om Tat Sat · Eternal Dharma' },
-  { id: 'Odia', label: 'Odia (ଓଡ଼ିଆ)', native: 'ଓଡ଼ିଆ', group: 'Indian', locale: 'or-IN', greeting: 'ଜୟ ଜଗନ୍ନାଥ · ସನಾତନ ସେତୁ' },
+  { id: 'Odia', label: 'Odia (ଓଡ଼ିଆ)', native: 'ଓଡ଼ିଆ', group: 'Indian', locale: 'or-IN', greeting: 'ଜୟ ଜଗନ୍ନାଥ · ସନାତନ ସେତୁ' },
   { id: 'Bengali', label: 'Bengali (বাংলা)', native: 'বাংলা', group: 'Indian', locale: 'bn-IN', greeting: 'জয় মা দুর্গা · সনাতন সেতু' },
   { id: 'Marathi', label: 'Marathi (मराठी)', native: 'मराठी', group: 'Indian', locale: 'mr-IN', greeting: 'राम कृष्ण हरी · सनातन सेतू' },
   { id: 'Gujarati', label: 'Gujarati (ગુજરાતી)', native: 'ગુજરાતી', group: 'Indian', locale: 'gu-IN', greeting: 'જય શ્રી કૃષ્ણ · સનાતન સેતુ' },
@@ -54,9 +60,47 @@ export const SUPPORTED_LANGUAGES = [
   { id: 'Italian', label: 'Italian (Italiano)', native: 'Italiano', group: 'World', locale: 'it-IT', greeting: 'Saggezza Vedica Eterna · Sanatan Dharma' }
 ];
 
-export const SECURE_PROTO = ['htt', 'ps://'].join('');
+// Unicode transliteration: Devanagari → native Indian scripts (for Odia/Bengali/Tamil/etc.)
+const DEVANAGARI_TO_NATIVE = {
+  // Full Unicode mapping for Odia/Bengali/Gujarati/Punjabi/Tamil/Telugu/Kannada/Malayalam/Assamese
+  // For simplicity, we provide a transliteration for the most common devanagari chars.
+  // In production, this would use full ICU transliteration; here we use a partial but practical map.
+  'अ': 'ଅ', 'आ': 'ଆ', 'इ': 'ଇ', 'ई': 'ଈ', 'उ': 'ଉ', 'ऊ': 'ଊ', 'ऋ': 'ଋ', 'ए': 'ଏ', 'ऐ': 'ଐ', 'ओ': 'ଓ', 'औ': 'ଔ',
+  'क': 'କ', 'ख': 'ଖ', 'ग': 'ଗ', 'घ': 'ଘ', 'ङ': 'ଙ',
+  'च': 'ଚ', 'छ': 'ଛ', 'ज': 'ଜ', 'झ': 'ଝ', 'ञ': 'ଞ',
+  'ट': 'ଟ', 'ठ': 'ଠ', 'ड': 'ଡ', 'ढ': 'ଢ', 'ण': 'ଣ',
+  'त': 'ତ', 'थ': 'ଥ', 'द': 'ଦ', 'ध': 'ଧ', 'न': 'ନ',
+  'प': 'ପ', 'फ': 'ଫ', 'ब': 'ବ', 'भ': 'ଭ', 'म': 'ମ',
+  'य': 'ୟ', 'र': 'ର', 'ल': 'ଲ', 'व': 'ୱ',
+  'श': 'ଶ', 'ष': 'ଷ', 'स': 'ସ', 'ह': 'ହ',
+  'क्ष': 'କ୍ଷ', 'त्र': 'ତ୍ର', 'ज्ञ': 'ଜ୍ଞ',
+  'ा': 'ା', 'ि': 'ି', 'ी': 'ୀ', 'ु': 'ୁ', 'ू': 'ୂ', 'ृ': 'ୃ', 'े': 'େ', 'ै': 'ୈ', 'ो': 'ୋ', 'ौ': 'ୌ',
+  'ं': 'ଂ', 'ः': 'ଃ', 'ऽ': 'ଽ', '।': '।', '॥': '॥',
+  '०': '୦', '१': '୧', '२': '୨', '३': '୩', '४': '୪', '५': '୫', '६': '୬', '७': '୭', '८': '୮', '९': '୯'
+};
 
-// Strips accidental google search redirect prefix and extracts clean URL or YouTube ID
+export function transliterateDevanagariToNativeScript(text, targetLang) {
+  if (!text || typeof text !== 'string') return '';
+  if (targetLang === 'Hindi' || targetLang === 'Sanskrit' || targetLang === 'Marathi' || targetLang === 'Maithili' || targetLang === 'Nepali') return text;
+  if (targetLang === 'Odia' || targetLang === 'Assamese' || targetLang === 'Bengali') {
+    // Use the Devanagari → Odia/Bengali/Assamese map (these scripts share many code points)
+    let result = '';
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      const next = text[i + 1];
+      const pair = ch + (next || '');
+      if (DEVANAGARI_TO_NATIVE[pair]) { result += DEVANAGARI_TO_NATIVE[pair]; i++; continue; }
+      if (DEVANAGARI_TO_NATIVE[ch]) { result += DEVANAGARI_TO_NATIVE[ch]; continue; }
+      result += ch;
+    }
+    return result;
+  }
+  // For other scripts (Tamil, Telugu, etc.) and World languages, return as-is for now.
+  // In a real implementation, this would use a proper transliteration library.
+  return text;
+}
+
+// Strips accidental google search redirect prefix
 export function cleanExternalUrl(rawUrl) {
   if (!rawUrl || typeof rawUrl !== 'string') return '';
   let u = rawUrl.trim();
@@ -84,21 +128,25 @@ export function extractYouTubeId(url) {
 export function getYouTubeEmbedUrl(url) {
   const ytId = extractYouTubeId(url);
   if (!ytId) return null;
-  const host = ['www', 'youtube', 'com'].join('.');
-  return `${SECURE_PROTO}${host}/embed/${ytId}?playsinline=1&rel=0&modestbranding=1`;
+  return `${SECURE_PROTO}${['www','youtube','com'].join('.')}/embed/${ytId}?playsinline=1&rel=0&modestbranding=1`;
 }
 
-// Helper that returns body text in the requested language
+export function getYouTubeThumbUrl(url) {
+  const ytId = extractYouTubeId(url);
+  if (!ytId) return null;
+  return `${SECURE_PROTO}${['i','ytimg','com'].join('.')}/vi/${ytId}/hqdefault.jpg`;
+}
+
 export function getBodyForLanguage(item, lang = 'English') {
   if (!item) return '';
   if (item.body && typeof item.body === 'object') {
     if (item.body[lang]) return item.body[lang];
-    if (item.body['English']) return item.body['English'];
+    if (item.body['English']) return transliterateDevanagariToNativeScript(item.body['English'], lang);
   }
   return item.description || '';
 }
 
-// Opens a richly typeset, print-ready Sacred PDF eBook view for ANY item
+// Opens a richly typeset, print-ready Sacred PDF eBook view
 export function openSacredPrintablePdf(item, lang = 'English') {
   if (typeof window === 'undefined') return;
   if (item.pdfUrl && item.pdfUrl !== '#auto-pdf' && !item.pdfUrl.startsWith('#')) {
@@ -106,153 +154,94 @@ export function openSacredPrintablePdf(item, lang = 'English') {
     return;
   }
   const bodyText = getBodyForLanguage(item, lang);
-  const sanText = typeof item.body === 'object' && item.body.Sanskrit ? item.body.Sanskrit : '';
-  const hinText = typeof item.body === 'object' && item.body.Hindi ? item.body.Hindi : '';
-  const engText = typeof item.body === 'object' && item.body.English ? item.body.English : bodyText;
+  const sanText = item.body?.Sanskrit || '';
+  const hinText = item.body?.Hindi || '';
+  const engText = item.body?.English || bodyText;
   const win = window.open('', '_blank');
   if (!win) return;
-  const esc = (str) => String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  win.document.write(`<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <title>${esc(item.title)} - Sacred PDF eBook | Sanatan Setu Library</title>
-  <style>
-    @page { size: A4; margin: 18mm; }
-    body { font-family: Georgia, 'Noto Serif Devanagari', serif; background: #FFFDF7; color: #2C1A12; line-height: 1.75; padding: 24px 36px; max-width: 820px; margin: 0 auto; }
-    .toolbar { background: #2C1A12; color: #FDE68A; padding: 12px 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; font-family: system-ui, sans-serif; }
-    .btn { background: #EA580C; color: #fff; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; }
-    .header-box { border: 2px solid #D97706; border-radius: 16px; padding: 22px; background: #FFFBEB; text-align: center; margin-bottom: 24px; }
-    .badge { color: #EA580C; font-weight: bold; font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; }
-    h1 { font-size: 24px; margin: 8px 0; color: #7C2D12; }
-    .meta { font-size: 13px; color: #78523A; }
-    .section-title { font-size: 15px; font-weight: bold; color: #EA580C; border-bottom: 1px solid #FDE68A; padding-bottom: 6px; margin-top: 24px; margin-bottom: 10px; text-transform: uppercase; }
-    .content { white-space: pre-line; font-size: 15px; }
-    @media print { .toolbar { display: none; } body { padding: 0; background: #fff; } }
-  </style>
-</head>
-<body>
-  <div class="toolbar">
-    <span><strong>Sanatan Setu Sacred PDF eBook</strong> · ${esc(item.title)}</span>
-    <button class="btn" onclick="window.print()">Save as PDF / Print</button>
-  </div>
-  <div class="header-box">
-    <div class="badge">Sri Ganesaya Namah · ${esc(item.sanskritBadge || item.category)}</div>
-    <h1>${esc(item.title)}</h1>
-    <div class="meta">Source / Tradition: ${esc(item.author || 'Vedic Tradition')} · Sanatan Setu Library</div>
-    <p style="font-style:italic; font-size:14px; margin-top:10px;">${esc(item.description)}</p>
-  </div>
-  ${sanText ? `<div class="section-title">Original Sanskrit Verses</div><div class="content">${esc(sanText)}</div>` : ''}
-  ${hinText ? `<div class="section-title">Hindi Text & Meaning</div><div class="content">${esc(hinText)}</div>` : ''}
-  ${engText ? `<div class="section-title">Complete English Text & Commentary</div><div class="content">${esc(engText)}</div>` : ''}
-</body>
-</html>`);
+  const esc = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(item.title)} - Sacred PDF eBook</title>
+<style>
+@page { size: A4; margin: 18mm; }
+body { font-family: Georgia, 'Noto Serif Devanagari', serif; background: #FFFDF7; color: #2C1A12; line-height: 1.75; padding: 24px 36px; max-width: 820px; margin: 0 auto; }
+.toolbar { background: #2C1A12; color: #FDE68A; padding: 12px 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; font-family: system-ui; }
+.btn { background: #EA580C; color: #fff; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+.header-box { border: 2px solid #D97706; border-radius: 16px; padding: 22px; background: #FFFBEB; text-align: center; margin-bottom: 24px; }
+.badge { color: #EA580C; font-weight: bold; font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; }
+h1 { font-size: 24px; margin: 8px 0; color: #7C2D12; }
+.meta { font-size: 13px; color: #78523A; }
+.section-title { font-size: 15px; font-weight: bold; color: #EA580C; border-bottom: 1px solid #FDE68A; padding-bottom: 6px; margin-top: 24px; margin-bottom: 10px; text-transform: uppercase; }
+.content { white-space: pre-line; font-size: 15px; }
+@media print { .toolbar { display: none; } body { padding: 0; background: #fff; } }
+</style></head><body>
+<div class="toolbar"><span><strong>Sanatan Setu Sacred PDF eBook</strong> · ${esc(item.title)}</span><button class="btn" onclick="window.print()">Save as PDF / Print</button></div>
+<div class="header-box"><div class="badge">|| Sri Ganesaya Namah · ${esc(item.sanskritBadge || item.category)} ||</div><h1>${esc(item.title)}</h1><div class="meta">Source: ${esc(item.author || 'Vedic Tradition')} · Sanatan Setu Library</div><p style="font-style:italic;font-size:14px;margin-top:10px;">${esc(item.description)}</p></div>
+${sanText ? `<div class="section-title">|| Original Sanskrit Verses ||</div><div class="content">${esc(sanText)}</div>` : ''}
+${hinText ? `<div class="section-title">|| Hindi Text &amp; Meaning ||</div><div class="content">${esc(hinText)}</div>` : ''}
+${engText ? `<div class="section-title">|| Complete English Text &amp; Commentary ||</div><div class="content">${esc(engText)}</div>` : ''}
+</body></html>`);
   win.document.close();
 }
 
-// Unlimited Browser Database Engine (IndexedDB)
+// IndexedDB wrapper (uses v5 key for compatibility with existing user data)
 export const SanatanUnlimitedDB = {
   dbName: 'SanatanSetuUnlimitedDB',
   storeName: 'sacred_items_store',
   open() {
     return new Promise((resolve, reject) => {
-      if (typeof window === 'undefined' || !window.indexedDB) {
-        return reject(new Error('IndexedDB unavailable'));
-      }
+      if (typeof window === 'undefined' || !window.indexedDB) return reject(new Error('IndexedDB unavailable'));
       const req = window.indexedDB.open(this.dbName, 1);
       req.onupgradeneeded = (e) => {
         const db = e.target.result;
-        if (!db.objectStoreNames.contains(this.storeName)) {
-          db.createObjectStore(this.storeName);
-        }
+        if (!db.objectStoreNames.contains(this.storeName)) db.createObjectStore(this.storeName);
       };
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => reject(req.error);
     });
   },
-  async saveItems(itemsArray) {
-    try {
-      const db = await this.open();
-      const tx = db.transaction(this.storeName, 'readwrite');
-      tx.objectStore(this.storeName).put(itemsArray, 'all_items_v5');
-    } catch (e) {}
-  },
-  async loadItems() {
-    try {
-      const db = await this.open();
-      return await new Promise((resolve) => {
-        const tx = db.transaction(this.storeName, 'readonly');
-        const req = tx.objectStore(this.storeName).get('all_items_v5');
-        req.onsuccess = () => resolve(req.result || null);
-        req.onerror = () => resolve(null);
-      });
-    } catch (e) { return null; }
-  },
-  async saveEditsMap(editsMap) {
-    try {
-      const db = await this.open();
-      const tx = db.transaction(this.storeName, 'readwrite');
-      tx.objectStore(this.storeName).put(editsMap, 'edits_map_v1');
-    } catch (e) {}
-  },
-  async loadEditsMap() {
-    try {
-      const db = await this.open();
-      return await new Promise((resolve) => {
-        const tx = db.transaction(this.storeName, 'readonly');
-        const req = tx.objectStore(this.storeName).get('edits_map_v1');
-        req.onsuccess = () => resolve(req.result || null);
-        req.onerror = () => resolve(null);
-      });
-    } catch (e) { return null; }
-  }
+  async saveItems(arr) { try { const db = await this.open(); const tx = db.transaction(this.storeName, 'readwrite'); tx.objectStore(this.storeName).put(arr, 'all_items_v5'); } catch (e) {} },
+  async loadItems() { try { const db = await this.open(); return await new Promise((r) => { const tx = db.transaction(this.storeName, 'readonly'); const req = tx.objectStore(this.storeName).get('all_items_v5'); req.onsuccess = () => r(req.result || null); req.onerror = () => r(null); }); } catch (e) { return null; } },
+  async saveEditsMap(m) { try { const db = await this.open(); const tx = db.transaction(this.storeName, 'readwrite'); tx.objectStore(this.storeName).put(m, 'edits_map_v1'); } catch (e) {} },
+  async loadEditsMap() { try { const db = await this.open(); return await new Promise((r) => { const tx = db.transaction(this.storeName, 'readonly'); const req = tx.objectStore(this.storeName).get('edits_map_v1'); req.onsuccess = () => r(req.result || null); req.onerror = () => r(null); }); } catch (e) { return null; } }
 };
 
-// Compresses uploaded cover images
 export function compressCoverImageFile(file, maxWidth = 1000, quality = 0.82) {
   return new Promise((resolve) => {
     const reader = new FileReader();
     reader.onload = (event) => {
-      const rawDataUrl = event.target?.result;
-      if (typeof rawDataUrl !== 'string') return resolve('');
+      const raw = event.target?.result;
+      if (typeof raw !== 'string') return resolve('');
       const img = new Image();
       img.onload = () => {
         try {
-          let width = img.width;
-          let height = img.height;
-          if (width > maxWidth) {
-            height = Math.round((height * maxWidth) / width);
-            width = maxWidth;
-          }
+          let w = img.width, h = img.height;
+          if (w > maxWidth) { h = Math.round((h * maxWidth) / w); w = maxWidth; }
           const canvas = document.createElement('canvas');
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
-          const compressed = canvas.toDataURL('image/jpeg', quality);
-          resolve(compressed.length < rawDataUrl.length ? compressed : rawDataUrl);
-        } catch (err) { resolve(rawDataUrl); }
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          const out = canvas.toDataURL('image/jpeg', quality);
+          resolve(out.length < raw.length ? out : raw);
+        } catch { resolve(raw); }
       };
-      img.onerror = () => resolve(rawDataUrl);
-      img.src = rawDataUrl;
+      img.onerror = () => resolve(raw);
+      img.src = raw;
     };
     reader.onerror = () => resolve('');
     reader.readAsDataURL(file);
   });
 }
 
-// UTF-8 safe Base64 for GitHub REST API commits
 export function encodeUtf8Base64(str) {
   const bytes = new TextEncoder().encode(str);
   let binary = '';
-  const chunkSize = 0x8000;
-  for (let i = 0; i < bytes.length; i += chunkSize) {
-    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
   }
   return btoa(binary);
 }
 
-// Copyright-Free (CC / Public Domain) Wikimedia Commons Photographs for Categories
+// Wikimedia Commons photos (CC / Public Domain)
 export const COPYRIGHT_FREE_CATEGORY_PHOTOS = {
   'Vedas': 'https://commons.wikimedia.org/wiki/Special:FilePath/1500-1200_BCE_Rigveda,_manuscript_page_sample_ii,_Sanskrit,_Devanagari.jpg?width=900',
   'Upanishads': 'https://commons.wikimedia.org/wiki/Special:FilePath/1500-1200_BCE,_Vivaha_sukta,_Rigveda_10.85.1-8,_Sanskrit,_Devanagari,_manuscript_page.jpg?width=900',
@@ -268,7 +257,6 @@ export const COPYRIGHT_FREE_CATEGORY_PHOTOS = {
   'Sant Teachings': 'https://commons.wikimedia.org/wiki/Special:FilePath/Hanuman_before_Rama.jpg?width=900'
 };
 
-// Per-item copyright-free photos (overrides default category photo when available)
 export const COPYRIGHT_FREE_ITEM_PHOTOS = {
   'jagannath-temple-puri': 'https://commons.wikimedia.org/wiki/Special:FilePath/Lord_Jagannath_Temple,_Puri.jpg?width=900',
   'kamakhya-temple-assam': 'https://commons.wikimedia.org/wiki/Special:FilePath/Maa_Kamakhya_temple.jpg?width=900',
@@ -310,60 +298,119 @@ export const SanatanSetuLogo = ({ size = 44, className = '' }) => (
   </svg>
 );
 
+// Daily Shlokas for the carousel
+const DAILY_SHLOKAS = [
+  { sanskrit: 'कर्मण्येवाधिकारस्ते मा फलेषु कदाचन।\nमा कर्मफलहेतुर्भूर्मा ते सङ्गोऽस्त्वकर्मणि॥', hindi: 'कर्म करने में ही तुम्हारा अधिकार है, फल में कभी नहीं। इसलिए फल के हेतु मत बनो, कर्म के प्रति आसक्ति भी मत करो।', english: 'You have a right to perform your prescribed duty, but never to the fruits of action. Never consider yourself the cause of the results, nor be attached to inaction. — Bhagavad Gita 2.47' },
+  { sanskrit: 'ॐ नमः शिवाय।', hindi: 'ॐ नमः शिवाय - भगवान शिव को नमन।', english: 'Om Namah Shivaya - Salutations to Lord Shiva, the Five-Syllable Panchakshari Mantra.' },
+  { sanskrit: 'तत्त्वमसि।', hindi: 'तू ही वही है - तत्वमसि महावाक्य।', english: 'Tat Tvam Asi - Thou Art That. The great Mahavakya of the Chandogya Upanishad affirming oneness of Self and Brahman.' },
+  { sanskrit: 'सर्वे भवन्तु सुखिनः सर्वे सन्तु निरामयाः।\nसर्वे भद्राणि पश्यन्तु मा कश्चित् दुःखभाग्भवेत्॥', hindi: 'सभी सुखी हों, सभी रोगमुक्त रहें, सभी मंगल देखें, कोई दुःखी न हो।', english: 'May all be happy, may all be free from illness, may all see auspicious things, and may no one suffer. — Shanti Mantra' },
+  { sanskrit: 'अहं ब्रह्मास्मि।', hindi: 'मैं ही ब्रह्म हूँ।', english: 'Aham Brahmasmi - I am Brahman. Mahavakya of the Brihadaranyaka Upanishad.' },
+  { sanskrit: 'हरे कृष्ण हरे कृष्ण कृष्ण कृष्ण हरे हरे।\nहरे राम हरे राम राम राम हरे हरे॥', hindi: 'हरे कृष्ण महामन्त्र - श्री चैतन्य महाप्रभु द्वारा प्रचारित १६-शब्द का महामन्त्र।', english: 'The Hare Krishna Maha Mantra - the 16-word great chant revealed by Sri Chaitanya Mahaprabhu for Kali Yuga.' }
+];
+
+// Mantras for the top infinite marquee
+const SACRED_MARQUEE_MANTRAS = [
+  '॥ ॐ नमः शिवाय ॥',
+  '॥ हरे कृष्ण हरे कृष्ण कृष्ण कृष्ण हरे हरे ॥',
+  '॥ ॐ भूर्भुवः स्वः तत्सवितुर्वरेण्यं भर्गो देवस्य धीमहि धियो यो नः प्रचोदयात् ॥',
+  '॥ ॐ त्र्यम्बकं यजामहे सुगन्धिं पुष्टिवर्धनम् ॥',
+  '॥ तत्त्वमसि · अहं ब्रह्मास्मि · प्रज्ञानं ब्रह्म ॥',
+  '॥ श्री राम जय राम जय जय राम ॥',
+  '॥ ॐ गं गणपतये नमः ॥',
+  '॥ ॐ नमो भगवते वासुदेवाय ॥'
+];
+
 // Advanced CSS Keyframe Animations
 export const SacredAnimationsStyle = () => (
   <style>{`
-    @keyframes floatSlow {
-      0%, 100% { transform: translateY(0px) rotate(0deg); }
-      50% { transform: translateY(-8px) rotate(2deg); }
-    }
-    @keyframes spinSlow {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-    @keyframes spinReverseSlow {
-      from { transform: rotate(360deg); }
-      to { transform: rotate(0deg); }
-    }
-    @keyframes pulseGlow {
-      0%, 100% { box-shadow: 0 0 20px rgba(234, 88, 12, 0.4), 0 0 45px rgba(245, 158, 11, 0.22); }
-      50% { box-shadow: 0 0 36px rgba(234, 88, 12, 0.75), 0 0 70px rgba(245, 158, 11, 0.45); }
-    }
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(16px) scale(0.98); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-    @keyframes shimmerGold {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-    @keyframes sacredMarquee {
-      0% { transform: translateX(0%); }
-      100% { transform: translateX(-50%); }
-    }
-    @keyframes aartiOrbit {
-      0% { transform: rotate(0deg) translateX(78px) rotate(0deg); }
-      100% { transform: rotate(360deg) translateX(78px) rotate(-360deg); }
-    }
-    @keyframes diyaFlicker {
-      0%, 100% { transform: scale(1) rotate(-2deg); opacity: 0.95; }
-      50% { transform: scale(1.14, 1.22) rotate(2deg); opacity: 1; }
-    }
+    @keyframes floatSlow { 0%,100% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-8px) rotate(2deg); } }
+    @keyframes spinSlow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes spinReverseSlow { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+    @keyframes pulseGlow { 0%,100% { box-shadow: 0 0 20px rgba(234,88,12,0.4), 0 0 45px rgba(245,158,11,0.22); } 50% { box-shadow: 0 0 36px rgba(234,88,12,0.75), 0 0 70px rgba(245,158,11,0.45); } }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(16px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @keyframes shimmerGold { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+    @keyframes sacredMarquee { 0% { transform: translateX(0%); } 100% { transform: translateX(-50%); } }
+    @keyframes aartiOrbit { 0% { transform: rotate(0deg) translateX(78px) rotate(0deg); } 100% { transform: rotate(360deg) translateX(78px) rotate(-360deg); } }
+    @keyframes diyaFlicker { 0%,100% { transform: scale(1) rotate(-2deg); opacity: 0.95; } 50% { transform: scale(1.14, 1.22) rotate(2deg); opacity: 1; } }
+    @keyframes chantParticle { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-90px) scale(0.4); opacity: 0; } }
+    @keyframes beadLight { 0%,100% { opacity: 0.35; transform: scale(1); } 50% { opacity: 1; transform: scale(1.2); box-shadow: 0 0 8px #f59e0b; } }
     .anim-float { animation: floatSlow 6s ease-in-out infinite; }
     .anim-spin-slow { animation: spinSlow 28s linear infinite; }
     .anim-spin-reverse-slow { animation: spinReverseSlow 32s linear infinite; }
     .anim-pulse-glow { animation: pulseGlow 3.2s ease-in-out infinite; }
     .anim-fade-in-up { animation: fadeInUp 0.5s ease-out both; }
-    .anim-shimmer { background-size: 200% 200%; animation: shimmerGold 4s linear infinite; }
-    .anim-marquee { animation: sacredMarquee 32s linear infinite; }
+    .anim-shimmer-gold { background: linear-gradient(90deg, #b45309 0%, #f59e0b 25%, #fde68a 50%, #f59e0b 75%, #b45309 100%); background-size: 200% 200%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: shimmerGold 4s linear infinite; }
+    .anim-marquee { animation: sacredMarquee 38s linear infinite; }
+    .anim-marquee:hover { animation-play-state: paused; }
     .anim-aarti-orbit { animation: aartiOrbit 5.5s linear infinite; }
     .anim-diya { animation: diyaFlicker 2.2s ease-in-out infinite; }
+    .anim-chant-particle { animation: chantParticle 1.4s ease-out forwards; }
+    .anim-bead-light { animation: beadLight 1.5s ease-in-out infinite; }
+    .card-3d-hover { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+    .card-3d-hover:hover { transform: translateY(-6px); box-shadow: 0 20px 35px -10px rgba(234,88,12,0.35); }
+    .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
   `}</style>
 );
 
+// SacredImageFrame - dual-layer image with blurred bg + object-contain foreground, with Frame Fit toggle
+function SacredImageFrame({ src, alt, fitMode = 'contain', className = '' }) {
+  const [mode, setMode] = useState(fitMode);
+  if (!src) return <div className={`bg-amber-100 dark:bg-amber-900/30 ${className}`} />;
+  return (
+    <div className={`relative overflow-hidden ${className}`}>
+      {mode === 'contain' && (
+        <div className="absolute inset-0 bg-cover bg-center scale-110 blur-md opacity-60" style={{ backgroundImage: `url(${src})` }} aria-hidden="true" />
+      )}
+      <img
+        src={src}
+        alt={alt}
+        loading="lazy"
+        className={`relative w-full h-full transition-transform ${mode === 'contain' ? 'object-contain p-2' : 'object-cover'}`}
+      />
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); setMode(mode === 'contain' ? 'cover' : 'contain'); }}
+        className="absolute top-1.5 right-1.5 px-2 py-1 rounded-md bg-black/60 text-white text-[10px] font-bold hover:bg-black/80 z-10"
+        title="Toggle Frame Fit (Full Uncropped / Fill Frame)"
+      >
+        {mode === 'contain' ? '▭ Fit' : '⛶ Fill'}
+      </button>
+    </div>
+  );
+}
+
+// SacredVideoPlayer - inline YouTube embed with referrerPolicy + fallback thumb
+function SacredVideoPlayer({ url, title }) {
+  const embed = getYouTubeEmbedUrl(url);
+  const thumb = getYouTubeThumbUrl(url);
+  const [showIframe, setShowIframe] = useState(false);
+  if (!embed) return null;
+  return (
+    <div className="mb-4 aspect-video rounded-xl overflow-hidden bg-black relative">
+      {showIframe ? (
+        <iframe
+          src={embed}
+          className="w-full h-full"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          referrerPolicy="strict-origin-when-cross-origin"
+          title={title || 'Sacred Video'}
+        />
+      ) : (
+        <button type="button" onClick={() => setShowIframe(true)} className="w-full h-full relative block" aria-label="Play video">
+          {thumb && <img src={thumb} alt={title || 'video thumbnail'} className="w-full h-full object-cover opacity-80" />}
+          <span className="absolute inset-0 flex items-center justify-center">
+            <span className="w-16 h-16 rounded-full bg-red-600 text-white flex items-center justify-center shadow-2xl text-2xl">▶</span>
+          </span>
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ============================================================================
-// CATEGORIES - 12 sacred knowledge categories (extracted from live site)
+// CATEGORIES - 12 sacred knowledge categories
 // ============================================================================
 const CATEGORIES = [
     { id: "Vedas", code: "VED", name: "Vedas", sanskrit: "वेद", description: "The eternal Shruti scriptures — Rigveda, Yajurveda, Samaveda, and Atharvaveda.", bgImage: COPYRIGHT_FREE_CATEGORY_PHOTOS["Vedas"] || "" },
@@ -381,7 +428,7 @@ const CATEGORIES = [
   ];
 
 // ============================================================================
-// DEFAULT_ITEMS - 44 sacred scriptures extracted from the live site
+// DEFAULT_ITEMS - 44 sacred scriptures
 // ============================================================================
 const DEFAULT_ITEMS = [
     {
@@ -3352,7 +3399,7 @@ Trinad api sunichena taror api sahishnuna, Amanina manadena kirtaniyah sada Hari
   ];
 
 // ============================================================================
-// JAAP_MANTRAS - 8 default chanting mantras for the 108-bead counter
+// JAAP_MANTRAS - 8 chanting mantras
 // ============================================================================
 const JAAP_MANTRAS = [
     { id: "om-namah-shivaya", name: "Om Namah Shivaya", sanskrit: "ॐ नमः शिवाय", deity: "Lord Shiva (Panchakshari)", defaultGoal: 108 },
@@ -3366,7 +3413,7 @@ const JAAP_MANTRAS = [
   ];
 
 // ============================================================================
-// Main App Component - uses all the above rich features
+// Main App Component
 // ============================================================================
 function App() {
   const [items, setItems] = useState(DEFAULT_ITEMS);
@@ -3378,24 +3425,18 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showBookmarksOnly, setShowBookmarksOnly] = useState(false);
   const [sortBy, setSortBy] = useState('Featured First');
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const [showAarti, setShowAarti] = useState(false);
+  const [showGhanta, setShowGhanta] = useState(false);
+  const [shlokaIndex, setShlokaIndex] = useState(0);
+  const [chantParticles, setChantParticles] = useState([]);
+  const [newPasscodeInput, setNewPasscodeInput] = useState('');
 
-  const [likedIds, setLikedIds] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('sanatan_setu_likes') || '[]'); }
-    catch { return []; }
-  });
-  const [bookmarkedIds, setBookmarkedIds] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('sanatan_setu_bookmarks') || '[]'); }
-    catch { return []; }
-  });
-  const [darkMode, setDarkMode] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('sanatan_setu_dark_mode') || 'false'); }
-    catch { return false; }
-  });
-  const [categoryCustomImages, setCategoryCustomImages] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('sanatan_setu_category_images_v1') || '{}'); }
-    catch { return {}; }
-  });
-  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
+  const [likedIds, setLikedIds] = useState(() => { try { return JSON.parse(localStorage.getItem('sanatan_setu_likes') || '[]'); } catch { return []; } });
+  const [bookmarkedIds, setBookmarkedIds] = useState(() => { try { return JSON.parse(localStorage.getItem('sanatan_setu_bookmarks') || '[]'); } catch { return []; } });
+  const [darkMode, setDarkMode] = useState(() => { try { return JSON.parse(localStorage.getItem('sanatan_setu_dark_mode') || 'false'); } catch { return false; } });
+  const [categoryCustomImages, setCategoryCustomImages] = useState(() => { try { return JSON.parse(localStorage.getItem('sanatan_setu_category_images_v1') || '{}'); } catch { return {}; } });
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(() => { try { return localStorage.getItem('sanatan_admin_auth') === 'true'; } catch { return false; } });
   const [adminPasscodeInput, setAdminPasscodeInput] = useState('');
   const [adminTab, setAdminTab] = useState('pending');
   const [editingItem, setEditingItem] = useState(null);
@@ -3412,31 +3453,16 @@ function App() {
       const saved = JSON.parse(localStorage.getItem('sanatan_global_sync_config_v1') || '{}');
       const envToken = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_GITHUB_TOKEN) || '';
       const envRepo = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_GITHUB_REPO) || GLOBAL_SYNC_DEFAULT_REPO;
-      return {
-        githubRepo: saved.githubRepo || envRepo,
-        githubBranch: saved.githubBranch || GLOBAL_SYNC_DEFAULT_BRANCH,
-        githubToken: saved.githubToken || envToken,
-        customCloudUrl: saved.customCloudUrl || ''
-      };
-    } catch {
-      return {
-        githubRepo: GLOBAL_SYNC_DEFAULT_REPO,
-        githubBranch: GLOBAL_SYNC_DEFAULT_BRANCH,
-        githubToken: '',
-        customCloudUrl: ''
-      };
-    }
+      return { githubRepo: saved.githubRepo || envRepo, githubBranch: saved.githubBranch || GLOBAL_SYNC_DEFAULT_BRANCH, githubToken: saved.githubToken || envToken, customCloudUrl: saved.customCloudUrl || '' };
+    } catch { return { githubRepo: GLOBAL_SYNC_DEFAULT_REPO, githubBranch: GLOBAL_SYNC_DEFAULT_BRANCH, githubToken: '', customCloudUrl: '' }; }
   });
   const [isSyncingGlobal, setIsSyncingGlobal] = useState(false);
   const [lastGlobalSyncStatus, setLastGlobalSyncStatus] = useState('');
 
-  // JAAP counter state
+  // JAAP state
   const [jaapMantra, setJaapMantra] = useState(JAAP_MANTRAS[0]);
   const [jaapCount, setJaapCount] = useState(0);
-  const [jaapTotal, setJaapTotal] = useState(() => {
-    try { return parseInt(localStorage.getItem('sanatan_jaap_total') || '0', 10); }
-    catch { return 0; }
-  });
+  const [jaapTotal, setJaapTotal] = useState(() => { try { return parseInt(localStorage.getItem('sanatan_jaap_total') || '0', 10); } catch { return 0; } });
   const [jaapAutoPlay, setJaapAutoPlay] = useState(false);
   const jaapAutoRef = useRef(null);
 
@@ -3447,7 +3473,72 @@ function App() {
     showToast._t = window.setTimeout(() => setToast(''), 3200);
   }, []);
 
-  // ---- IndexedDB hydration (uses v5 key) ----
+  // ---- SEO: Dynamic document head update ----
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    if (activeView === 'detail' && selectedItem) {
+      document.title = `${selectedItem.title} | ${selectedItem.category} – Sanatan Setu & Naam Jaap`;
+      const setMeta = (name, content) => {
+        let m = document.querySelector(`meta[name="${name}"]`);
+        if (!m) { m = document.createElement('meta'); m.setAttribute('name', name); document.head.appendChild(m); }
+        m.setAttribute('content', content);
+      };
+      setMeta('description', selectedItem.description || 'Sanatan Setu Sacred Scripture Library');
+      const jsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        headline: selectedItem.title,
+        description: selectedItem.description,
+        author: { '@type': 'Organization', name: selectedItem.author || 'Sanatan Setu Library' },
+        publisher: { '@type': 'Organization', name: 'Sanatan Setu Library' },
+        about: selectedItem.category
+      };
+      let script = document.getElementById('article-jsonld');
+      if (!script) { script = document.createElement('script'); script.id = 'article-jsonld'; script.type = 'application/ld+json'; document.head.appendChild(script); }
+      script.textContent = JSON.stringify(jsonLd);
+    } else {
+      document.title = 'Naam Jaap Counter (108 Digital Mala) & Sanatan Setu Hindu Scripture Library';
+      const s = document.getElementById('article-jsonld');
+      if (s) s.remove();
+    }
+  }, [activeView, selectedItem]);
+
+  // ---- URL routing with pushState + popstate ----
+  useEffect(() => {
+    const applyHash = () => {
+      const h = window.location.hash;
+      if (!h || h === '#home' || h === '#' || h === '') {
+        setActiveView('home'); setSelectedItem(null);
+      } else if (h.startsWith('#jaap')) {
+        setActiveView('jaap'); setSelectedItem(null);
+      } else if (h.startsWith('#upload')) {
+        setActiveView('upload'); setSelectedItem(null);
+      } else if (h.startsWith('#admin')) {
+        setActiveView('admin'); setSelectedItem(null);
+      } else if (h.startsWith('#article/')) {
+        const id = h.slice('#article/'.length);
+        const item = items.find((i) => i.id === id);
+        if (item) { setSelectedItem(item); setActiveView('detail'); }
+      } else if (h.startsWith('#category/')) {
+        const cat = decodeURIComponent(h.slice('#category/'.length));
+        setSelectedCategory(cat); setActiveView('home');
+        window.scrollTo({ top: 400, behavior: 'smooth' });
+      }
+    };
+    applyHash();
+    window.addEventListener('popstate', applyHash);
+    window.addEventListener('hashchange', applyHash);
+    return () => { window.removeEventListener('popstate', applyHash); window.removeEventListener('hashchange', applyHash); };
+  }, [items]);
+
+  const navigate = useCallback((hash) => {
+    if (window.location.hash !== hash) {
+      window.history.pushState({}, '', hash);
+      window.dispatchEvent(new Event('hashchange'));
+    }
+  }, []);
+
+  // ---- IndexedDB hydration ----
   useEffect(() => {
     let active = true;
     Promise.all([SanatanUnlimitedDB.loadItems(), SanatanUnlimitedDB.loadEditsMap()])
@@ -3458,9 +3549,7 @@ function App() {
           setItems((prev) => {
             const map = new Map();
             prev.forEach((it) => map.set(String(it.id), it));
-            idbItems.forEach((it) => {
-              if (it && it.id) map.set(String(it.id), { ...map.get(String(it.id)), ...it });
-            });
+            idbItems.forEach((it) => { if (it && it.id) map.set(String(it.id), { ...map.get(String(it.id)), ...it }); });
             return Array.from(map.values());
           });
         }
@@ -3469,24 +3558,26 @@ function App() {
     return () => { active = false; };
   }, []);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem('sanatan_setu_items_v6', JSON.stringify(items));
-      SanatanUnlimitedDB.saveItems(items);
-    } catch (e) {}
-  }, [items]);
-
+  useEffect(() => { try { localStorage.setItem('sanatan_setu_items_v6', JSON.stringify(items)); SanatanUnlimitedDB.saveItems(items); } catch (e) {} }, [items]);
   useEffect(() => { try { localStorage.setItem('sanatan_setu_likes', JSON.stringify(likedIds)); } catch {} }, [likedIds]);
   useEffect(() => { try { localStorage.setItem('sanatan_setu_bookmarks', JSON.stringify(bookmarkedIds)); } catch {} }, [bookmarkedIds]);
   useEffect(() => { try { localStorage.setItem('sanatan_setu_dark_mode', JSON.stringify(darkMode)); } catch {} }, [darkMode]);
   useEffect(() => { try { localStorage.setItem('sanatan_jaap_total', String(jaapTotal)); } catch {} }, [jaapTotal]);
 
+  // ---- Cross-tab storage sync ----
+  useEffect(() => {
+    const onStorage = (e) => {
+      if (e.key === 'sanatan_setu_items_v6' && e.newValue) {
+        try { setItems(JSON.parse(e.newValue)); } catch {}
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
   // ---- Derived items ----
   const approvedItems = useMemo(() => items.filter((i) => i.status !== 'rejected'), [items]);
-  const pendingItems = useMemo(
-    () => items.filter((i) => i.status === 'pending' || i.isApproved === false || Boolean(i.pendingEdit)),
-    [items]
-  );
+  const pendingItems = useMemo(() => items.filter((i) => i.status === 'pending' || i.isApproved === false || Boolean(i.pendingEdit)), [items]);
 
   const visibleItems = useMemo(() => {
     let list = approvedItems;
@@ -3529,7 +3620,33 @@ function App() {
     return '';
   }, [categoryCustomImages]);
 
-  // ---- Global sync fetch engine ----
+  // ---- Smart Search Omnibox suggestions ----
+  const searchSuggestions = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    const sugg = [];
+    if (!q) {
+      sugg.push({ type: 'trending', label: 'Trending Searches', items: ['Hanuman Chalisa', '108 Naam Jaap Counter', 'Jagannath Temple Puri', 'Bhagavad Gita', 'Shiva Tandava Stotram'] });
+      return sugg;
+    }
+    if (q.includes('jaap') || q.includes('mala') || q.includes('counter') || q.includes('108')) {
+      sugg.push({ type: 'tool', label: 'Instant Tool', action: 'jaap', title: '📿 108-Bead Digital Naam Jaap Counter' });
+    }
+    CATEGORIES.forEach((c) => {
+      if (c.name.toLowerCase().includes(q) || c.sanskrit.includes(searchQuery.trim())) {
+        sugg.push({ type: 'category', label: c.name, action: 'category', catId: c.id, sanskrit: c.sanskrit });
+      }
+    });
+    const matching = approvedItems.filter((i) => {
+      return i.title.toLowerCase().includes(q) || (i.description || '').toLowerCase().includes(q) ||
+        (Array.isArray(i.tags) ? i.tags : []).some((t) => String(t).toLowerCase().includes(q));
+    }).slice(0, 8);
+    matching.forEach((it) => {
+      sugg.push({ type: 'item', label: it.title, action: 'item', item: it, sanskritBadge: it.sanskritBadge });
+    });
+    return sugg;
+  }, [searchQuery, approvedItems]);
+
+  // ---- Global sync fetch ----
   const fetchGlobalPublishedDatabase = useCallback(async () => {
     const urlsToTry = [];
     if (globalSyncConfig.githubRepo) {
@@ -3570,7 +3687,7 @@ function App() {
     return false;
   }, [globalSyncConfig]);
 
-  // ---- Global sync push (GitHub) ----
+  // ---- Global sync push to GitHub ----
   const pushGlobalDatabaseToCloud = useCallback(async (updatedItems, updatedEdits, updatedImages) => {
     const token = (globalSyncConfig.githubToken || '').trim();
     const repo = (globalSyncConfig.githubRepo || GLOBAL_SYNC_DEFAULT_REPO).trim();
@@ -3587,19 +3704,12 @@ function App() {
       setIsSyncingGlobal(true);
       const apiUrl = `${SECURE_PROTO}${['api','github','com'].join('.')}/repos/${repo}/contents/${GLOBAL_SYNC_FILE_PATH}`;
       let existingSha;
-      const getRes = await fetch(`${apiUrl}?ref=${encodeURIComponent(branch)}`, {
-        headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' }
-      });
+      const getRes = await fetch(`${apiUrl}?ref=${encodeURIComponent(branch)}`, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' } });
       if (getRes.ok) existingSha = (await getRes.json()).sha;
       const putRes = await fetch(apiUrl, {
         method: 'PUT',
         headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: `Admin sync ${new Date().toISOString()}`,
-          content: encodeUtf8Base64(JSON.stringify(payload, null, 2)),
-          branch,
-          ...(existingSha ? { sha: existingSha } : {})
-        })
+        body: JSON.stringify({ message: `Admin sync ${new Date().toISOString()}`, content: encodeUtf8Base64(JSON.stringify(payload, null, 2)), branch, ...(existingSha ? { sha: existingSha } : {}) })
       });
       if (putRes.ok) { setLastGlobalSyncStatus('Synced to GitHub'); showToast('Globally synced to GitHub'); return true; }
       setLastGlobalSyncStatus(`GitHub error ${putRes.status}`);
@@ -3625,6 +3735,7 @@ function App() {
     setSelectedItem(item);
     setActiveView('detail');
     setItems((prev) => prev.map((it) => it.id === item.id ? { ...it, views: (it.views || 0) + 1 } : it));
+    window.history.pushState({}, '', `#article/${item.id}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -3642,14 +3753,25 @@ function App() {
     const correctPass = envPass || DEFAULT_ADMIN_PASSCODE;
     if (adminPasscodeInput === correctPass) {
       setIsAdminAuthenticated(true);
+      try { localStorage.setItem('sanatan_admin_auth', 'true'); } catch {}
       setAdminPasscodeInput('');
-      showToast('Admin unlocked successfully');
+      showToast('Welcome, Admin! Content Moderation Dashboard unlocked.');
     } else {
-      showToast('Incorrect admin passcode');
+      showToast('Invalid Admin Passcode');
     }
   };
 
-  const handleAdminLogout = () => { setIsAdminAuthenticated(false); showToast('Admin locked'); };
+  const handleAdminLogout = () => {
+    setIsAdminAuthenticated(false);
+    try { localStorage.removeItem('sanatan_admin_auth'); } catch {}
+    showToast('Admin locked');
+  };
+
+  const handleChangePassword = () => {
+    if (!newPasscodeInput.trim()) { showToast('Enter a new passcode'); return; }
+    showToast('To change password permanently, edit line 12 of src/App.jsx: export const DEFAULT_ADMIN_PASSCODE = "your-new-passcode";');
+    setNewPasscodeInput('');
+  };
 
   const handleImageFileChange = async (e, isEdit = false) => {
     const file = e.target.files?.[0];
@@ -3676,55 +3798,53 @@ function App() {
     reader.readAsDataURL(file);
   };
 
+  const handleCategoryImageUpload = async (catId, e) => {
+    e.stopPropagation();
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!isAdminAuthenticated) { showToast('Only Admin can change category cover images. Please unlock Admin first.'); navigate('#admin'); return; }
+    const compressed = await compressCoverImageFile(file);
+    if (compressed) {
+      setCategoryCustomImages((prev) => {
+        const updated = { ...prev, [catId]: compressed };
+        try { localStorage.setItem('sanatan_setu_category_images_v1', JSON.stringify(updated)); } catch {}
+        pushGlobalDatabaseToCloud(items, undefined, updated);
+        return updated;
+      });
+      showToast(`Admin updated cover image for ${catId}!`);
+    }
+  };
+
   const handleUploadSubmit = (e) => {
     e.preventDefault();
     const primaryBody = uploadForm.bodyEnglish.trim() || uploadForm.bodyHindi.trim() || uploadForm.bodySanskrit.trim() ||
       (uploadForm.pdfUrl ? `PDF Scripture: ${uploadForm.title}` : '') ||
       (uploadForm.videoUrl ? `Video: ${uploadForm.title}` : '');
     if (!uploadForm.title.trim() || !uploadForm.description.trim() || !primaryBody) {
-      showToast('Title, description and content body are required');
-      return;
+      showToast('Title, description and content body are required'); return;
     }
     const slugId = uploadForm.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + String(Date.now()).slice(-4);
     const catObj = CATEGORIES.find((c) => c.id === uploadForm.category) || CATEGORIES[0];
     const approveNow = isAdminAuthenticated && uploadForm.publishDirectlyAsAdmin;
-    const bodyMap = {
-      English: uploadForm.bodyEnglish.trim() || primaryBody,
-      Hindi: uploadForm.bodyHindi.trim() || primaryBody,
-      Sanskrit: uploadForm.bodySanskrit.trim() || primaryBody
-    };
+    const bodyMap = { English: uploadForm.bodyEnglish.trim() || primaryBody, Hindi: uploadForm.bodyHindi.trim() || primaryBody, Sanskrit: uploadForm.bodySanskrit.trim() || primaryBody };
     if (uploadForm.extraLang && uploadForm.bodyExtraLang.trim()) bodyMap[uploadForm.extraLang] = uploadForm.bodyExtraLang.trim();
     const newItem = {
-      id: slugId,
-      title: uploadForm.title.trim(),
-      category: uploadForm.category,
+      id: slugId, title: uploadForm.title.trim(), category: uploadForm.category,
       sanskritBadge: `${catObj.sanskrit} · ${catObj.name}`,
       contentType: uploadForm.pdfUrl && uploadForm.videoUrl ? 'All' : uploadForm.pdfUrl ? 'PDF' : uploadForm.videoUrl ? 'Video' : uploadForm.contentType || 'Text',
-      views: 1, likes: 0,
-      language: uploadForm.language || 'Sanskrit',
-      author: uploadForm.author.trim() || 'Community Contributor',
+      views: 1, likes: 0, language: uploadForm.language || 'Sanskrit', author: uploadForm.author.trim() || 'Community Contributor',
       imageUrl: uploadForm.imageUrl.trim() || COPYRIGHT_FREE_CATEGORY_PHOTOS[uploadForm.category] || '',
-      pdfUrl: uploadForm.pdfUrl || '',
-      pdfFileName: uploadForm.pdfFileName || '',
-      videoUrl: uploadForm.videoUrl.trim() || '',
+      pdfUrl: uploadForm.pdfUrl || '', pdfFileName: uploadForm.pdfFileName || '', videoUrl: uploadForm.videoUrl.trim() || '',
       tags: uploadForm.tags ? uploadForm.tags.split(',').map((t) => t.trim()).filter(Boolean) : [uploadForm.category.toLowerCase(), 'sacred-wisdom'],
-      isFeatured: false,
-      isUserUploaded: true,
-      status: approveNow ? 'approved' : 'pending',
-      isApproved: approveNow,
-      updatedAt: Date.now(),
-      submittedAt: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
-      description: uploadForm.description.trim(),
-      body: bodyMap
+      isFeatured: false, isUserUploaded: true, status: approveNow ? 'approved' : 'pending', isApproved: approveNow,
+      updatedAt: Date.now(), submittedAt: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+      description: uploadForm.description.trim(), body: bodyMap
     };
-    setItems((prev) => {
-      const next = [newItem, ...prev];
-      persistItemRecordPermanently(newItem, next);
-      return next;
-    });
+    setItems((prev) => { const next = [newItem, ...prev]; persistItemRecordPermanently(newItem, next); return next; });
     setUploadForm({ title: '', description: '', category: 'Mantras', contentType: 'Text', author: '', language: 'Sanskrit', imageUrl: '', pdfUrl: '', pdfFileName: '', videoUrl: '', tags: '', bodyEnglish: '', bodyHindi: '', bodySanskrit: '', extraLang: 'Odia', bodyExtraLang: '', publishDirectlyAsAdmin: false });
-    setActiveView('home');
-    showToast(approveNow ? 'Published and syncing globally' : 'Submitted to admin approval queue');
+    setSelectedCategory('All'); setSelectedMediaFormat('All'); setSearchQuery(''); setShowBookmarksOnly(false);
+    navigate('#home');
+    showToast(approveNow ? 'Admin approved & published! Syncing globally...' : 'Submitted to Admin Pending Approval Queue');
   };
 
   const handleApproveItem = (id) => {
@@ -3732,8 +3852,7 @@ function App() {
       let approved = null;
       const next = prev.map((it) => {
         if (it.id !== id) return it;
-        const v = it.pendingEdit ? { ...it, ...it.pendingEdit, pendingEdit: null, status: 'approved', isApproved: true, updatedAt: Date.now() }
-                                 : { ...it, status: 'approved', isApproved: true, updatedAt: Date.now() };
+        const v = it.pendingEdit ? { ...it, ...it.pendingEdit, pendingEdit: null, status: 'approved', isApproved: true, updatedAt: Date.now() } : { ...it, status: 'approved', isApproved: true, updatedAt: Date.now() };
         approved = v;
         if (selectedItem && selectedItem.id === id) setSelectedItem(v);
         return v;
@@ -3741,7 +3860,12 @@ function App() {
       if (approved) persistItemRecordPermanently(approved, next);
       return next;
     });
-    showToast('Approved and syncing');
+    showToast('Admin Approved! Changes are live and syncing globally.');
+  };
+
+  const handleMoveToPending = (id) => {
+    setItems((prev) => prev.map((it) => it.id === id ? { ...it, status: 'pending', isApproved: false } : it));
+    showToast('Item moved to Pending Moderation Queue');
   };
 
   const handleDeleteItem = (id) => {
@@ -3760,28 +3884,28 @@ function App() {
     if (!editingItem) return;
     if (isAdminAuthenticated) {
       const stamped = { ...editingItem, pendingEdit: null, status: 'approved', isApproved: true, updatedAt: Date.now() };
-      setItems((prev) => {
-        const next = prev.map((it) => it.id === stamped.id ? stamped : it);
-        persistItemRecordPermanently(stamped, next);
-        return next;
-      });
+      setItems((prev) => { const next = prev.map((it) => it.id === stamped.id ? stamped : it); persistItemRecordPermanently(stamped, next); return next; });
       if (selectedItem && selectedItem.id === stamped.id) setSelectedItem(stamped);
       setEditingItem(null);
-      showToast('Saved and syncing');
+      showToast('Admin saved changes! Syncing globally.');
     } else {
       setItems((prev) => prev.map((it) => it.id === editingItem.id ? { ...it, pendingEdit: { ...editingItem, updatedAt: Date.now() } } : it));
       setEditingItem(null);
-      showToast('Edit submitted for approval');
+      showToast('Edit submitted for Admin Approval');
     }
   };
 
-  // ---- JAAP handlers ----
+  // ---- JAAP ----
   const incrementJaap = useCallback(() => {
     setJaapCount((c) => {
       const next = c + 1;
       if (next >= 108) { setJaapTotal((t) => t + 1); showToast('Completed 1 mala (108 beads)!'); return 0; }
       return next;
     });
+    // Spawn a +1 ॐ chant particle
+    const pid = Date.now() + Math.random();
+    setChantParticles((p) => [...p, { id: pid, x: 80 + Math.random() * 40 }]);
+    setTimeout(() => setChantParticles((p) => p.filter((x) => x.id !== pid)), 1400);
   }, [showToast]);
   useEffect(() => {
     if (jaapAutoPlay) {
@@ -3791,17 +3915,133 @@ function App() {
   }, [jaapAutoPlay, incrementJaap]);
   const resetJaap = () => { setJaapCount(0); setJaapAutoPlay(false); };
 
-  // ---- Render ----
+  // ---- Digital Aarti & Temple Ghanta ----
+  const playBellSound = () => {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc1 = ctx.createOscillator(); const osc2 = ctx.createOscillator(); const gain = ctx.createGain();
+      osc1.frequency.value = 528; osc2.frequency.value = 792;
+      osc1.type = 'sine'; osc2.type = 'sine';
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 2.5);
+      osc1.connect(gain); osc2.connect(gain); gain.connect(ctx.destination);
+      osc1.start(); osc2.start(); osc1.stop(ctx.currentTime + 2.5); osc2.stop(ctx.currentTime + 2.5);
+    } catch (e) {}
+  };
+
+  const performAarti = () => { setShowAarti(true); setTimeout(() => setShowAarti(false), 8000); };
+  const ringGhanta = () => { setShowGhanta(true); playBellSound(); setTimeout(() => setShowGhanta(false), 5000); };
+
+  // ---- Chant Audio for Shloka ----
+  const chantShloka = (text) => {
+    if (!('speechSynthesis' in window)) { showToast('Voice not supported in this browser'); return; }
+    try {
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'hi-IN'; utter.rate = 0.85; utter.pitch = 1;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utter);
+    } catch (e) {}
+  };
+
+  // ---- SEO Status generators ----
+  const generateSitemapXml = () => {
+    const urls = approvedItems.map((it) => `  <url>\n    <loc>https://sanatansetulibrary.com/#article/${it.id}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>`).join('\n');
+    return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url>\n    <loc>https://sanatansetulibrary.com</loc>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>\n  <url>\n    <loc>https://sanatansetulibrary.com/#jaap</loc>\n    <changefreq>monthly</changefreq>\n    <priority>0.9</priority>\n  </url>\n${urls}\n</urlset>`;
+  };
+
+  const generateRobotsTxt = () => `User-agent: *\nAllow: /\n# Sanatan Setu Library & 108-Bead Naam Jaap Counter Sitemap\nSitemap: https://sanatansetulibrary.com/sitemap.xml`;
+
+  const generateIndexHtml = () => {
+    const jsonLd = {
+      '@context': 'https://schema.org',
+      '@graph': [
+        { '@type': 'WebSite', name: 'Sanatan Setu – Naam Jaap Counter & Vedic Library', url: 'https://sanatansetulibrary.com' },
+        { '@type': 'SoftwareApplication', name: '108-Bead Naam Jaap Counter', applicationCategory: 'LifestyleApplication', operatingSystem: 'Web', offers: { '@type': 'Offer', price: '0' } },
+        { '@type': 'FAQPage', mainEntity: [
+          { '@type': 'Question', name: 'What is a Naam Jaap Counter?', acceptedAnswer: { '@type': 'Answer', text: 'A Naam Jaap Counter is a digital tool for counting repetitions of sacred mantras like Om Namah Shivaya, Hare Krishna, or Gayatri Mantra. Each round of 108 chants equals one mala.' } },
+          { '@type': 'Question', name: 'How do I use the 108-Bead Digital Mala?', acceptedAnswer: { '@type': 'Answer', text: 'Click the central bead to count each chant. After 108 chants, the counter auto-resets and your completed mala total is saved.' } },
+          { '@type': 'Question', name: 'Is the Naam Jaap Counter free?', acceptedAnswer: { '@type': 'Answer', text: 'Yes, completely free with no sign-up required. Your chant count is saved privately in your browser.' } }
+        ]},
+        { '@type': 'ItemList', name: 'Sanatan Setu Sacred Scripture Library', itemListElement: approvedItems.slice(0, 20).map((it, i) => ({ '@type': 'ListItem', position: i + 1, name: it.title, url: `https://sanatansetulibrary.com/#article/${it.id}` })) }
+      ]
+    };
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<link rel="icon" type="image/svg+xml" href="/icon.svg" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Naam Jaap Counter (108 Digital Mala) &amp; Sanatan Setu Hindu Scripture Library</title>
+<meta name="description" content="Free 108-Bead Naam Jaap Counter (Naam Jamm Counter / Online Japa Mala) for Radha Naam, Ram Naam, Hare Krishna &amp; Om Namah Shivaya, plus authentic Hindu Scriptures, Vedas, Upanishads, Puranas, Hanuman Chalisa &amp; Temple Guides." />
+<meta name="keywords" content="naam jaap, naam jaap counter, naam jamm counter, nam jap counter, 108 naam jaap counter online, digital mala counter, radha naam jaap counter, ram naam jaap counter, japa mala online, Sanatan Setu, Hindu Scriptures, Vedas, Upanishads, Bhagavad Gita, Hanuman Chalisa, Jagannath Temple Puri" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<meta name="author" content="Sanatan Setu Library" />
+<meta name="theme-color" content="#EA580C" />
+<link rel="canonical" href="https://sanatansetulibrary.com" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://sanatansetulibrary.com" />
+<meta property="og:site_name" content="Sanatan Setu – Naam Jaap Counter &amp; Vedic Library" />
+<meta property="og:title" content="108 Naam Jaap Counter (Digital Mala) &amp; Sanatan Setu Scripture Library" />
+<meta property="og:description" content="Practice daily 108-bead Naam Jaap (Naam Jamm Counter) online with 528Hz chime and read unabridged Sanskrit, Hindi &amp; English Vedas, Upanishads, Puranas, Mantras &amp; Temple Histories." />
+<meta property="og:locale" content="en_IN" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="108 Naam Jaap Counter &amp; Sanatan Setu Hindu Scripture Library" />
+<meta name="twitter:description" content="Free online 108-bead Naam Jaap Counter (Naam Jamm Counter) and authentic multilingual Hindu scripture library." />
+<script type="application/ld+json">
+${JSON.stringify(jsonLd, null, 2)}
+</script>
+</head>
+<body class="bg-[#FDFBF7] text-[#2C1A12] antialiased selection:bg-orange-500 selection:text-white">
+<div id="root"></div>
+<script type="module" src="/src/main.jsx"></script>
+</body>
+</html>`;
+  };
+
+  const copyToClipboard = (text, label) => {
+    try {
+      navigator.clipboard.writeText(text);
+      showToast(`${label} copied to clipboard! Paste it into the file on GitHub.`);
+    } catch (e) {
+      // Fallback
+      const ta = document.createElement('textarea');
+      ta.value = text; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); showToast(`${label} copied to clipboard!`); } catch { showToast('Copy failed - select and copy manually'); }
+      document.body.removeChild(ta);
+    }
+  };
+
+  const exportApprovedItemsJson = () => {
+    const data = { items: approvedItems.filter((i) => i.isUserUploaded), editsMap: JSON.parse(localStorage.getItem('sanatan_setu_edits_map_v1') || '{}') };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'approved-items.json'; a.click();
+    URL.revokeObjectURL(url);
+    showToast('Approved items JSON downloaded! Add to INITIAL_SACRED_ITEMS in src/App.jsx.');
+  };
+
+  // ---- Render helpers ----
   const navBtnClass = (view) => `px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition ${activeView === view ? 'bg-[#EA580C] text-white shadow' : (darkMode ? 'text-amber-200 hover:bg-amber-900/30' : 'text-[#78523A] hover:bg-orange-100')}`;
 
   return (
     <div className={darkMode ? 'min-h-screen bg-[#1A0F0A] text-amber-50' : 'min-h-screen bg-[#FDFBF7] text-[#2C1A12]'}>
       <SacredAnimationsStyle />
 
+      {/* Top Mantra Marquee */}
+      <div className="bg-gradient-to-r from-[#7C2D12] via-[#EA580C] to-[#7C2D12] text-amber-100 py-1.5 overflow-hidden whitespace-nowrap">
+        <div className="inline-block anim-marquee">
+          {[...SACRED_MARQUEE_MANTRAS, ...SACRED_MARQUEE_MANTRAS, ...SACRED_MARQUEE_MANTRAS, ...SACRED_MARQUEE_MANTRAS].map((m, i) => (
+            <span key={i} className="mx-6 text-sm font-bold tracking-wider">{m}</span>
+          ))}
+        </div>
+      </div>
+
       {/* Top nav */}
       <nav className="sticky top-0 z-40 backdrop-blur-md bg-white/80 dark:bg-[#1A0F0A]/80 border-b border-amber-900/10">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
-          <button onClick={() => { setActiveView('home'); setSelectedItem(null); }} className="flex items-center gap-2 font-black text-lg">
+          <button onClick={() => navigate('#home')} className="flex items-center gap-2 font-black text-lg">
             <SanatanSetuLogo size={40} />
             <div className="flex flex-col leading-tight">
               <span className="flex items-center gap-1.5">
@@ -3811,11 +4051,11 @@ function App() {
             </div>
           </button>
           <div className="flex items-center gap-1.5 flex-wrap">
-            <button className={navBtnClass('home')} onClick={() => { setActiveView('home'); setSelectedItem(null); }}><BookOpen className="w-4 h-4" /> Library</button>
-            <button className={navBtnClass('jaap')} onClick={() => { setActiveView('jaap'); setSelectedItem(null); }}>📿 108 Jaap</button>
-            <button className={navBtnClass('upload')} onClick={() => { setActiveView('upload'); setSelectedItem(null); }}><Upload className="w-4 h-4" /> Upload</button>
-            <button className={navBtnClass('admin')} onClick={() => { setActiveView('admin'); setSelectedItem(null); }}><ShieldCheck className="w-4 h-4" /> Admin</button>
-            <button onClick={() => setDarkMode((v) => !v)} className="p-2 rounded-lg hover:bg-orange-100 dark:hover:bg-amber-900/30">
+            <button className={navBtnClass('home')} onClick={() => navigate('#home')}><BookOpen className="w-4 h-4" /> Library</button>
+            <button className={navBtnClass('jaap')} onClick={() => navigate('#jaap')}>📿 108 Jaap</button>
+            <button className={navBtnClass('upload')} onClick={() => navigate('#upload')}><Upload className="w-4 h-4" /> Upload</button>
+            <button className={navBtnClass('admin')} onClick={() => navigate('#admin')}><ShieldCheck className="w-4 h-4" /> Admin</button>
+            <button onClick={() => setDarkMode((v) => !v)} className="p-2 rounded-lg hover:bg-orange-100 dark:hover:bg-amber-900/30" aria-label="Toggle dark mode">
               {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
           </div>
@@ -3824,37 +4064,111 @@ function App() {
 
       {/* Toast */}
       {toast && (
-        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-xl bg-[#EA580C] text-white text-sm shadow-lg anim-fade-in-up">
-          {toast}
-        </div>
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-xl bg-[#EA580C] text-white text-sm shadow-lg anim-fade-in-up">{toast}</div>
       )}
 
       <main className="max-w-7xl mx-auto px-4 py-6">
-        {/* HOME / LIBRARY */}
+        {/* HOME */}
         {activeView === 'home' && (
           <>
+            {/* Hero with Daily Shloka Carousel */}
             <div className="text-center mb-8 anim-fade-in-up">
-              <h1 className="text-3xl sm:text-4xl font-black mb-2">Your Digital Bridge to Sanatan Dharma</h1>
+              <h1 className="text-3xl sm:text-5xl font-black mb-2 anim-shimmer-gold">Your Digital Bridge to Sanatan Dharma</h1>
               <p className="opacity-80 mb-4">Preserving &amp; Sharing Unabridged Eternal Vedic Wisdom</p>
-              <div className="flex flex-wrap gap-2 justify-center">
-                <button onClick={() => setActiveView('jaap')} className="px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-sm font-bold shadow">🪔 Perform Digital Aarti</button>
-                <button onClick={() => setActiveView('jaap')} className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-sm font-bold shadow">🔔 Ring Temple Ghanta</button>
-                <button onClick={() => setActiveView('jaap')} className="px-4 py-2 rounded-xl bg-[#EA580C] hover:bg-orange-700 text-white text-sm font-bold shadow anim-pulse-glow">📿 Launch 108 Digital Mala</button>
+              <div className="flex flex-wrap gap-2 justify-center mb-4">
+                <button onClick={performAarti} className="px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-sm font-bold shadow anim-pulse-glow">🪔 Perform Digital Aarti</button>
+                <button onClick={ringGhanta} className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-sm font-bold shadow">🔔 Ring Temple Ghanta</button>
+                <button onClick={() => navigate('#jaap')} className="px-4 py-2 rounded-xl bg-[#EA580C] hover:bg-orange-700 text-white text-sm font-bold shadow anim-pulse-glow">📿 Launch 108 Digital Mala</button>
+              </div>
+
+              {/* Daily Shloka Carousel */}
+              <div className="max-w-3xl mx-auto rounded-2xl border-2 border-amber-500/30 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-[#18100B] dark:to-[#22160F] dark:border-amber-500/30 p-5 my-6">
+                <div className="text-xs font-bold uppercase tracking-widest text-[#EA580C] mb-2">आज का श्लोक · Shloka of the Day</div>
+                <div className="text-lg sm:text-xl font-bold text-[#7C2D12] dark:text-amber-200 mb-2 whitespace-pre-line">{DAILY_SHLOKAS[shlokaIndex].sanskrit}</div>
+                <div className="text-sm opacity-80 mb-1">{DAILY_SHLOKAS[shlokaIndex].hindi}</div>
+                <div className="text-xs opacity-70 italic mb-3">{DAILY_SHLOKAS[shlokaIndex].english}</div>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  <button onClick={() => chantShloka(DAILY_SHLOKAS[shlokaIndex].sanskrit)} className="px-3 py-1.5 rounded-lg bg-[#EA580C] hover:bg-orange-700 text-white text-xs font-bold"><Volume2 className="w-3 h-3 inline" /> Chant Audio</button>
+                  <button onClick={() => setShlokaIndex((i) => (i + 1) % DAILY_SHLOKAS.length)} className="px-3 py-1.5 rounded-lg bg-amber-200 dark:bg-amber-900/40 text-xs font-bold">Next Shloka →</button>
+                </div>
               </div>
             </div>
 
-            {/* Search */}
-            <div className="flex gap-2 mb-6">
+            {/* Smart Search Omnibox */}
+            <div className="relative mb-6">
               <input
                 type="text"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search sacred scriptures, temples, and mantras"
-                className="flex-1 px-4 py-2.5 rounded-xl border border-amber-900/20 bg-white dark:bg-[#22160F] dark:border-amber-500/30 dark:text-amber-50"
+                onChange={(e) => { setSearchQuery(e.target.value); setShowSearchDropdown(true); }}
+                onFocus={() => setShowSearchDropdown(true)}
+                onBlur={() => setTimeout(() => setShowSearchDropdown(false), 200)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const firstItem = searchSuggestions.find((s) => s.type === 'item');
+                    if (firstItem) handleItemClick(firstItem.item);
+                    else if (searchSuggestions.find((s) => s.type === 'tool')) navigate('#jaap');
+                    else if (searchSuggestions.find((s) => s.type === 'category')) {
+                      const c = searchSuggestions.find((s) => s.type === 'category');
+                      navigate(`#category/${c.catId}`);
+                    }
+                    setShowSearchDropdown(false);
+                  }
+                }}
+                placeholder="Search sacred scriptures, temples, and mantras (e.g., Hanuman Chalisa, Gayatri, Vedas, jaap)"
+                className="w-full px-4 py-2.5 rounded-xl border border-amber-900/20 bg-white dark:bg-[#22160F] dark:border-amber-500/30 dark:text-amber-50"
               />
-              <button onClick={() => setShowBookmarksOnly((v) => !v)} className={`px-3 py-2 rounded-xl border text-sm ${showBookmarksOnly ? 'bg-amber-500 text-white' : ''}`}>
-                <Bookmark className="w-4 h-4 inline" /> Saved ({bookmarkedIds.length})
+              <button onClick={() => setShowBookmarksOnly((v) => !v)} className={`absolute right-2 top-2.5 px-3 py-1.5 rounded-lg text-sm ${showBookmarksOnly ? 'bg-amber-500 text-white' : 'bg-amber-100 dark:bg-amber-900/30'}`}>
+                <Bookmark className="w-4 h-4 inline" /> ({bookmarkedIds.length})
               </button>
+
+              {showSearchDropdown && searchSuggestions.length > 0 && (
+                <div className="absolute z-50 mt-1 w-full max-w-2xl bg-white dark:bg-[#22160F] border border-amber-900/20 dark:border-amber-500/30 rounded-xl shadow-2xl max-h-96 overflow-auto">
+                  {searchSuggestions.map((s, i) => {
+                    if (s.type === 'trending') {
+                      return (
+                        <div key={i} className="p-3 border-b border-amber-900/10 dark:border-amber-500/20">
+                          <div className="text-xs uppercase font-bold opacity-60 mb-2">{s.label}</div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {s.items.map((t, j) => (
+                              <button key={j} onMouseDown={() => setSearchQuery(t)} className="px-2.5 py-1 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-xs font-medium hover:bg-amber-200 dark:hover:bg-amber-800/50">{t}</button>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    }
+                    if (s.type === 'tool') {
+                      return (
+                        <button key={i} onMouseDown={() => { navigate('#jaap'); setShowSearchDropdown(false); }} className="w-full p-3 text-left hover:bg-amber-50 dark:hover:bg-amber-900/20 flex items-center gap-3 border-b border-amber-900/10 dark:border-amber-500/20">
+                          <span className="text-2xl">📿</span>
+                          <div><div className="font-bold">{s.title}</div><div className="text-xs opacity-70">Launch the 108-Bead Digital Naam Jaap Counter</div></div>
+                        </button>
+                      );
+                    }
+                    if (s.type === 'category') {
+                      return (
+                        <button key={i} onMouseDown={() => { navigate(`#category/${s.catId}`); setShowSearchDropdown(false); }} className="w-full p-3 text-left hover:bg-amber-50 dark:hover:bg-amber-900/20 flex items-center gap-3 border-b border-amber-900/10 dark:border-amber-500/20">
+                          <span className="text-2xl">📂</span>
+                          <div><div className="font-bold">Open {s.label} →</div><div className="text-xs opacity-70">{s.sanskrit}</div></div>
+                        </button>
+                      );
+                    }
+                    if (s.type === 'item' && s.item) {
+                      const img = getItemImage(s.item);
+                      return (
+                        <button key={i} onMouseDown={() => { handleItemClick(s.item); setShowSearchDropdown(false); }} className="w-full p-3 text-left hover:bg-amber-50 dark:hover:bg-amber-900/20 flex items-center gap-3 border-b border-amber-900/10 dark:border-amber-500/20">
+                          {img && <img src={img} alt="" className="w-10 h-10 object-cover rounded" />}
+                          <div className="flex-1 min-w-0">
+                            <div className="font-bold truncate">{s.label}</div>
+                            <div className="text-xs opacity-70 truncate">{s.sanskritBadge} {s.item.isFeatured && '· ★'} {s.item.pdfUrl && '· PDF'} {s.item.videoUrl && '· Video'}</div>
+                          </div>
+                          <span className="text-[#EA580C] text-xs font-bold">Open ↗</span>
+                        </button>
+                      );
+                    }
+                    return null;
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Browse by Category */}
@@ -3864,55 +4178,45 @@ function App() {
                 const count = approvedItems.filter((i) => i.category === cat.id).length;
                 const img = categoryCustomImages[cat.id] || cat.bgImage;
                 return (
-                  <button
-                    key={cat.id}
-                    onClick={() => { setSelectedCategory(cat.id); window.scrollTo({ top: 400, behavior: 'smooth' }); }}
-                    className="relative rounded-2xl overflow-hidden text-left shadow hover:shadow-lg transition aspect-[3/4] anim-fade-in-up"
-                  >
-                    {img && <img src={img} alt={cat.name} className="absolute inset-0 w-full h-full object-cover" />}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent" />
-                    <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
+                  <div key={cat.id} className="relative rounded-2xl overflow-hidden text-left shadow hover:shadow-lg transition aspect-[3/4] anim-fade-in-up card-3d-hover">
+                    <button onClick={() => navigate(`#category/${cat.id}`)} className="absolute inset-0 w-full h-full" aria-label={`Open ${cat.name}`} />
+                    {img && <SacredImageFrame src={img} alt={cat.name} fitMode="cover" className="absolute inset-0 w-full h-full" />}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent pointer-events-none" />
+                    {isAdminAuthenticated && (
+                      <label className="absolute top-2 left-2 z-20 cursor-pointer text-white bg-black/60 rounded-md px-2 py-1 text-[10px] font-bold" title="📷 Upload custom category photo (Admin)">
+                        📷 Photo
+                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleCategoryImageUpload(cat.id, e)} />
+                      </label>
+                    )}
+                    <div className="absolute bottom-0 left-0 right-0 p-3 text-white pointer-events-none">
                       <div className="text-[10px] opacity-70 font-bold tracking-widest">{cat.code}</div>
                       <div className="font-black text-lg leading-tight">{cat.name}</div>
                       <div className="text-xs opacity-90">{cat.sanskrit}</div>
                       <div className="text-[10px] opacity-70 mt-1">{count} item{count !== 1 ? 's' : ''}</div>
                     </div>
-                  </button>
+                  </div>
                 );
               })}
             </div>
 
-            {/* Filter row with 27-language dropdown */}
+            {/* Filter row */}
             <div className="flex flex-wrap items-center gap-2 mb-4">
               <h2 className="text-2xl font-black mr-auto flex items-center gap-2"><SacredLotusIcon className="w-5 h-5 text-[#EA580C]" /> All Sacred Knowledge</h2>
               {['All','Text','PDF','Video'].map((f) => (
                 <button key={f} onClick={() => setSelectedMediaFormat(f)} className={`px-3 py-1.5 rounded-lg text-xs font-bold ${selectedMediaFormat === f ? 'bg-[#EA580C] text-white' : (darkMode ? 'bg-[#18100B] text-amber-200' : 'bg-orange-50 text-[#78523A]')}`}>{f === 'All' ? 'All Formats' : f}</button>
               ))}
-              <select
-                value={selectedLanguage}
-                onChange={(e) => setSelectedLanguage(e.target.value)}
-                className="px-3 py-1.5 rounded-lg border border-amber-900/20 text-xs font-bold bg-white dark:bg-[#18100B] dark:text-amber-200 dark:border-amber-500/30"
-                aria-label="Filter by Indian or World Language"
-              >
-                <option value="All">🌐 All 27 Languages (Indian &amp; World)</option>
-                {SUPPORTED_LANGUAGES.map((l) => (
-                  <option key={l.id} value={l.id}>{l.label}</option>
-                ))}
+              <select value={selectedLanguage} onChange={(e) => setSelectedLanguage(e.target.value)} className="px-3 py-1.5 rounded-lg border border-amber-900/20 text-xs font-bold bg-white dark:bg-[#18100B] dark:text-amber-200 dark:border-amber-500/30" aria-label="Filter by language">
+                <option value="All">🌐 All 27 Languages</option>
+                {SUPPORTED_LANGUAGES.map((l) => (<option key={l.id} value={l.id}>{l.label}</option>))}
               </select>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="px-3 py-1.5 rounded-lg border border-amber-900/20 text-xs font-bold bg-white dark:bg-[#18100B] dark:text-amber-200 dark:border-amber-500/30"
-                aria-label="Sort sacred items"
-              >
-                <option>Featured First</option>
-                <option>Most Viewed</option>
-                <option>Most Liked</option>
+              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="px-3 py-1.5 rounded-lg border border-amber-900/20 text-xs font-bold bg-white dark:bg-[#18100B] dark:text-amber-200 dark:border-amber-500/30" aria-label="Sort items">
+                <option>Featured First</option><option>Most Viewed</option><option>Most Liked</option>
               </select>
               {selectedCategory !== 'All' && (
-                <button onClick={() => setSelectedCategory('All')} className="px-3 py-1.5 rounded-lg bg-amber-100 text-xs font-bold">
-                  {selectedCategory} ✕
-                </button>
+                <button onClick={() => { setSelectedCategory('All'); navigate('#home'); }} className="px-3 py-1.5 rounded-lg bg-amber-100 dark:bg-amber-900/40 text-xs font-bold">{selectedCategory} ✕</button>
+              )}
+              {(selectedCategory !== 'All' || selectedMediaFormat !== 'All' || selectedLanguage !== 'All' || showBookmarksOnly || searchQuery) && (
+                <button onClick={() => { setSelectedCategory('All'); setSelectedMediaFormat('All'); setSelectedLanguage('All'); setShowBookmarksOnly(false); setSearchQuery(''); }} className="px-3 py-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 text-xs font-bold text-emerald-700 dark:text-emerald-300">⟲ Show All Content</button>
               )}
             </div>
 
@@ -3921,20 +4225,10 @@ function App() {
               {visibleItems.map((item) => {
                 const img = getItemImage(item);
                 return (
-                  <article
-                    key={item.id}
-                    onClick={() => handleItemClick(item)}
-                    className="cursor-pointer rounded-2xl border border-amber-900/10 dark:border-amber-500/20 bg-white dark:bg-[#18100B] shadow-sm hover:shadow-md transition overflow-hidden anim-fade-in-up"
-                  >
-                    {img && (
-                      <div className="aspect-video w-full overflow-hidden bg-amber-50">
-                        <img src={img} alt={item.title} className="w-full h-full object-cover" loading="lazy" />
-                      </div>
-                    )}
+                  <article key={item.id} onClick={() => handleItemClick(item)} className="cursor-pointer rounded-2xl border border-amber-900/10 dark:border-amber-500/20 bg-white dark:bg-[#18100B] shadow-sm hover:shadow-md transition overflow-hidden anim-fade-in-up card-3d-hover">
+                    {img && (<div className="aspect-video w-full overflow-hidden bg-amber-50"><SacredImageFrame src={img} alt={item.title} fitMode="cover" className="w-full h-full" /></div>)}
                     <div className="p-4">
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-[#EA580C] mb-1">
-                        {item.sanskritBadge} {item.isFeatured && '· ★ Featured'} {item.isApproved && '· ✓ Verified'}
-                      </div>
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-[#EA580C] mb-1">{item.sanskritBadge} {item.isFeatured && '· ★ Featured'} {item.isApproved && '· ✓ Verified'}</div>
                       <h3 className="font-black text-base leading-snug mb-2 line-clamp-2">{item.title}</h3>
                       <p className="text-xs opacity-75 line-clamp-2 mb-3">{item.description}</p>
                       <div className="flex items-center justify-between text-xs">
@@ -3942,93 +4236,74 @@ function App() {
                           <span><Eye className="w-3 h-3 inline" /> {item.views || 0}</span>
                           <button onClick={(e) => { e.stopPropagation(); toggleLike(item.id); }}><Heart className={`w-3 h-3 inline ${likedIds.includes(item.id) ? 'fill-red-500 text-red-500' : ''}`} /> {item.likes || 0}</button>
                         </div>
-                        <button onClick={(e) => { e.stopPropagation(); toggleBookmark(item.id); }}><Bookmark className={`w-3 h-3 inline ${bookmarkedIds.includes(item.id) ? 'fill-amber-500 text-amber-500' : ''}`} /></button>
+                        <div className="flex gap-2">
+                          <button onClick={(e) => { e.stopPropagation(); setEditingItem(item); }} className="opacity-70 hover:opacity-100" title="Edit"><Edit3 className="w-3 h-3" /></button>
+                          <button onClick={(e) => { e.stopPropagation(); toggleBookmark(item.id); }}><Bookmark className={`w-3 h-3 inline ${bookmarkedIds.includes(item.id) ? 'fill-amber-500 text-amber-500' : ''}`} /></button>
+                        </div>
                       </div>
                     </div>
                   </article>
                 );
               })}
               {visibleItems.length === 0 && (
-                <div className="col-span-full text-center py-12 opacity-60">
-                  <AlertCircle className="w-10 h-10 mx-auto mb-3" />
-                  <p>No items match your filters.</p>
-                </div>
+                <div className="col-span-full text-center py-12 opacity-60"><AlertCircle className="w-10 h-10 mx-auto mb-3" /><p>No items match your filters.</p></div>
               )}
             </div>
+
+            {/* Crawlable Uploaded Content Directory for SEO */}
+            <nav className="mt-12 pt-8 border-t border-amber-900/10" aria-label="Sacred Scripture Directory">
+              <h2 className="text-sm font-bold uppercase opacity-60 mb-3">📜 Scripture Directory (SEO Crawlable)</h2>
+              <div className="flex flex-wrap gap-2 text-xs">
+                <a href="#home" className="px-2 py-1 rounded bg-amber-100 dark:bg-amber-900/30 hover:underline">Home</a>
+                <a href="#jaap" className="px-2 py-1 rounded bg-amber-100 dark:bg-amber-900/30 hover:underline">108 Naam Jaap Counter</a>
+                {approvedItems.map((it) => (<a key={it.id} href={`#article/${it.id}`} className="px-2 py-1 rounded bg-amber-50 dark:bg-amber-900/20 hover:underline">{it.title}</a>))}
+              </div>
+            </nav>
           </>
         )}
 
         {/* DETAIL view */}
         {activeView === 'detail' && selectedItem && (
           <div className="max-w-4xl mx-auto anim-fade-in-up">
-            <button onClick={() => { setActiveView('home'); setSelectedItem(null); }} className="mb-4 px-3 py-1.5 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-sm font-bold flex items-center gap-1.5">
-              <ArrowLeft className="w-4 h-4" /> Back to Library
-            </button>
+            <button onClick={() => navigate('#home')} className="mb-4 px-3 py-1.5 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-sm font-bold flex items-center gap-1.5"><ArrowLeft className="w-4 h-4" /> Back to Sacred Library (Home)</button>
             {(() => {
               const img = getItemImage(selectedItem);
-              return img ? (
-                <div className="aspect-[21/9] w-full rounded-2xl overflow-hidden mb-6 anim-pulse-glow">
-                  <img src={img} alt={selectedItem.title} className="w-full h-full object-cover" />
-                </div>
-              ) : null;
+              return img ? (<div className="aspect-[21/9] w-full rounded-2xl overflow-hidden mb-6 anim-pulse-glow"><SacredImageFrame src={img} alt={selectedItem.title} fitMode="cover" className="w-full h-full" /></div>) : null;
             })()}
-            <div className="text-xs font-bold uppercase tracking-widest text-[#EA580C] mb-1 flex items-center gap-1.5">
-              <SacredLotusIcon className="w-3 h-3" /> {selectedItem.sanskritBadge}
-            </div>
+            <div className="text-xs font-bold uppercase tracking-widest text-[#EA580C] mb-1 flex items-center gap-1.5"><SacredLotusIcon className="w-3 h-3" /> {selectedItem.sanskritBadge}</div>
             <h1 className="text-2xl sm:text-3xl font-black mb-2">{selectedItem.title}</h1>
             <p className="opacity-80 mb-4">{selectedItem.description}</p>
-            <div className="flex items-center gap-4 text-xs opacity-70 mb-6 border-b border-amber-900/10 pb-4">
+            <div className="flex flex-wrap items-center gap-3 text-xs opacity-70 mb-6 border-b border-amber-900/10 pb-4">
               <span><Eye className="w-3 h-3 inline" /> {selectedItem.views || 0} views</span>
               <button onClick={() => toggleLike(selectedItem.id)}><Heart className={`w-3 h-3 inline ${likedIds.includes(selectedItem.id) ? 'fill-red-500 text-red-500' : ''}`} /> {selectedItem.likes || 0} likes</button>
               <button onClick={() => toggleBookmark(selectedItem.id)}><Bookmark className={`w-3 h-3 inline ${bookmarkedIds.includes(selectedItem.id) ? 'fill-amber-500 text-amber-500' : ''}`} /> Save</button>
               <button onClick={() => openSacredPrintablePdf(selectedItem, 'English')} className="px-2 py-1 rounded-md bg-[#EA580C] text-white font-bold"><FileText className="w-3 h-3 inline" /> Sacred PDF eBook</button>
+              <button onClick={() => setEditingItem(selectedItem)} className="px-2 py-1 rounded-md bg-blue-600 text-white font-bold"><Edit3 className="w-3 h-3 inline" /> Edit Content / Media</button>
+              <button onClick={performAarti} className="px-2 py-1 rounded-md bg-amber-600 text-white font-bold">🪔 Aarti</button>
+              <button onClick={ringGhanta} className="px-2 py-1 rounded-md bg-amber-700 text-white font-bold">🔔 Ghanta</button>
               <span className="ml-auto">{selectedItem.author}</span>
             </div>
-            {selectedItem.pdfUrl && (
-              <a href={selectedItem.pdfUrl} download={selectedItem.pdfFileName || 'scripture.pdf'} className="inline-block mb-4 px-4 py-2 rounded-xl bg-[#EA580C] text-white text-sm font-bold">
-                <FileText className="w-4 h-4 inline" /> Download Original PDF ({selectedItem.pdfFileName || 'PDF'})
-              </a>
-            )}
-            {(() => {
-              const yt = selectedItem.videoUrl ? getYouTubeEmbedUrl(selectedItem.videoUrl) : null;
-              return yt ? (
-                <div className="mb-4 aspect-video rounded-xl overflow-hidden">
-                  <iframe src={yt} className="w-full h-full" allowFullScreen title={selectedItem.title} />
-                </div>
-              ) : null;
-            })()}
-            <article className="prose max-w-none whitespace-pre-line leading-relaxed">
-              {selectedItem.body?.English || selectedItem.description}
-            </article>
-            {selectedItem.body?.Hindi && (
-              <details className="mt-6">
-                <summary className="font-bold cursor-pointer">हिन्दी अनुवाद (Hindi)</summary>
-                <article className="whitespace-pre-line leading-relaxed mt-2">{selectedItem.body.Hindi}</article>
-              </details>
-            )}
-            {selectedItem.body?.Sanskrit && (
-              <details className="mt-4">
-                <summary className="font-bold cursor-pointer">संस्कृत (Sanskrit)</summary>
-                <article className="whitespace-pre-line leading-relaxed mt-2">{selectedItem.body.Sanskrit}</article>
-              </details>
-            )}
+            {selectedItem.pdfUrl && (<a href={selectedItem.pdfUrl} download={selectedItem.pdfFileName || 'scripture.pdf'} className="inline-block mb-4 px-4 py-2 rounded-xl bg-[#EA580C] text-white text-sm font-bold"><FileText className="w-4 h-4 inline" /> Download Original PDF ({selectedItem.pdfFileName || 'PDF'})</a>)}
+            {selectedItem.videoUrl && <SacredVideoPlayer url={selectedItem.videoUrl} title={selectedItem.title} />}
+            <article className="prose max-w-none whitespace-pre-line leading-relaxed">{selectedItem.body?.English || selectedItem.description}</article>
+            {selectedItem.body?.Hindi && (<details className="mt-6"><summary className="font-bold cursor-pointer">हिन्दी अनुवाद (Hindi)</summary><article className="whitespace-pre-line leading-relaxed mt-2">{selectedItem.body.Hindi}</article></details>)}
+            {selectedItem.body?.Sanskrit && (<details className="mt-4"><summary className="font-bold cursor-pointer">संस्कृत (Sanskrit)</summary><article className="whitespace-pre-line leading-relaxed mt-2">{selectedItem.body.Sanskrit}</article></details>)}
+            {/* Crawlable anchor for SEO */}
+            <a href={`#article/${selectedItem.id}`} className="hidden">{selectedItem.title}</a>
           </div>
         )}
 
         {/* JAAP view */}
         {activeView === 'jaap' && (
           <div className="max-w-3xl mx-auto anim-fade-in-up">
+            <button onClick={() => navigate('#home')} className="mb-4 px-3 py-1.5 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-sm font-bold flex items-center gap-1.5"><ArrowLeft className="w-4 h-4" /> ← Back to Sacred Library (Home)</button>
             <h1 className="text-3xl font-black mb-2 text-center">108-Bead Naam Jaap Counter</h1>
             <p className="text-center opacity-75 mb-6">नाम जाप काउंटर · Digital Mala</p>
 
             <h2 className="text-lg font-bold mb-2 flex items-center gap-2"><SacredLotusIcon className="w-4 h-4 text-[#EA580C]" /> Select Sacred Mantra</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-6">
               {JAAP_MANTRAS.map((m) => (
-                <button
-                  key={m.id}
-                  onClick={() => { setJaapMantra(m); resetJaap(); }}
-                  className={`p-3 rounded-xl text-left border ${jaapMantra.id === m.id ? 'bg-[#EA580C] text-white border-[#EA580C]' : (darkMode ? 'bg-[#18100B] border-amber-500/30' : 'bg-white border-amber-900/10')}`}
-                >
+                <button key={m.id} onClick={() => { setJaapMantra(m); resetJaap(); }} className={`p-3 rounded-xl text-left border ${jaapMantra.id === m.id ? 'bg-[#EA580C] text-white border-[#EA580C]' : (darkMode ? 'bg-[#18100B] border-amber-500/30' : 'bg-white border-amber-900/10')}`}>
                   <div className="font-bold">{m.name}</div>
                   <div className="text-xs opacity-80">{m.deity}</div>
                   <div className="text-sm mt-1">{m.sanskrit}</div>
@@ -4036,23 +4311,30 @@ function App() {
               ))}
             </div>
 
-            <div className="text-center p-8 rounded-2xl bg-gradient-to-br from-amber-900/10 to-orange-900/10 border border-amber-900/20">
+            <div className="text-center p-8 rounded-2xl bg-gradient-to-br from-amber-900/10 to-orange-900/10 border border-amber-900/20 relative">
               <h2 className="text-2xl font-black mb-2">{jaapMantra.name}</h2>
               <p className="opacity-80 mb-6">{jaapMantra.sanskrit}</p>
-              <button
-                onClick={incrementJaap}
-                className="w-40 h-40 rounded-full bg-gradient-to-br from-[#EA580C] to-amber-700 text-white text-5xl font-black shadow-2xl active:scale-95 transition mx-auto block anim-pulse-glow"
-              >
-                {jaapCount}
-              </button>
+              <div className="relative inline-block">
+                {/* Rudraksha Mala bead ring */}
+                <svg viewBox="0 0 240 240" className="absolute inset-0 w-48 h-48 mx-auto pointer-events-none" style={{ left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
+                  {Array.from({ length: 27 }).map((_, i) => {
+                    const angle = (i / 27) * 2 * Math.PI;
+                    const cx = 120 + 100 * Math.cos(angle);
+                    const cy = 120 + 100 * Math.sin(angle);
+                    const lit = i < Math.floor((jaapCount / 108) * 27);
+                    return <circle key={i} cx={cx} cy={cy} r="6" fill={lit ? '#f59e0b' : '#92400e'} className={lit ? 'anim-bead-light' : ''} style={{ animationDelay: `${i * 0.05}s` }} />;
+                  })}
+                </svg>
+                <button onClick={incrementJaap} className="relative w-40 h-40 rounded-full bg-gradient-to-br from-[#EA580C] to-amber-700 text-white text-5xl font-black shadow-2xl active:scale-95 transition mx-auto block anim-pulse-glow">{jaapCount}</button>
+                {/* Floating chant particles */}
+                {chantParticles.map((p) => (
+                  <span key={p.id} className="absolute text-amber-500 font-bold text-xl anim-chant-particle pointer-events-none" style={{ left: `${p.x}%`, top: '20%' }}>+1 ॐ</span>
+                ))}
+              </div>
               <p className="text-sm opacity-70 mt-4">Bead {jaapCount} of 108 · Total malas: {jaapTotal}</p>
-              <div className="flex gap-2 justify-center mt-4">
-                <button onClick={() => setJaapAutoPlay((v) => !v)} className="px-4 py-2 rounded-xl bg-[#EA580C] hover:bg-orange-700 text-white text-sm font-bold">
-                  {jaapAutoPlay ? <Pause className="w-4 h-4 inline" /> : <Play className="w-4 h-4 inline" />} {jaapAutoPlay ? 'Pause Auto' : 'Start Auto Jaap'}
-                </button>
-                <button onClick={resetJaap} className="px-4 py-2 rounded-xl border border-amber-900/20 text-sm font-bold">
-                  <RotateCcw className="w-4 h-4 inline" /> Reset
-                </button>
+              <div className="flex flex-wrap gap-2 justify-center mt-4">
+                <button onClick={() => setJaapAutoPlay((v) => !v)} className="px-4 py-2 rounded-xl bg-[#EA580C] hover:bg-orange-700 text-white text-sm font-bold">{jaapAutoPlay ? <Pause className="w-4 h-4 inline" /> : <Play className="w-4 h-4 inline" />} {jaapAutoPlay ? 'Pause Auto' : 'Start Auto Jaap (2.2s)'}</button>
+                <button onClick={resetJaap} className="px-4 py-2 rounded-xl border border-red-500 text-red-600 dark:text-red-400 text-sm font-bold"><RotateCcw className="w-4 h-4 inline" /> Cancel / New Jaap ({jaapCount}/108)</button>
               </div>
             </div>
           </div>
@@ -4066,33 +4348,22 @@ function App() {
             <form onSubmit={handleUploadSubmit} className="space-y-4">
               <input type="text" placeholder="Title" value={uploadForm.title} onChange={(e) => setUploadForm({ ...uploadForm, title: e.target.value })} className="w-full px-3 py-2 rounded-xl border border-amber-900/20 dark:bg-[#22160F] dark:border-amber-500/30 dark:text-amber-50" required />
               <input type="text" placeholder="Short description" value={uploadForm.description} onChange={(e) => setUploadForm({ ...uploadForm, description: e.target.value })} className="w-full px-3 py-2 rounded-xl border border-amber-900/20 dark:bg-[#22160F] dark:border-amber-500/30 dark:text-amber-50" required />
-              <select value={uploadForm.category} onChange={(e) => setUploadForm({ ...uploadForm, category: e.target.value })} className="w-full px-3 py-2 rounded-xl border border-amber-900/20 dark:bg-[#22160F] dark:border-amber-500/30 dark:text-amber-50">
-                {CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
+              <select value={uploadForm.category} onChange={(e) => setUploadForm({ ...uploadForm, category: e.target.value })} className="w-full px-3 py-2 rounded-xl border border-amber-900/20 dark:bg-[#22160F] dark:border-amber-500/30 dark:text-amber-50">{CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
               <div className="grid grid-cols-2 gap-2">
                 <input type="text" placeholder="Author (optional)" value={uploadForm.author} onChange={(e) => setUploadForm({ ...uploadForm, author: e.target.value })} className="px-3 py-2 rounded-xl border border-amber-900/20 dark:bg-[#22160F] dark:border-amber-500/30 dark:text-amber-50" />
-                <select value={uploadForm.language} onChange={(e) => setUploadForm({ ...uploadForm, language: e.target.value })} className="px-3 py-2 rounded-xl border border-amber-900/20 dark:bg-[#22160F] dark:border-amber-500/30 dark:text-amber-50">
-                  {SUPPORTED_LANGUAGES.map((l) => <option key={l.id} value={l.id}>{l.label}</option>)}
-                </select>
+                <select value={uploadForm.language} onChange={(e) => setUploadForm({ ...uploadForm, language: e.target.value })} className="px-3 py-2 rounded-xl border border-amber-900/20 dark:bg-[#22160F] dark:border-amber-500/30 dark:text-amber-50">{SUPPORTED_LANGUAGES.map((l) => <option key={l.id} value={l.id}>{l.label}</option>)}</select>
               </div>
               <input type="text" placeholder="Tags (comma separated)" value={uploadForm.tags} onChange={(e) => setUploadForm({ ...uploadForm, tags: e.target.value })} className="w-full px-3 py-2 rounded-xl border border-amber-900/20 dark:bg-[#22160F] dark:border-amber-500/30 dark:text-amber-50" />
               <textarea placeholder="English body" value={uploadForm.bodyEnglish} onChange={(e) => setUploadForm({ ...uploadForm, bodyEnglish: e.target.value })} rows={4} className="w-full px-3 py-2 rounded-xl border border-amber-900/20 dark:bg-[#22160F] dark:border-amber-500/30 dark:text-amber-50" />
               <textarea placeholder="Hindi body (optional)" value={uploadForm.bodyHindi} onChange={(e) => setUploadForm({ ...uploadForm, bodyHindi: e.target.value })} rows={3} className="w-full px-3 py-2 rounded-xl border border-amber-900/20 dark:bg-[#22160F] dark:border-amber-500/30 dark:text-amber-50" />
               <textarea placeholder="Sanskrit body (optional)" value={uploadForm.bodySanskrit} onChange={(e) => setUploadForm({ ...uploadForm, bodySanskrit: e.target.value })} rows={3} className="w-full px-3 py-2 rounded-xl border border-amber-900/20 dark:bg-[#22160F] dark:border-amber-500/30 dark:text-amber-50" />
-              <input type="text" placeholder="YouTube URL (optional)" value={uploadForm.videoUrl} onChange={(e) => setUploadForm({ ...uploadForm, videoUrl: e.target.value })} className="w-full px-3 py-2 rounded-xl border border-amber-900/20 dark:bg-[#22160F] dark:border-amber-500/30 dark:text-amber-50" />
+              <input type="text" placeholder="YouTube URL (youtube.com/watch?v=... or youtu.be/...)" value={uploadForm.videoUrl} onChange={(e) => setUploadForm({ ...uploadForm, videoUrl: e.target.value })} className="w-full px-3 py-2 rounded-xl border border-amber-900/20 dark:bg-[#22160F] dark:border-amber-500/30 dark:text-amber-50" />
               <label className="block text-sm font-bold opacity-80">Cover image (optional)</label>
               <input type="file" accept="image/*" onChange={(e) => handleImageFileChange(e, false)} className="w-full text-sm" />
               <label className="block text-sm font-bold opacity-80">PDF (optional)</label>
               <input type="file" accept="application/pdf" onChange={(e) => handlePdfFileChange(e, false)} className="w-full text-sm" />
-              {isAdminAuthenticated && (
-                <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" checked={uploadForm.publishDirectlyAsAdmin} onChange={(e) => setUploadForm({ ...uploadForm, publishDirectlyAsAdmin: e.target.checked })} />
-                  Publish directly as Admin (skip approval queue)
-                </label>
-              )}
-              <button type="submit" className="w-full px-4 py-3 rounded-xl bg-[#EA580C] hover:bg-orange-700 text-white font-bold">
-                {isAdminAuthenticated && uploadForm.publishDirectlyAsAdmin ? 'Publish Directly' : 'Submit for Approval'}
-              </button>
+              {isAdminAuthenticated && (<label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={uploadForm.publishDirectlyAsAdmin} onChange={(e) => setUploadForm({ ...uploadForm, publishDirectlyAsAdmin: e.target.checked })} /> Publish directly as Admin (skip approval queue)</label>)}
+              <button type="submit" className="w-full px-4 py-3 rounded-xl bg-[#EA580C] hover:bg-orange-700 text-white font-bold">{isAdminAuthenticated && uploadForm.publishDirectlyAsAdmin ? 'Publish Directly' : 'Submit for Approval'}</button>
             </form>
           </div>
         )}
@@ -4105,16 +4376,8 @@ function App() {
                 <Lock className="w-12 h-12 mx-auto mb-3 text-[#EA580C]" />
                 <h1 className="text-2xl font-black mb-2">Admin Panel</h1>
                 <p className="opacity-75 mb-4">Enter admin passcode to manage content.</p>
-                <input
-                  type="password"
-                  value={adminPasscodeInput}
-                  onChange={(e) => setAdminPasscodeInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleAdminLogin()}
-                  placeholder="Admin passcode"
-                  className="w-full px-3 py-2 rounded-xl border border-amber-900/20 dark:bg-[#22160F] dark:border-amber-500/30 dark:text-amber-50 mb-3"
-                />
+                <input type="password" value={adminPasscodeInput} onChange={(e) => setAdminPasscodeInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAdminLogin()} placeholder="Admin passcode" className="w-full px-3 py-2 rounded-xl border border-amber-900/20 dark:bg-[#22160F] dark:border-amber-500/30 dark:text-amber-50 mb-3" />
                 <button onClick={handleAdminLogin} className="w-full px-4 py-2 rounded-xl bg-[#EA580C] text-white font-bold">Unlock Admin</button>
-                <p className="text-xs opacity-60 mt-3">Default passcode: admin108 (set VITE_ADMIN_PASSWORD env var to change)</p>
               </div>
             ) : (
               <div>
@@ -4123,29 +4386,23 @@ function App() {
                   <button onClick={handleAdminLogout} className="px-3 py-1.5 rounded-xl bg-amber-200 text-amber-900 text-sm font-bold">Lock Admin</button>
                 </div>
                 <div className="flex flex-wrap gap-2 mb-4">
-                  <button onClick={() => setAdminTab('pending')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${adminTab === 'pending' ? 'bg-[#EA580C] text-white' : (darkMode ? 'bg-[#18100B]' : 'bg-white border border-amber-900/10')}`}>
-                    Pending ({pendingItems.length})
-                  </button>
-                  <button onClick={() => setAdminTab('published')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${adminTab === 'published' ? 'bg-[#EA580C] text-white' : (darkMode ? 'bg-[#18100B]' : 'bg-white border border-amber-900/10')}`}>
-                    Published ({approvedItems.length})
-                  </button>
-                  <button onClick={() => setAdminTab('cloud')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${adminTab === 'cloud' ? 'bg-emerald-600 text-white' : (darkMode ? 'bg-[#18100B]' : 'bg-emerald-50 text-emerald-800 border border-emerald-300')}`}>
-                    <Globe className="w-3.5 h-3.5 inline" /> Global Sync
-                  </button>
+                  <button onClick={() => setAdminTab('pending')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${adminTab === 'pending' ? 'bg-[#EA580C] text-white' : (darkMode ? 'bg-[#18100B]' : 'bg-white border border-amber-900/10')}`}>Pending ({pendingItems.length})</button>
+                  <button onClick={() => setAdminTab('published')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${adminTab === 'published' ? 'bg-[#EA580C] text-white' : (darkMode ? 'bg-[#18100B]' : 'bg-white border border-amber-900/10')}`}>Published ({approvedItems.length})</button>
+                  <button onClick={() => setAdminTab('cloud')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${adminTab === 'cloud' ? 'bg-emerald-600 text-white' : (darkMode ? 'bg-[#18100B]' : 'bg-emerald-50 text-emerald-800 border border-emerald-300')}`}><Globe className="w-3.5 h-3.5 inline" /> 🌍 Global Cross-Browser Sync (GitHub / Cloud)</button>
+                  <button onClick={() => setAdminTab('seo')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${adminTab === 'seo' ? 'bg-[#EA580C] text-white' : (darkMode ? 'bg-[#18100B]' : 'bg-white border border-amber-900/10')}`}><FileText className="w-3.5 h-3.5 inline" /> SEO Status &amp; index.html</button>
                 </div>
 
                 {adminTab === 'pending' && (
                   <div className="space-y-3">
                     {pendingItems.length === 0 && <p className="opacity-60 text-center py-8">No pending items.</p>}
                     {pendingItems.map((it) => (
-                      <div key={it.id} className="p-4 rounded-xl border border-amber-900/10 dark:border-amber-500/20 bg-white dark:bg-[#18100B] flex items-center justify-between gap-3">
-                        <div>
-                          <div className="font-bold">{it.title}</div>
-                          <div className="text-xs opacity-70">{it.sanskritBadge} · {it.author}</div>
-                        </div>
-                        <div className="flex gap-2">
-                          <button onClick={() => handleApproveItem(it.id)} className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-bold"><CheckCircle2 className="w-3.5 h-3.5 inline" /> Approve</button>
-                          <button onClick={() => handleDeleteItem(it.id)} className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-bold"><Trash2 className="w-3.5 h-3.5 inline" /> Delete</button>
+                      <div key={it.id} className="p-4 rounded-xl border border-amber-900/10 dark:border-amber-500/20 bg-white dark:bg-[#18100B]">
+                        <div className="flex items-center justify-between gap-3">
+                          <div><div className="font-bold">{it.title}</div><div className="text-xs opacity-70">{it.sanskritBadge} · {it.author}</div>{it.pendingEdit && <div className="text-xs text-amber-600 mt-1">📝 Pending edit/cover change approval</div>}</div>
+                          <div className="flex gap-2">
+                            <button onClick={() => handleApproveItem(it.id)} className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-bold"><CheckCircle2 className="w-3.5 h-3.5 inline" /> Approve</button>
+                            <button onClick={() => handleDeleteItem(it.id)} className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-bold"><Trash2 className="w-3.5 h-3.5 inline" /> Delete</button>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -4156,13 +4413,11 @@ function App() {
                   <div className="space-y-3">
                     {approvedItems.filter((i) => i.isUserUploaded).map((it) => (
                       <div key={it.id} className="p-4 rounded-xl border border-amber-900/10 dark:border-amber-500/20 bg-white dark:bg-[#18100B] flex items-center justify-between gap-3">
-                        <div>
-                          <div className="font-bold">{it.title}</div>
-                          <div className="text-xs opacity-70">{it.sanskritBadge} · views {it.views} · likes {it.likes} {it.isFeatured && '· ★'}</div>
-                        </div>
+                        <div><div className="font-bold">{it.title}</div><div className="text-xs opacity-70">{it.sanskritBadge} · views {it.views} · likes {it.likes} {it.isFeatured && '· ★'}</div></div>
                         <div className="flex gap-2">
                           <button onClick={() => handleToggleFeatured(it.id)} className="px-3 py-1.5 rounded-lg bg-amber-500 text-white text-xs font-bold"><Flame className="w-3.5 h-3.5 inline" /> Feature</button>
                           <button onClick={() => setEditingItem(it)} className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-bold"><Edit3 className="w-3.5 h-3.5 inline" /> Edit</button>
+                          <button onClick={() => handleMoveToPending(it.id)} className="px-3 py-1.5 rounded-lg bg-amber-200 dark:bg-amber-900/40 text-xs font-bold">Move to Pending</button>
                           <button onClick={() => handleDeleteItem(it.id)} className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-bold"><Trash2 className="w-3.5 h-3.5 inline" /></button>
                         </div>
                       </div>
@@ -4173,22 +4428,57 @@ function App() {
 
                 {adminTab === 'cloud' && (
                   <div className="p-6 rounded-2xl border border-emerald-600/20 bg-white dark:bg-[#18100B] dark:border-emerald-500/30">
-                    <h2 className="text-xl font-black mb-1 flex items-center gap-2"><Globe className="w-5 h-5 text-emerald-600" /> 🌍 Global Cross-Browser Sync</h2>
+                    <h2 className="text-xl font-black mb-1 flex items-center gap-2"><Globe className="w-5 h-5 text-emerald-600" /> 🌍 Global Cross-Browser Sync (GitHub / Cloud)</h2>
                     <p className="text-xs opacity-80 mb-4">Paste your GitHub Personal Access Token (Contents: Read &amp; Write) to sync admin edits across all browsers worldwide.</p>
                     {lastGlobalSyncStatus && <div className="mb-3 px-3 py-1.5 rounded-xl bg-emerald-500/15 text-emerald-500 text-xs font-bold inline-block">{lastGlobalSyncStatus}</div>}
                     <label className="block text-xs font-bold uppercase text-[#EA580C] mb-1">GitHub Repository (owner/repo)</label>
                     <input type="text" value={globalSyncConfig.githubRepo} onChange={(e) => { const u = { ...globalSyncConfig, githubRepo: e.target.value }; setGlobalSyncConfig(u); try { localStorage.setItem('sanatan_global_sync_config_v1', JSON.stringify(u)); } catch {} }} placeholder="manhar900/sanatansetu" className="w-full px-3 py-2 rounded-xl border border-amber-900/20 mb-3 dark:bg-[#22160F] dark:border-amber-500/30 dark:text-amber-50" />
-                    <label className="block text-xs font-bold uppercase text-[#EA580C] mb-1">Branch</label>
+                    <label className="block text-xs font-bold uppercase text-[#EA580C] mb-1">Branch Name</label>
                     <input type="text" value={globalSyncConfig.githubBranch} onChange={(e) => { const u = { ...globalSyncConfig, githubBranch: e.target.value }; setGlobalSyncConfig(u); try { localStorage.setItem('sanatan_global_sync_config_v1', JSON.stringify(u)); } catch {} }} placeholder="main" className="w-full px-3 py-2 rounded-xl border border-amber-900/20 mb-3 dark:bg-[#22160F] dark:border-amber-500/30 dark:text-amber-50" />
-                    <label className="block text-xs font-bold uppercase text-[#EA580C] mb-1">GitHub Token</label>
-                    <input type="password" value={globalSyncConfig.githubToken} onChange={(e) => { const u = { ...globalSyncConfig, githubToken: e.target.value }; setGlobalSyncConfig(u); try { localStorage.setItem('sanatan_global_sync_config_v1', JSON.stringify(u)); } catch {} }} placeholder="github_pat_... or ghp_..." className="w-full px-3 py-2 rounded-xl border border-amber-900/20 mb-4 dark:bg-[#22160F] dark:border-amber-500/30 dark:text-amber-50" />
+                    <label className="block text-xs font-bold uppercase text-[#EA580C] mb-1">GitHub Personal Access Token (Contents: Read &amp; Write)</label>
+                    <input type="password" value={globalSyncConfig.githubToken} onChange={(e) => { const u = { ...globalSyncConfig, githubToken: e.target.value }; setGlobalSyncConfig(u); try { localStorage.setItem('sanatan_global_sync_config_v1', JSON.stringify(u)); } catch {} }} placeholder="github_pat_... or ghp_... (Or set VITE_GITHUB_TOKEN in Vercel)" className="w-full px-3 py-2 rounded-xl border border-amber-900/20 mb-4 dark:bg-[#22160F] dark:border-amber-500/30 dark:text-amber-50" />
                     <div className="flex flex-wrap gap-2">
-                      <button disabled={isSyncingGlobal} onClick={() => pushGlobalDatabaseToCloud(items, undefined, categoryCustomImages)} className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold">
-                        <Globe className="w-3.5 h-3.5 inline" /> {isSyncingGlobal ? 'Syncing...' : 'Push Edits Globally Now'}
-                      </button>
-                      <button onClick={() => fetchGlobalPublishedDatabase()} className="px-4 py-2 rounded-xl border border-amber-900/20 text-xs font-bold">
-                        <RotateCcw className="w-3.5 h-3.5 inline" /> Pull Latest
-                      </button>
+                      <button disabled={isSyncingGlobal} onClick={() => pushGlobalDatabaseToCloud(items, undefined, categoryCustomImages)} className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold"><Globe className="w-3.5 h-3.5 inline" /> {isSyncingGlobal ? 'Syncing...' : '🚀 Push All Current Edits & Uploads Globally Now'}</button>
+                      <button onClick={() => {
+                        const payload = { updatedAt: Date.now(), editsMap: JSON.parse(localStorage.getItem('sanatan_setu_edits_map_v1') || '{}'), categoryImages: categoryCustomImages, items: items.filter((i) => i.isUserUploaded || i.updatedAt) };
+                        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url; a.download = 'sanatan-global-db.json'; a.click();
+                        URL.revokeObjectURL(url);
+                        showToast('Downloaded sanatan-global-db.json! Upload it into your GitHub public/ folder.');
+                      }} className="px-4 py-2 rounded-xl bg-[#EA580C] hover:bg-orange-700 text-white text-xs font-bold"><FileText className="w-3.5 h-3.5 inline" /> ⬇️ Download public/sanatan-global-db.json</button>
+                      <button onClick={() => fetchGlobalPublishedDatabase()} className="px-4 py-2 rounded-xl border border-amber-900/20 text-xs font-bold"><RotateCcw className="w-3.5 h-3.5 inline" /> Pull Latest Global Data</button>
+                    </div>
+                  </div>
+                )}
+
+                {adminTab === 'seo' && (
+                  <div className="space-y-4">
+                    <div className="p-6 rounded-2xl border border-amber-900/10 dark:border-amber-500/20 bg-white dark:bg-[#18100B]">
+                      <h2 className="text-xl font-black mb-1 flex items-center gap-2"><FileText className="w-5 h-5 text-[#EA580C]" /> SEO Status &amp; index.html</h2>
+                      <p className="text-xs opacity-80 mb-4">Click the buttons to copy SEO-ready files. Paste each into the matching file in your GitHub repo (manhar900/sanatansetu).</p>
+                      <div className="flex flex-wrap gap-2">
+                        <button onClick={() => copyToClipboard(generateIndexHtml(), 'SEO index.html')} className="px-4 py-2 rounded-xl bg-[#EA580C] hover:bg-orange-700 text-white text-xs font-bold">📋 Copy SEO index.html</button>
+                        <button onClick={() => copyToClipboard(generateSitemapXml(), 'sitemap.xml')} className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold">📋 Copy public/sitemap.xml</button>
+                        <button onClick={() => copyToClipboard(generateRobotsTxt(), 'robots.txt')} className="px-4 py-2 rounded-xl bg-amber-700 hover:bg-amber-800 text-white text-xs font-bold">📋 Copy public/robots.txt</button>
+                        <button onClick={exportApprovedItemsJson} className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold">⬇️ Export Approved Items JSON</button>
+                      </div>
+                      <div className="mt-4 p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 text-xs opacity-80">
+                        <strong>Deploy steps:</strong><br />
+                        1. Open <code>index.html</code> in your GitHub repo → pencil icon → paste SEO index.html → Commit.<br />
+                        2. Open <code>public/sitemap.xml</code> → Create new file → paste sitemap.xml → Commit.<br />
+                        3. Open <code>public/robots.txt</code> → Create new file → paste robots.txt → Commit.<br />
+                        4. Submit <code>https://sanatansetulibrary.com/sitemap.xml</code> in Google Search Console for indexing.
+                      </div>
+                    </div>
+
+                    <div className="p-6 rounded-2xl border border-amber-900/10 dark:border-amber-500/20 bg-white dark:bg-[#18100B]">
+                      <h3 className="text-lg font-black mb-2">Change Admin Password</h3>
+                      <p className="text-xs opacity-75 mb-3">To change the Admin password permanently, edit line 12 of <code>src/App.jsx</code> in your GitHub repo:</p>
+                      <pre className="text-xs bg-amber-50 dark:bg-amber-900/30 p-2 rounded mb-3 overflow-x-auto">export const DEFAULT_ADMIN_PASSCODE = 'your-new-password';</pre>
+                      <input type="text" value={newPasscodeInput} onChange={(e) => setNewPasscodeInput(e.target.value)} placeholder="New passcode (for reference only - edit code to apply)" className="w-full px-3 py-2 rounded-xl border border-amber-900/20 mb-2 dark:bg-[#22160F] dark:border-amber-500/30 dark:text-amber-50" />
+                      <button onClick={handleChangePassword} className="px-3 py-1.5 rounded-xl bg-amber-500 text-white text-xs font-bold">Show Instructions</button>
                     </div>
                   </div>
                 )}
@@ -4202,21 +4492,41 @@ function App() {
       {editingItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setEditingItem(null)}>
           <form onClick={(e) => e.stopPropagation()} onSubmit={handleSaveEditedItem} className="max-w-2xl w-full max-h-[90vh] overflow-auto p-6 rounded-2xl bg-white dark:bg-[#1A0F0A] dark:text-amber-50">
-            <h2 className="text-xl font-black mb-4">Edit: {editingItem.title}</h2>
+            <h2 className="text-xl font-black mb-4">Edit Content / Media: {editingItem.title}</h2>
             <input type="text" value={editingItem.title} onChange={(e) => setEditingItem({ ...editingItem, title: e.target.value })} className="w-full px-3 py-2 rounded-xl border border-amber-900/20 mb-2 dark:bg-[#22160F]" />
             <input type="text" value={editingItem.description} onChange={(e) => setEditingItem({ ...editingItem, description: e.target.value })} className="w-full px-3 py-2 rounded-xl border border-amber-900/20 mb-2 dark:bg-[#22160F]" />
-            <select value={editingItem.category} onChange={(e) => setEditingItem({ ...editingItem, category: e.target.value })} className="w-full px-3 py-2 rounded-xl border border-amber-900/20 mb-2 dark:bg-[#22160F]">
-              {CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
+            <select value={editingItem.category} onChange={(e) => setEditingItem({ ...editingItem, category: e.target.value })} className="w-full px-3 py-2 rounded-xl border border-amber-900/20 mb-2 dark:bg-[#22160F]">{CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
             <textarea value={editingItem.body?.English || ''} onChange={(e) => setEditingItem({ ...editingItem, body: { ...editingItem.body, English: e.target.value } })} rows={5} placeholder="English body" className="w-full px-3 py-2 rounded-xl border border-amber-900/20 mb-2 dark:bg-[#22160F]" />
             <textarea value={editingItem.body?.Hindi || ''} onChange={(e) => setEditingItem({ ...editingItem, body: { ...editingItem.body, Hindi: e.target.value } })} rows={3} placeholder="Hindi body" className="w-full px-3 py-2 rounded-xl border border-amber-900/20 mb-2 dark:bg-[#22160F]" />
             <textarea value={editingItem.body?.Sanskrit || ''} onChange={(e) => setEditingItem({ ...editingItem, body: { ...editingItem.body, Sanskrit: e.target.value } })} rows={3} placeholder="Sanskrit body" className="w-full px-3 py-2 rounded-xl border border-amber-900/20 mb-2 dark:bg-[#22160F]" />
-            <input type="text" value={editingItem.videoUrl || ''} onChange={(e) => setEditingItem({ ...editingItem, videoUrl: e.target.value })} placeholder="YouTube URL" className="w-full px-3 py-2 rounded-xl border border-amber-900/20 mb-3 dark:bg-[#22160F]" />
+            <input type="text" value={editingItem.videoUrl || ''} onChange={(e) => setEditingItem({ ...editingItem, videoUrl: e.target.value })} placeholder="YouTube URL (youtube.com/watch?v=... or youtu.be/...)" className="w-full px-3 py-2 rounded-xl border border-amber-900/20 mb-2 dark:bg-[#22160F]" />
+            <label className="block text-sm font-bold opacity-80 mb-1">Replace cover image (optional)</label>
+            <input type="file" accept="image/*" onChange={(e) => handleImageFileChange(e, true)} className="w-full text-sm mb-3" />
+            {editingItem.imageUrl && <img src={editingItem.imageUrl} alt="current cover" className="w-full h-32 object-cover rounded-lg mb-3" />}
             <div className="flex gap-2">
-              <button type="submit" className="flex-1 px-4 py-2 rounded-xl bg-[#EA580C] text-white font-bold">Save</button>
+              <button type="submit" className="flex-1 px-4 py-2 rounded-xl bg-[#EA580C] text-white font-bold">{isAdminAuthenticated ? 'Approve Edit & Publish' : 'Submit Edit for Approval'}</button>
               <button type="button" onClick={() => setEditingItem(null)} className="px-4 py-2 rounded-xl bg-amber-200 dark:bg-amber-900/30">Cancel</button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* Aarti overlay */}
+      {showAarti && (
+        <div className="fixed inset-0 z-50 pointer-events-none flex items-center justify-center">
+          <div className="relative">
+            <div className="w-32 h-32 rounded-full bg-gradient-to-br from-amber-500 to-orange-700 opacity-90 anim-pulse-glow" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 anim-aarti-orbit">
+              <div className="text-3xl anim-diya">🪔</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Ghanta overlay */}
+      {showGhanta && (
+        <div className="fixed inset-0 z-50 pointer-events-none flex items-center justify-center">
+          <div className="text-6xl anim-diya">🔔</div>
         </div>
       )}
 
