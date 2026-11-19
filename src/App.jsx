@@ -122,6 +122,24 @@ export function extractYouTubeId(url) {
   const cleaned = cleanExternalUrl(url);
   if (!cleaned) return null;
   if (/^[a-zA-Z0-9_-]{11}$/.test(cleaned)) return cleaned;
+  try {
+    const withProto = /^https?:\/\//i.test(cleaned) ? cleaned : `https://${cleaned}`;
+    const parsed = new URL(withProto);
+    const host = parsed.hostname.replace(/^(www\.|m\.|music\.)/i, '').toLowerCase();
+    if (host === 'youtu.be') {
+      const seg = parsed.pathname.split('/').filter(Boolean)[0];
+      if (seg && /^[a-zA-Z0-9_-]{11}$/.test(seg)) return seg;
+    }
+    if (host === 'youtube.com' || host === 'youtube-nocookie.com') {
+      const vParam = parsed.searchParams.get('v');
+      if (vParam && /^[a-zA-Z0-9_-]{11}$/.test(vParam)) return vParam;
+      const parts = parsed.pathname.split('/').filter(Boolean);
+      const markerIdx = parts.findIndex((p) => ['embed', 'shorts', 'live', 'v', 'e'].includes(p.toLowerCase()));
+      if (markerIdx !== -1 && parts[markerIdx + 1] && /^[a-zA-Z0-9_-]{11}$/.test(parts[markerIdx + 1])) {
+        return parts[markerIdx + 1];
+      }
+    }
+  } catch (e) {}
   const regExp = /(?:youtube(?:-nocookie)?\.com\/(?:[^/]+\/.+\/|v\/|e(?:mbed)?\/|shorts\/|live\/|.*[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i;
   const match = cleaned.match(regExp);
   return match && match[1] ? match[1] : null;
@@ -130,8 +148,15 @@ export function extractYouTubeId(url) {
 export function getYouTubeEmbedUrl(url) {
   const ytId = extractYouTubeId(url);
   if (!ytId) return null;
+  const host = ['www', 'youtube-nocookie', 'com'].join('.');
+  return `${SECURE_PROTO}${host}/embed/${ytId}?rel=0&modestbranding=1&playsinline=1`;
+}
+
+export function getYouTubeWatchUrl(url) {
+  const ytId = extractYouTubeId(url);
+  if (!ytId) return cleanExternalUrl(url);
   const host = ['www', 'youtube', 'com'].join('.');
-  return `${SECURE_PROTO}${host}/embed/${ytId}?playsinline=1&rel=0&modestbranding=1`;
+  return `${SECURE_PROTO}${host}/watch?v=${ytId}`;
 }
 
 export function openSacredPrintablePdf(item, lang = 'English') {
@@ -451,21 +476,19 @@ export const SacredVideoPlayer = ({ item, darkMode, lang = 'English' }) => {
   const playerContainerRef = useRef(null);
   const cleanedVideoUrl = cleanExternalUrl(item?.videoUrl || '');
   const ytId = extractYouTubeId(cleanedVideoUrl);
+  const ytEmbedUrl = getYouTubeEmbedUrl(cleanedVideoUrl);
+  const ytWatchUrl = getYouTubeWatchUrl(cleanedVideoUrl);
   const isDirectVideoFile =
     cleanedVideoUrl.startsWith('data:video/') ||
     /\.(mp4|webm|ogg)(\?.*)?$/i.test(cleanedVideoUrl);
 
-  const [playerMode, setPlayerMode] = useState('cinema');
+  const [playerMode, setPlayerMode] = useState(ytId ? 'youtube' : 'cinema');
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentLineIdx, setCurrentLineIdx] = useState(0);
   const [elapsedSec, setElapsedSec] = useState(0);
   const [chimeActive, setChimeActive] = useState(true);
   const [showSubtitles, setShowSubtitles] = useState(true);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
-
-  const ytThumbUrl = ytId
-    ? `${SECURE_PROTO}${['i', 'ytimg', 'com'].join('.')}/vi/${ytId}/hqdefault.jpg`
-    : null;
 
   const lines = useMemo(() => {
     const raw = getBodyForLanguage(item, lang) || item.description || item.title;
@@ -477,7 +500,9 @@ export const SacredVideoPlayer = ({ item, darkMode, lang = 'English' }) => {
 
   const totalSec = Math.max(lines.length * 5, 30);
 
+  // Automatically switch to YouTube mode whenever a YouTube link is added or item changes
   useEffect(() => {
+    setPlayerMode(ytId ? 'youtube' : 'cinema');
     setIsPlaying(false);
     setCurrentLineIdx(0);
     setElapsedSec(0);
@@ -489,10 +514,10 @@ export const SacredVideoPlayer = ({ item, darkMode, lang = 'English' }) => {
         window.speechSynthesis.cancel();
       }
     };
-  }, [item?.id, lang]);
+  }, [item?.id, ytId, lang]);
 
   useEffect(() => {
-    if (!isPlaying) return;
+    if (!isPlaying || playerMode !== 'cinema') return;
     const interval = setInterval(() => {
       setElapsedSec((prev) => {
         const next = prev + 1;
@@ -509,10 +534,10 @@ export const SacredVideoPlayer = ({ item, darkMode, lang = 'English' }) => {
       });
     }, Math.round(1000 / playbackSpeed));
     return () => clearInterval(interval);
-  }, [isPlaying, totalSec, lines.length, chimeActive, playbackSpeed]);
+  }, [isPlaying, playerMode, totalSec, lines.length, chimeActive, playbackSpeed]);
 
   useEffect(() => {
-    if (!isPlaying || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    if (!isPlaying || playerMode !== 'cinema' || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
     try {
       window.speechSynthesis.cancel();
       const textToSpeak = lines[currentLineIdx] || item.title;
@@ -522,7 +547,7 @@ export const SacredVideoPlayer = ({ item, darkMode, lang = 'English' }) => {
       utt.rate = 0.92 * playbackSpeed;
       window.speechSynthesis.speak(utt);
     } catch (e) {}
-  }, [isPlaying, currentLineIdx, lines, lang, item?.title, playbackSpeed]);
+  }, [isPlaying, playerMode, currentLineIdx, lines, lang, item?.title, playbackSpeed]);
 
   const togglePlay = () => {
     if (!isPlaying) {
@@ -553,48 +578,72 @@ export const SacredVideoPlayer = ({ item, darkMode, lang = 'English' }) => {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs font-extrabold uppercase tracking-wider text-[#EA580C] flex items-center gap-1.5">
-            <Play className="w-4 h-4 fill-[#EA580C]" /> In-App Sacred Video Player
+            <Play className="w-4 h-4 fill-[#EA580C]" /> {ytId && playerMode === 'youtube' ? 'YouTube Sacred Video' : 'In-App Sacred Video Player'}
           </span>
-          <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 text-[10px] font-bold">
-            ✓ HD On-Site Playback (Error-153 Free)
-          </span>
+          {ytId && (
+            <a
+              href={ytWatchUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-2.5 py-0.5 rounded-full bg-red-600/15 text-red-500 hover:bg-red-600 hover:text-white text-[10px] font-bold transition-all"
+            >
+              Open on YouTube ↗
+            </a>
+          )}
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
+          {ytId && (
+            <button
+              type="button"
+              onClick={() => {
+                setIsPlaying(false);
+                if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+                setPlayerMode('youtube');
+              }}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold shadow flex items-center gap-1.5 transition-all ${
+                playerMode === 'youtube'
+                  ? 'bg-red-600 text-white'
+                  : 'bg-amber-500/15 text-[#EA580C] hover:bg-amber-500/25'
+              }`}
+            >
+              <span>▶️ YouTube Video</span>
+            </button>
+          )}
           <button
             type="button"
-            onClick={() => {
-              setPlayerMode('youtube');
-              if (!isPlaying) togglePlay();
-            }}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold shadow flex items-center gap-1.5 transition-all ${
-              playerMode === 'youtube'
-                ? 'bg-red-600 text-white'
+            onClick={() => setPlayerMode('cinema')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold shadow flex items-center gap-1 transition-all ${
+              playerMode === 'cinema'
+                ? 'bg-[#EA580C] text-white'
                 : 'bg-amber-500/15 text-[#EA580C] hover:bg-amber-500/25'
             }`}
           >
-            <span>▶️ YouTube Embed</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setPlayerMode('cinema');
-              if (!isPlaying) togglePlay();
-            }}
-            className="px-3 py-1.5 rounded-xl bg-[#EA580C] hover:bg-orange-600 text-white text-xs font-bold shadow flex items-center gap-1 transition-all"
-          >
-            🎬 Sacred Cinema Player (Instant Play)
+            🎬 Sacred Cinema Audio
           </button>
         </div>
       </div>
 
       {isDirectVideoFile ? (
         <video
+          key={cleanedVideoUrl}
           src={cleanedVideoUrl}
           controls
           playsInline
           className="w-full rounded-2xl max-h-96 bg-black border border-amber-500/30"
         />
+      ) : playerMode === 'youtube' && ytEmbedUrl ? (
+        <div className="relative w-full overflow-hidden rounded-2xl aspect-video bg-black border border-amber-500/30 shadow-2xl">
+          <iframe
+            key={ytId}
+            src={ytEmbedUrl}
+            title={item.title || 'YouTube Sacred Video'}
+            className="w-full h-full border-0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            referrerPolicy="strict-origin-when-cross-origin"
+            allowFullScreen
+          />
+        </div>
       ) : (
         <div
           ref={playerContainerRef}
@@ -602,11 +651,11 @@ export const SacredVideoPlayer = ({ item, darkMode, lang = 'English' }) => {
           className="cursor-pointer relative w-full overflow-hidden rounded-2xl aspect-video bg-[#0B0704] border border-amber-500/30 shadow-2xl flex flex-col justify-between p-4 sm:p-6 text-white select-none group"
         >
           <img
-            src={playerMode === 'youtube' && ytThumbUrl ? ytThumbUrl : cleanExternalUrl(item.imageUrl)}
+            src={cleanExternalUrl(item.imageUrl) || item.fallbackImageUrl || ''}
             alt={item.title}
             onError={(e) => {
               e.target.onerror = null;
-              e.target.src = cleanExternalUrl(item.imageUrl) || item.fallbackImageUrl || '';
+              e.target.src = item.fallbackImageUrl || '';
             }}
             className={`absolute inset-0 w-full h-full object-cover object-center transition-all duration-1000 ${
               isPlaying ? 'scale-110 opacity-55' : 'scale-100 opacity-65 group-hover:scale-105'
@@ -633,7 +682,7 @@ export const SacredVideoPlayer = ({ item, darkMode, lang = 'English' }) => {
                   {item.title}
                 </div>
                 <div className="text-[10px] text-amber-300/90 font-semibold">
-                  Sanatan Setu HD Sacred Stream · {lang} Audio &amp; Subtitles
+                  Sanatan Setu HD Sacred Audio · {lang} Subtitles
                 </div>
               </div>
             </div>
@@ -668,7 +717,7 @@ export const SacredVideoPlayer = ({ item, darkMode, lang = 'English' }) => {
                   e.stopPropagation();
                   togglePlay();
                 }}
-                aria-label="Play Video"
+                aria-label="Play Audio"
                 className="mx-auto w-20 h-14 sm:w-24 sm:h-16 rounded-2xl bg-red-600 hover:bg-red-500 text-white shadow-[0_0_35px_rgba(220,38,38,0.8)] flex items-center justify-center transform hover:scale-110 active:scale-95 transition-all"
               >
                 <Play className="w-9 h-9 fill-white ml-1" />
@@ -681,7 +730,7 @@ export const SacredVideoPlayer = ({ item, darkMode, lang = 'English' }) => {
                   {lines[currentLineIdx] || item.title}
                 </p>
                 <div className="text-[10px] text-amber-300/80 font-semibold mt-1">
-                  Verse {currentLineIdx + 1} of {lines.length} · {isPlaying ? '🔊 Playing On-Site Audio Stream' : 'Click Play to Start Video & Audio'}
+                  Verse {currentLineIdx + 1} of {lines.length} · {isPlaying ? '🔊 Playing On-Site Audio Stream' : 'Click Play to Start Audio'}
                 </div>
               </div>
             )}
@@ -711,7 +760,7 @@ export const SacredVideoPlayer = ({ item, darkMode, lang = 'English' }) => {
                   className="px-3.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white flex items-center gap-1.5 shadow"
                 >
                   {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 fill-white" />}
-                  <span>{isPlaying ? 'Pause' : 'Play Video'}</span>
+                  <span>{isPlaying ? 'Pause' : 'Play Audio'}</span>
                 </button>
                 <button
                   type="button"
@@ -743,7 +792,7 @@ export const SacredVideoPlayer = ({ item, darkMode, lang = 'English' }) => {
                 <button
                   type="button"
                   onClick={handleFullscreen}
-                  title="Toggle Fullscreen Video"
+                  title="Toggle Fullscreen"
                   className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/25 text-white text-xs font-bold"
                 >
                   ⛶
@@ -4776,7 +4825,14 @@ export default function App() {
                 <input type="file" accept="image/*" onChange={(e) => handleImageFileChange(e, false)} className="w-full text-xs file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#EA580C] file:text-white" />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <input type="text" value={uploadForm.videoUrl} onChange={(e) => setUploadForm({ ...uploadForm, videoUrl: e.target.value })} placeholder="YouTube Video Link (optional)" className={`w-full px-3.5 py-2.5 rounded-xl border text-xs ${darkMode ? 'bg-[#22160F] border-amber-500/25' : 'bg-white border-amber-900/20'}`} />
+                <div className="space-y-1">
+                  <input type="text" value={uploadForm.videoUrl} onChange={(e) => setUploadForm({ ...uploadForm, videoUrl: e.target.value })} placeholder="YouTube Video Link (e.g. https://youtu.be/...)" className={`w-full px-3.5 py-2.5 rounded-xl border text-xs ${darkMode ? 'bg-[#22160F] border-amber-500/25' : 'bg-white border-amber-900/20'}`} />
+                  {uploadForm.videoUrl.trim() && (
+                    <div className={`text-[11px] font-bold ${extractYouTubeId(uploadForm.videoUrl) ? 'text-emerald-500' : 'text-amber-500'}`}>
+                      {extractYouTubeId(uploadForm.videoUrl) ? `✓ YouTube video ready (ID: ${extractYouTubeId(uploadForm.videoUrl)})` : '⚠️ Paste a valid YouTube link (youtube.com/watch?v=... or youtu.be/...)'}
+                    </div>
+                  )}
+                </div>
                 <input type="file" accept="application/pdf,.pdf" onChange={(e) => handlePdfFileChange(e, false)} className="w-full text-xs file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-red-600 file:text-white" />
               </div>
               <textarea rows={4} value={uploadForm.bodyEnglish} onChange={(e) => setUploadForm({ ...uploadForm, bodyEnglish: e.target.value })} placeholder="Full English content & meaning *" className={`w-full px-3.5 py-2.5 rounded-xl border text-sm ${darkMode ? 'bg-[#22160F] border-amber-500/25' : 'bg-white border-amber-900/20'}`} />
@@ -4826,7 +4882,14 @@ export default function App() {
                 <input type="text" value={editingItem.imageUrl?.startsWith('data:') ? '' : editingItem.imageUrl || ''} onChange={(e) => setEditingItem({ ...editingItem, imageUrl: e.target.value })} placeholder="Cover Image URL" className={`w-full px-3 py-2 rounded-xl border text-xs ${darkMode ? 'bg-[#22160F] border-amber-500/25' : 'bg-white border-amber-900/20'}`} />
                 <input type="file" accept="image/*" onChange={(e) => handleImageFileChange(e, true)} className="w-full text-xs file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#EA580C] file:text-white" />
               </div>
-              <input type="text" value={editingItem.videoUrl || ''} onChange={(e) => setEditingItem({ ...editingItem, videoUrl: e.target.value })} placeholder="YouTube Video Link" className={`w-full px-3.5 py-2 rounded-xl border text-xs ${darkMode ? 'bg-[#22160F] border-amber-500/25' : 'bg-white border-amber-900/20'}`} />
+              <div className="space-y-1">
+                <input type="text" value={editingItem.videoUrl || ''} onChange={(e) => setEditingItem({ ...editingItem, videoUrl: e.target.value })} placeholder="YouTube Video Link (e.g. https://youtu.be/...)" className={`w-full px-3.5 py-2 rounded-xl border text-xs ${darkMode ? 'bg-[#22160F] border-amber-500/25' : 'bg-white border-amber-900/20'}`} />
+                {editingItem.videoUrl && editingItem.videoUrl.trim() && (
+                  <div className={`text-[11px] font-bold ${extractYouTubeId(editingItem.videoUrl) ? 'text-emerald-500' : 'text-amber-500'}`}>
+                    {extractYouTubeId(editingItem.videoUrl) ? `✓ YouTube video ready (ID: ${extractYouTubeId(editingItem.videoUrl)})` : '⚠️ Paste a valid YouTube link (youtube.com/watch?v=... or youtu.be/...)'}
+                  </div>
+                )}
+              </div>
               <textarea rows={4} value={typeof editingItem.body === 'object' ? editingItem.body.English || '' : editingItem.body || ''} onChange={(e) => setEditingItem({ ...editingItem, body: { ...(typeof editingItem.body === 'object' ? editingItem.body : {}), English: e.target.value } })} className={`w-full px-3.5 py-2 rounded-xl border text-sm ${darkMode ? 'bg-[#22160F] border-amber-500/25' : 'bg-white border-amber-900/20'}`} />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <textarea rows={3} value={typeof editingItem.body === 'object' ? editingItem.body.Hindi || '' : ''} onChange={(e) => setEditingItem({ ...editingItem, body: { ...(typeof editingItem.body === 'object' ? editingItem.body : {}), Hindi: e.target.value } })} placeholder="Hindi Body" className={`w-full px-3.5 py-2 rounded-xl border text-sm ${darkMode ? 'bg-[#22160F] border-amber-500/25' : 'bg-white border-amber-900/20'}`} />
