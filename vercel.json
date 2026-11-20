@@ -8,7 +8,7 @@
       "destination": "/api/sitemap"
     },
     {
-      "source": "/((?!api/|assets/|robots\\.txt|manifest\\.json|sanatan-global-db\\.json|icon\\.svg|favicon\\.ico).*)",
+      "source": "/((?!api/|assets/|robots\\.txt|manifest\\.json|sanatan-global-db\\.json|.*\\.(?:png|ico|svg|jpg|jpeg|webp|xml|txt)$).*)",
       "destination": "/index.html"
     }
   ]
