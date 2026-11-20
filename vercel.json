@@ -1,15 +1,14 @@
 {
+  "framework": "vite",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
   "rewrites": [
     {
       "source": "/sitemap.xml",
       "destination": "/api/sitemap"
     },
     {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
-    },
-    {
-      "source": "/((?!assets/|robots\\.txt|manifest\\.json|sanatan-global-db\\.json|icon\\.svg|favicon\\.ico).*)",
+      "source": "/((?!api/|assets/|robots\\.txt|manifest\\.json|sanatan-global-db\\.json|icon\\.svg|favicon\\.ico).*)",
       "destination": "/index.html"
     }
   ]
