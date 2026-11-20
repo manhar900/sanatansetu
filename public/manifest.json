@@ -1,0 +1,17 @@
+{
+  "name": "Sanatan Setu \u2013 108 Naam Jaap & Vedic Library",
+  "short_name": "Sanatan Setu",
+  "description": "108-Bead Digital Naam Jaap Mala Counter and Verified Hindu Scripture Library in Sanskrit, Hindi, Odia & English.",
+  "start_url": "/naam-jaap-counter",
+  "display": "standalone",
+  "background_color": "#FFFBEB",
+  "theme_color": "#EA580C",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

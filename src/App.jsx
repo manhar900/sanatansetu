@@ -205,6 +205,10 @@ export function openSacredPrintablePdf(item, lang = 'English') {
   ${sanText ? `<div class="section-title">॥ मूल संस्कृत पाठ (Original Sanskrit Verses) ॥</div><div class="content">${esc(sanText)}</div>` : ''}
   ${hinText ? `<div class="section-title">॥ हिन्दी भावार्थ एवं संपूर्ण पाठ (Hindi Text & Meaning) ॥</div><div class="content">${esc(hinText)}</div>` : ''}
   ${engText ? `<div class="section-title">॥ Complete English Text & Commentary ॥</div><div class="content">${esc(engText)}</div>` : ''}
+  <div style="margin-top:32px; padding-top:14px; border-top:2px solid #FDE68A; text-align:center; font-size:12px; color:#78523A; font-family:system-ui,sans-serif;">
+    <strong>🕉️ Published by Sanatan Setu Library</strong> · <a href="https://sanatansetulibrary.com" style="color:#EA580C;">sanatansetulibrary.com</a><br/>
+    Practice daily 108-Bead Naam Jaap online: <a href="https://sanatansetulibrary.com/naam-jaap-counter" style="color:#EA580C;">sanatansetulibrary.com/naam-jaap-counter</a>
+  </div>
 </body>
 </html>`);
   win.document.close();
@@ -2136,7 +2140,16 @@ CATEGORIES.forEach((cat) => {
   }
 });
 
+export const MANTRA_ROUTE_SLUGS = {
+  'radha-naam': '/radha-naam-jaap-counter',
+  'jai-shri-ram': '/ram-naam-jaap-counter',
+  'om-namah-shivaya': '/om-namah-shivaya-counter',
+  'gayatri-jaap': '/gayatri-mantra-108-counter',
+  'hare-krishna': '/hare-krishna-jaap-counter'
+};
+
 export const JAAP_MANTRAS = [
+  { id: 'radha-naam', name: 'Radha Naam Jaap', sanskrit: 'श्री राधा राधा · राधे राधे', deity: 'Shrimati Radharani', defaultGoal: 108 },
   { id: 'om-namah-shivaya', name: 'Om Namah Shivaya', sanskrit: 'ॐ नमः शिवाय', deity: 'Lord Shiva (Panchakshari)', defaultGoal: 108 },
   { id: 'hare-krishna', name: 'Hare Krishna Maha Mantra', sanskrit: 'हरे कृष्ण हरे कृष्ण कृष्ण कृष्ण हरे हरे । हरे राम हरे राम राम राम हरे हरे ॥', deity: 'Sri Radha-Krishna & Sri Rama', defaultGoal: 108 },
   { id: 'jai-shri-ram', name: 'Shri Ram Jai Ram Jai Jai Ram', sanskrit: 'श्री राम जय राम जय जय राम', deity: 'Maryada Purushottama Sri Rama', defaultGoal: 108 },
@@ -2559,7 +2572,13 @@ export default function App() {
     try { return Number(localStorage.getItem('sanatan_jaap_current') || 0); } catch { return 0; }
   });
   const [lifetimeCount, setLifetimeCount] = useState(() => {
-    try { return Number(localStorage.getItem('sanatan_jaap_lifetime') || 1080); } catch { return 1080; }
+    try { return Number(localStorage.getItem('sanatan_jaap_lifetime') || 0); } catch { return 0; }
+  });
+  const [jaapStreak, setJaapStreak] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('sanatan_jaap_streak_v1') || '{"count":0,"lastDate":""}');
+      return saved.count || 0;
+    } catch { return 0; }
   });
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [meditationSeconds, setMeditationSeconds] = useState(0);
@@ -2739,66 +2758,136 @@ export default function App() {
     } catch (e) {}
   }, [currentCount, lifetimeCount]);
 
-  // URL Hash Deep-Linking & Browser Back Button Support
+  // Clean Path Routing (SEO-Friendly Real URLs: /scripture/:id, /hi/scripture/:id, /or/scripture/:id, /naam-jaap-counter, /radha-naam-jaap-counter, /admin-portal)
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const handleHash = () => {
+    const syncFromUrl = () => {
+      const path = window.location.pathname.replace(/\/+$/, '') || '/';
       const hash = window.location.hash.replace(/^#\/?/, '');
-      if (!hash) return;
+
+      // Private Admin Portal route (/admin-portal or legacy #admin)
+      if (path === '/admin-portal' || path === '/admin' || hash === 'admin') {
+        setSelectedItem(null);
+        setActiveView('admin');
+        return;
+      }
+
+      // Dedicated Naam Jaap Mantra Counter URLs
+      const mantraRouteMap = {
+        '/naam-jaap-counter': null,
+        '/radha-naam-jaap-counter': 'radha-naam',
+        '/ram-naam-jaap-counter': 'jai-shri-ram',
+        '/om-namah-shivaya-counter': 'om-namah-shivaya',
+        '/gayatri-mantra-108-counter': 'gayatri-jaap',
+        '/hare-krishna-jaap-counter': 'hare-krishna'
+      };
+      if (Object.prototype.hasOwnProperty.call(mantraRouteMap, path) || hash === 'jaap') {
+        setSelectedItem(null);
+        setActiveView('jaap');
+        const mId = mantraRouteMap[path];
+        if (mId) {
+          setIsCustomMantra(false);
+          setSelectedMantraId(mId);
+        }
+        return;
+      }
+
+      // Localized or default Scripture URLs: /scripture/:id, /hi/scripture/:id, /or/scripture/:id
+      const scriptureMatch = path.match(/^\/(?:(hi|or)\/)?scripture\/([^/]+)$/);
+      if (scriptureMatch) {
+        const langPrefix = scriptureMatch[1];
+        const slug = decodeURIComponent(scriptureMatch[2]);
+        const found = items.find((i) => String(i.id) === slug && (i.status === 'approved' || i.isApproved));
+        if (found) {
+          setActiveView('home');
+          setSelectedItem(found);
+          setDetailLang(langPrefix === 'hi' ? 'Hindi' : langPrefix === 'or' ? 'Odia' : 'English');
+          return;
+        }
+      }
+
+      // Legacy #article/:id support
       if (hash.startsWith('article/')) {
         const slug = decodeURIComponent(hash.slice('article/'.length));
         const found = items.find((i) => String(i.id) === slug && (i.status === 'approved' || i.isApproved));
         if (found) {
+          setActiveView('home');
           setSelectedItem(found);
           setDetailLang(found.language || 'English');
+          return;
         }
-      } else if (hash.startsWith('category/')) {
-        const cat = decodeURIComponent(hash.slice('category/'.length));
-        setSelectedCategory(cat);
-        setActiveView('home');
-      } else if (['home', 'jaap', 'admin', 'about', 'contact', 'privacy', 'disclaimer'].includes(hash)) {
-        setActiveView(hash);
       }
-    };
-    handleHash();
-    const handlePopState = (e) => {
-      const st = e.state;
-      if (st && st.sanatanView) {
-        if (!st.itemId) setSelectedItem(null);
-        setActiveView(st.sanatanView);
-        if (st.catId) setSelectedCategory(st.catId);
+
+      // Category URL: /category/:slug
+      const catMatch = path.match(/^\/category\/([^/]+)$/);
+      if (catMatch) {
+        const slug = decodeURIComponent(catMatch[1]).toLowerCase();
+        const catObj = CATEGORIES.find((c) => c.id.toLowerCase().replace(/\s+/g, '-') === slug || c.id.toLowerCase() === slug);
+        if (catObj) {
+          setSelectedItem(null);
+          setSelectedCategory(catObj.id);
+          setActiveView('home');
+          return;
+        }
+      }
+
+      // Static info pages
+      if (['/about', '/contact', '/privacy', '/disclaimer'].includes(path)) {
+        setSelectedItem(null);
+        setActiveView(path.slice(1));
         return;
       }
-      const currentHash = window.location.hash.replace(/^#\/?/, '');
-      if (!currentHash || currentHash === 'home') {
+
+      if (path === '/' && !hash) {
         setSelectedItem(null);
         setActiveView('home');
-        setSelectedCategory('All');
-      } else {
-        handleHash();
       }
     };
-    window.addEventListener('hashchange', handleHash);
-    window.addEventListener('popstate', handlePopState);
+
+    syncFromUrl();
+    window.addEventListener('popstate', syncFromUrl);
+    window.addEventListener('hashchange', syncFromUrl);
+
+    // Keyboard shortcut Ctrl+Shift+A to open hidden Admin Portal
+    const onKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'a') {
+        e.preventDefault();
+        setSelectedItem(null);
+        setActiveView('admin');
+        try { window.history.pushState({}, '', '/admin-portal'); } catch (err) {}
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+
     return () => {
-      window.removeEventListener('hashchange', handleHash);
-      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('popstate', syncFromUrl);
+      window.removeEventListener('hashchange', syncFromUrl);
+      window.removeEventListener('keydown', onKeyDown);
     };
   }, [items]);
 
+  // Keep browser URL bar in sync with clean SEO paths
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      const targetHash = activeView === 'home' ? (selectedCategory !== 'All' ? `#category/${encodeURIComponent(selectedCategory)}` : '#home') : `#${activeView}`;
-      if (window.location.hash !== targetHash) {
-        window.history.pushState(
-          { sanatanView: activeView, itemId: selectedItem?.id || null, catId: selectedCategory },
-          '',
-          targetHash
-        );
+      let targetPath = '/';
+      if (selectedItem) {
+        const prefix = detailLang === 'Hindi' ? '/hi' : detailLang === 'Odia' ? '/or' : '';
+        targetPath = `${prefix}/scripture/${encodeURIComponent(selectedItem.id)}`;
+      } else if (activeView === 'jaap') {
+        targetPath = (!isCustomMantra && MANTRA_ROUTE_SLUGS[selectedMantraId]) || '/naam-jaap-counter';
+      } else if (activeView === 'admin') {
+        targetPath = '/admin-portal';
+      } else if (['about', 'contact', 'privacy', 'disclaimer'].includes(activeView)) {
+        targetPath = `/${activeView}`;
+      } else if (activeView === 'home' && selectedCategory !== 'All') {
+        targetPath = `/category/${encodeURIComponent(selectedCategory.toLowerCase().replace(/\s+/g, '-'))}`;
+      }
+      if (window.location.pathname !== targetPath) {
+        window.history.pushState({}, '', targetPath);
       }
     } catch (e) {}
-  }, [activeView, selectedCategory]);
+  }, [activeView, selectedCategory, selectedItem, detailLang, selectedMantraId, isCustomMantra]);
 
   // STRICT ADMIN APPROVAL SEPARATION: Only Admin-approved items show publicly; visitor uploads & edits wait in Pending Queue
   const approvedItems = useMemo(
@@ -2856,8 +2945,64 @@ export default function App() {
   }, [selectedItem]);
 
   useEffect(() => {
-    if (typeof document !== 'undefined') document.title = seoMetadata.title;
-  }, [seoMetadata]);
+    if (typeof document === 'undefined') return;
+    document.title = seoMetadata.title;
+    const setMeta = (selector, attrName, attrVal, content) => {
+      let el = document.querySelector(selector);
+      if (!el) {
+        el = document.createElement('meta');
+        el.setAttribute(attrName, attrVal);
+        document.head.appendChild(el);
+      }
+      el.setAttribute('content', content);
+    };
+    setMeta('meta[name="description"]', 'name', 'description', seoMetadata.description);
+    setMeta('meta[name="keywords"]', 'name', 'keywords', seoMetadata.keywords);
+    setMeta('meta[property="og:title"]', 'property', 'og:title', seoMetadata.title);
+    setMeta('meta[property="og:description"]', 'property', 'og:description', seoMetadata.description);
+    setMeta('meta[property="og:type"]', 'property', 'og:type', seoMetadata.type);
+
+    const baseUrl = 'https://sanatansetulibrary.com';
+    const canonicalUrl = selectedItem
+      ? `${baseUrl}${detailLang === 'Hindi' ? '/hi' : detailLang === 'Odia' ? '/or' : ''}/scripture/${encodeURIComponent(selectedItem.id)}`
+      : `${baseUrl}${window.location.pathname === '/' ? '/' : window.location.pathname}`;
+
+    let canonicalEl = document.querySelector('link[rel="canonical"]');
+    if (!canonicalEl) {
+      canonicalEl = document.createElement('link');
+      canonicalEl.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonicalEl);
+    }
+    canonicalEl.setAttribute('href', canonicalUrl);
+
+    // Reciprocal hreflang links for English, Hindi & Odia scripture pages
+    document.querySelectorAll('link[data-sanatan-hreflang="true"]').forEach((n) => n.remove());
+    if (selectedItem) {
+      const enc = encodeURIComponent(selectedItem.id);
+      [
+        ['en', `${baseUrl}/scripture/${enc}`],
+        ['hi', `${baseUrl}/hi/scripture/${enc}`],
+        ['or', `${baseUrl}/or/scripture/${enc}`],
+        ['x-default', `${baseUrl}/scripture/${enc}`]
+      ].forEach(([hl, href]) => {
+        const link = document.createElement('link');
+        link.setAttribute('rel', 'alternate');
+        link.setAttribute('hreflang', hl);
+        link.setAttribute('href', href);
+        link.setAttribute('data-sanatan-hreflang', 'true');
+        document.head.appendChild(link);
+      });
+    }
+
+    let scriptEl = document.getElementById('sanatan-seo-jsonld');
+    if (!scriptEl) {
+      scriptEl = document.createElement('script');
+      scriptEl.id = 'sanatan-seo-jsonld';
+      scriptEl.type = 'application/ld+json';
+      document.head.appendChild(scriptEl);
+    }
+    scriptEl.textContent = JSON.stringify(seoMetadata.jsonLd);
+  }, [seoMetadata, selectedItem, detailLang]);
 
   // Live Full-Document Neural Translation Effect
   const [, setTranslationVersion] = useState(0);
@@ -3023,6 +3168,16 @@ export default function App() {
       return next;
     });
     setLifetimeCount((prev) => prev + 1);
+    try {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const saved = JSON.parse(localStorage.getItem('sanatan_jaap_streak_v1') || '{"count":0,"lastDate":""}');
+      if (saved.lastDate !== todayStr) {
+        const yest = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+        const nextStreak = saved.lastDate === yest ? (saved.count || 0) + 1 : 1;
+        localStorage.setItem('sanatan_jaap_streak_v1', JSON.stringify({ count: nextStreak, lastDate: todayStr }));
+        setJaapStreak(nextStreak);
+      }
+    } catch (e) {}
     setIsTimerRunning(true);
     setPulseEffect(true);
     const pid = Date.now() + Math.random();
@@ -3079,7 +3234,7 @@ export default function App() {
     setIsSearchFocused(false);
     if (typeof window !== 'undefined') {
       try {
-        window.history.pushState({ sanatanView: activeView, itemId: item.id, catId: selectedCategory }, '', `#article/${item.id}`);
+        window.history.pushState({ sanatanView: activeView, itemId: item.id, catId: selectedCategory }, '', `/scripture/${encodeURIComponent(item.id)}`);
       } catch (e) {}
     }
   };
@@ -3630,25 +3785,7 @@ export default function App() {
               <span className="hidden sm:inline">Upload Content</span>
             </button>
 
-            <button
-              onClick={() => setActiveView('admin')}
-              title="Admin Moderation & Global Sync Portal"
-              className={`px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 relative border ${
-                activeView === 'admin'
-                  ? 'bg-amber-600 text-white border-amber-500 shadow-md'
-                  : darkMode
-                  ? 'bg-[#23160E] text-amber-300 border-amber-500/30 hover:bg-amber-500/20'
-                  : 'bg-amber-100/80 text-[#9A3412] border-amber-300 hover:bg-amber-200/80'
-              }`}
-            >
-              <ShieldCheck className="w-4 h-4" />
-              <span>Admin</span>
-              {pendingItems.length > 0 && (
-                <span className="px-1.5 py-0.2 rounded-full bg-red-600 text-white text-[10px] font-black">
-                  {pendingItems.length}
-                </span>
-              )}
-            </button>
+
 
             <button
               onClick={() => setDarkMode((prev) => !prev)}
@@ -4309,7 +4446,7 @@ export default function App() {
 
                           <div className={`pt-3 border-t flex items-center justify-between text-xs ${darkMode ? 'border-amber-500/15 text-amber-300/75' : 'border-amber-900/10 text-[#78523A]'}`}>
                             <div className="flex items-center gap-2.5">
-                              <span className="flex items-center gap-1"><Eye className="w-3.5 h-3.5" /> {(item.views || 0).toLocaleString()}</span>
+                              <span className="flex items-center gap-1 text-emerald-500 font-semibold"><CheckCircle2 className="w-3.5 h-3.5" /> Authentic</span>
                               <button onClick={(e) => toggleLike(item.id, e)} className={`flex items-center gap-1 hover:text-[#EA580C] ${isLiked ? 'text-red-500 font-bold' : ''}`}>
                                 <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
                                 <span>{item.likes || 0}</span>
@@ -4455,11 +4592,25 @@ export default function App() {
                     </button>
                   </div>
 
+                  <div className="mb-3 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-xs font-bold text-[#EA580C]">
+                    <Flame className="w-4 h-4 fill-orange-500 text-orange-500" />
+                    <span>🔥 {jaapStreak}-Day Sankalpa Streak</span>
+                  </div>
+
                   <div className="flex flex-wrap items-center justify-center gap-3 mt-2">
                     <button onClick={() => setAutoJaapActive(!autoJaapActive)} className="px-5 py-3 rounded-2xl bg-amber-500/15 text-[#EA580C] text-xs font-bold flex items-center gap-2">
                       {autoJaapActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                       <span>{autoJaapActive ? 'Pause Auto-Chanting' : 'Start Hands-Free Auto Jaap'}</span>
                     </button>
+                    <a
+                      href={`https://wa.me/?text=${encodeURIComponent(`🕉️ Hari Om! I just completed ${currentCount} chants (${Math.floor(currentCount / 108)} Mala) of ${activeMantra.name} on Sanatan Setu 108-Bead Digital Mala! Join daily Naam Jaap here: https://sanatansetulibrary.com${(!isCustomMantra && MANTRA_ROUTE_SLUGS[selectedMantraId]) || '/naam-jaap-counter'}`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-5 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-2 shadow"
+                    >
+                      <Share2 className="w-4 h-4" />
+                      <span>Share Sankalpa on WhatsApp</span>
+                    </a>
                     <button onClick={handleResetJaap} className="px-5 py-3 rounded-2xl bg-red-600 text-white text-xs font-bold flex items-center gap-2">
                       <XCircle className="w-4 h-4" />
                       <span>Cancel Old Jaap &amp; Start New</span>
@@ -4919,7 +5070,7 @@ export default function App() {
           <div className="flex flex-wrap justify-center gap-4 font-semibold">
             <button onClick={() => setActiveView('home')} className="hover:text-amber-300">Library</button>
             <button onClick={() => setActiveView('jaap')} className="hover:text-amber-300">108 Naam Jaap</button>
-            <button onClick={() => setActiveView('admin')} className="hover:text-amber-300">Admin Approval ({pendingItems.length})</button>
+
             <button onClick={() => setActiveView('about')} className="hover:text-amber-300">About Us</button>
             <button onClick={() => setActiveView('contact')} className="hover:text-amber-300">Contact</button>
             <button onClick={() => setActiveView('privacy')} className="hover:text-amber-300">Privacy Policy</button>

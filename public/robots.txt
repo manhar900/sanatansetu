@@ -1,5 +1,5 @@
 User-agent: *
 Allow: /
+Disallow: /admin-portal
 
-# Sanatan Setu Library & 108-Bead Naam Jaap Counter Sitemap
 Sitemap: https://sanatansetulibrary.com/sitemap.xml
