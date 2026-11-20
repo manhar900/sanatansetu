@@ -2179,15 +2179,43 @@ export const NAAM_JAAP_SEO_FAQS = [
   }
 ];
 
+export function clampSeoTitle(rawTitle, suffix = ' | Sanatan Setu', maxLen = 65) {
+  const clean = String(rawTitle || 'Sanatan Setu').replace(/\s+/g, ' ').trim();
+  const full = suffix && !clean.toLowerCase().includes('sanatan setu') ? `${clean}${suffix}` : clean;
+  if (full.length <= maxLen) return full;
+  const budget = Math.max(20, maxLen - (suffix ? suffix.length : 0) - 1);
+  let trimmed = clean.slice(0, budget);
+  const lastSpace = trimmed.lastIndexOf(' ');
+  if (lastSpace > 15) trimmed = trimmed.slice(0, lastSpace);
+  trimmed = trimmed.replace(/[:;,\-–—|]+$/, '').trim();
+  return suffix ? `${trimmed}${suffix}` : trimmed;
+}
+
+export function clampSeoDescription(rawDesc, fallbackPad = 'Read verified Hindu scriptures in Sanskrit, Hindi, Odia, and English on Sanatan Setu Library.') {
+  let clean = String(rawDesc || '').replace(/\s+/g, ' ').trim();
+  if (clean.length < 115) {
+    clean = clean ? `${clean.replace(/\.?$/, '.')} ${fallbackPad}` : fallbackPad;
+  }
+  if (clean.length <= 155) return clean;
+  let trimmed = clean.slice(0, 152);
+  const lastSpace = trimmed.lastIndexOf(' ');
+  if (lastSpace > 100) trimmed = trimmed.slice(0, lastSpace);
+  trimmed = trimmed.replace(/[:;,\-–—]+$/, '').trim();
+  return `${trimmed}...`;
+}
+
 export const SEO_INDEX_HTML_TEMPLATE = `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Naam Jaap Counter (108 Digital Mala) & Sanatan Setu Hindu Scripture Library</title>
+    <title>108 Naam Jaap Counter &amp; Hindu Scripture Library | Sanatan Setu</title>
+    <meta name="description" content="Practice daily 108-bead Naam Jaap with our free digital mala and read verified Hindu scriptures in Sanskrit, Hindi, and English." />
   </head>
-  <body class="bg-[#FDFBF7] text-[#2C1A12] antialiased">
-    <div id="root"></div>
+  <body class="bg-[#FFFBEB] text-[#2C1A12] antialiased">
+    <div id="root">
+      <h1>Sanatan Setu Library &amp; 108-Bead Naam Jaap Counter</h1>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>`;
@@ -2923,26 +2951,133 @@ export default function App() {
   }, []);
 
   const seoMetadata = useMemo(() => {
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://sanatansetulibrary.com';
+    const baseUrl = 'https://sanatansetulibrary.com';
     if (selectedItem) {
+      const langSuffix = detailLang === 'Hindi' ? ' (Hindi)' : detailLang === 'Odia' ? ' (Odia)' : '';
+      const rawTitle = `${selectedItem.title}${langSuffix}`;
+      const title = clampSeoTitle(rawTitle, ' | Sanatan Setu', 64);
+      const description = clampSeoDescription(
+        selectedItem.description || selectedItem.title,
+        `Read complete ${selectedItem.category} text with meaning in Sanskrit, Hindi, Odia, and English on Sanatan Setu.`
+      );
+      const langPrefix = detailLang === 'Hindi' ? '/hi' : detailLang === 'Odia' ? '/or' : '';
       return {
-        title: `${selectedItem.title} | ${selectedItem.category} – Sanatan Setu`,
-        description: selectedItem.description || selectedItem.title,
+        title,
+        description,
         keywords: [...(selectedItem.tags || []), selectedItem.category, 'Sanatan Setu'].join(', '),
-        canonical: `${baseUrl}/#article/${selectedItem.id}`,
+        canonical: `${baseUrl}${langPrefix}/scripture/${encodeURIComponent(selectedItem.id)}`,
         type: 'article',
-        jsonLd: { '@context': 'https://schema.org', '@type': 'Article', headline: selectedItem.title, description: selectedItem.description }
+        jsonLd: {
+          '@context': 'https://schema.org',
+          '@type': 'Article',
+          headline: selectedItem.title,
+          description,
+          publisher: {
+            '@type': 'Organization',
+            name: 'Sanatan Setu Library',
+            logo: { '@type': 'ImageObject', url: `${baseUrl}/icon-192.png` }
+          }
+        }
       };
     }
+
+    if (activeView === 'jaap') {
+      const jaapSeoMap = {
+        'radha-naam': {
+          title: 'Radha Naam Jaap Counter Online — 108 Digital Japa Mala',
+          description: 'Practice daily Radha Naam Jaap with a free 108-bead online japa mala counter, 528Hz sacred chime, Sankalpa streak tracker, and Dhyana timer.'
+        },
+        'jai-shri-ram': {
+          title: 'Ram Naam Jaap Counter Online — 108 Digital Japa Mala',
+          description: 'Practice daily Ram Naam Jaap with a free 108-bead online japa mala counter, 528Hz sacred chime, Sankalpa streak tracker, and Dhyana timer.'
+        },
+        'om-namah-shivaya': {
+          title: 'Om Namah Shivaya 108 Counter — Online Digital Japa Mala',
+          description: 'Chant Om Namah Shivaya daily with our free 108-bead Rudraksha digital mala counter, 528Hz sacred chime, Sankalpa streak, and meditation timer.'
+        },
+        'gayatri-jaap': {
+          title: 'Gayatri Mantra 108 Counter — Free Online Japa Mala Tool',
+          description: 'Chant Gayatri Mantra 108 times daily with our free digital japa mala counter, 528Hz chime, Sankalpa streak tracker, and meditation timer.'
+        },
+        'hare-krishna': {
+          title: 'Hare Krishna Maha Mantra 108 Counter — Digital Japa Mala',
+          description: 'Chant Hare Krishna Maha Mantra daily with our free 108-bead digital japa mala counter, 528Hz chime, Sankalpa streak, and meditation timer.'
+        }
+      };
+      const mantraSeo = (!isCustomMantra && jaapSeoMap[selectedMantraId]) || {
+        title: '108 Naam Jaap Counter Online — Free Digital Japa Mala',
+        description: 'Chant Radha Naam, Ram Naam, or Om Namah Shivaya with a free 108-bead digital japa mala, 528Hz chime, mala tracker, and Dhyana timer.'
+      };
+      const path = (!isCustomMantra && MANTRA_ROUTE_SLUGS[selectedMantraId]) || '/naam-jaap-counter';
+      return {
+        title: mantraSeo.title,
+        description: mantraSeo.description,
+        keywords: '108 naam jaap counter, digital japa mala, radha naam jaap, ram naam jaap, om namah shivaya counter, Sanatan Setu',
+        canonical: `${baseUrl}${path}`,
+        type: 'website',
+        jsonLd: {
+          '@context': 'https://schema.org',
+          '@type': 'SoftwareApplication',
+          name: mantraSeo.title,
+          applicationCategory: 'LifestyleApplication',
+          operatingSystem: 'Web',
+          offers: { '@type': 'Offer', price: '0', priceCurrency: 'INR' }
+        }
+      };
+    }
+
+    if (activeView === 'home' && selectedCategory !== 'All') {
+      const catObj = CATEGORIES.find((c) => c.id === selectedCategory);
+      const slug = encodeURIComponent(selectedCategory.toLowerCase().replace(/\s+/g, '-'));
+      return {
+        title: clampSeoTitle(`${selectedCategory} Scriptures & Mantras`, ' | Sanatan Setu', 64),
+        description: clampSeoDescription(
+          catObj?.description || `Explore authentic ${selectedCategory} texts on Sanatan Setu.`,
+          'Read complete verses, audio recitation, printable PDFs, and meanings in Sanskrit, Hindi, Odia, and English.'
+        ),
+        keywords: `${selectedCategory}, Hindu scriptures, Sanatan Dharma, Sanatan Setu`,
+        canonical: `${baseUrl}/category/${slug}`,
+        type: 'website',
+        jsonLd: { '@context': 'https://schema.org', '@type': 'CollectionPage', name: `${selectedCategory} | Sanatan Setu Library`, url: `${baseUrl}/category/${slug}` }
+      };
+    }
+
+    if (['about', 'contact', 'privacy', 'disclaimer'].includes(activeView)) {
+      const pageTitles = {
+        about: 'About Sanatan Setu Library & Digital Vedic Archive',
+        contact: 'Contact Sanatan Setu Library — Feedback & Seva Inquiries',
+        privacy: 'Privacy Policy | Sanatan Setu Library',
+        disclaimer: 'Scriptural Disclaimer | Sanatan Setu Library'
+      };
+      return {
+        title: pageTitles[activeView],
+        description: 'Learn about Sanatan Setu Library, our mission to preserve authentic Vedas, Upanishads, Puranas, Mantras, and free 108-bead Naam Jaap tools.',
+        keywords: 'Sanatan Setu Library, Hindu scriptures, Vedic archive',
+        canonical: `${baseUrl}/${activeView}`,
+        type: 'website',
+        jsonLd: { '@context': 'https://schema.org', '@type': 'WebPage', name: pageTitles[activeView], url: `${baseUrl}/${activeView}` }
+      };
+    }
+
     return {
-      title: 'Naam Jaap Counter (108 Digital Mala) & Sanatan Setu Hindu Scripture Library',
-      description: 'Free 108-Bead Naam Jaap Counter and authentic Admin-verified Hindu scriptures in 27 languages.',
-      keywords: 'naam jaap counter, Sanatan Setu, Vedas, Upanishads, Bhagavad Gita, Hanuman Chalisa, Jagannath Temple Puri',
+      title: '108 Naam Jaap Counter & Hindu Scripture Library | Sanatan Setu',
+      description: 'Practice daily 108-bead Naam Jaap with our free digital mala and read verified Hindu scriptures in Sanskrit, Hindi, and English.',
+      keywords: 'naam jaap counter, 108 digital mala, Sanatan Setu, Vedas, Upanishads, Bhagavad Gita, Hanuman Chalisa, Jagannath Temple Puri',
       canonical: `${baseUrl}/`,
       type: 'website',
-      jsonLd: { '@context': 'https://schema.org', '@type': 'WebSite', name: 'Sanatan Setu Library', url: baseUrl }
+      jsonLd: {
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'Sanatan Setu Library',
+        url: `${baseUrl}/`,
+        publisher: {
+          '@type': 'Organization',
+          name: 'Sanatan Setu Library',
+          logo: { '@type': 'ImageObject', url: `${baseUrl}/icon-192.png` }
+        }
+      }
     };
-  }, [selectedItem]);
+  }, [selectedItem, detailLang, activeView, selectedCategory, selectedMantraId, isCustomMantra]);
 
   useEffect(() => {
     if (typeof document === 'undefined') return;
@@ -3838,16 +3973,31 @@ export default function App() {
                   <span>Unabridged Vedas · Upanishads · Gita · Puranas · Temples · Mantras</span>
                 </div>
 
-                <h1
-                  className={`text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight max-w-4xl mx-auto leading-tight ${
-                    darkMode ? 'text-amber-50' : 'text-[#2C1A12]'
-                  }`}
-                >
-                  Your Digital Bridge to{' '}
-                  <span className="bg-gradient-to-r from-[#EA580C] via-amber-500 to-red-600 bg-clip-text text-transparent animate-shimmer-gold underline decoration-amber-400/70 decoration-wavy decoration-2">
-                    Sanatan Dharma
-                  </span>
-                </h1>
+                {selectedItem ? (
+                  <div
+                    role="heading"
+                    aria-level="2"
+                    className={`text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight max-w-4xl mx-auto leading-tight ${
+                      darkMode ? 'text-amber-50' : 'text-[#2C1A12]'
+                    }`}
+                  >
+                    Your Digital Bridge to{' '}
+                    <span className="bg-gradient-to-r from-[#EA580C] via-amber-500 to-red-600 bg-clip-text text-transparent animate-shimmer-gold underline decoration-amber-400/70 decoration-wavy decoration-2">
+                      Sanatan Dharma
+                    </span>
+                  </div>
+                ) : (
+                  <h1
+                    className={`text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight max-w-4xl mx-auto leading-tight ${
+                      darkMode ? 'text-amber-50' : 'text-[#2C1A12]'
+                    }`}
+                  >
+                    Your Digital Bridge to{' '}
+                    <span className="bg-gradient-to-r from-[#EA580C] via-amber-500 to-red-600 bg-clip-text text-transparent animate-shimmer-gold underline decoration-amber-400/70 decoration-wavy decoration-2">
+                      Sanatan Dharma
+                    </span>
+                  </h1>
+                )}
 
                 {/* Interactive Temple Experience Bar */}
                 <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
@@ -4502,6 +4652,17 @@ export default function App() {
                 <span>← Back to Sacred Library (Home)</span>
               </button>
               <span className={`text-xs font-bold ${darkMode ? 'text-amber-300/80' : 'text-[#78523A]'}`}>🕉️ Sanatan Setu · 108-Bead Digital Mala Sanctuary</span>
+            </div>
+
+            <div className="text-center mb-6 space-y-1.5">
+              <h1 className={`text-2xl sm:text-4xl font-black tracking-tight ${darkMode ? 'text-amber-50' : 'text-[#2C1A12]'}`}>
+                {!isCustomMantra && MANTRA_ROUTE_SLUGS[selectedMantraId]
+                  ? `${activeMantra.name} — 108-Bead Naam Jaap Counter`
+                  : 'Online 108-Bead Naam Jaap Counter (Digital Japa Mala)'}
+              </h1>
+              <p className={`text-xs sm:text-sm max-w-2xl mx-auto ${darkMode ? 'text-amber-200/80' : 'text-[#78523A]'}`}>
+                Chant with 528Hz sacred chime feedback, automatic 108-bead mala tracking, Dhyana timer, and daily Sankalpa streak.
+              </p>
             </div>
 
             <div className="bg-gradient-to-r from-amber-800 via-orange-600 to-amber-900 rounded-3xl p-6 text-white shadow-xl mb-8 grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
