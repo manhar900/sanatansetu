@@ -7,6 +7,7 @@ import {
   Share2, Copy, Globe, Lock, Unlock, Plus, ChevronRight,
   Check, AlertCircle, FileText
 } from 'lucide-react';
+import { FULL_SACRED_CONTENT_MAP } from './data/sacredContent';
 
 // Change your default Admin Password here (or set VITE_ADMIN_PASSWORD in Vercel Environment Variables)
 export const DEFAULT_ADMIN_PASSCODE =
@@ -2125,6 +2126,18 @@ export const EXTRA_SEO_SACRED_ITEMS = [
 INITIAL_SACRED_ITEMS.push(...EXTRA_SEO_SACRED_ITEMS);
 
 INITIAL_SACRED_ITEMS.forEach((it) => {
+  const enriched = FULL_SACRED_CONTENT_MAP[it.id];
+  if (enriched) {
+    it.body = {
+      ...(typeof it.body === 'object' ? it.body : {}),
+      English: enriched.English,
+      Hindi: enriched.Hindi,
+      Sanskrit: enriched.Sanskrit
+    };
+    if (Array.isArray(enriched.faqs) && enriched.faqs.length > 0) {
+      it.faqs = enriched.faqs;
+    }
+  }
   if (!it.pdfUrl) it.pdfUrl = '#auto-pdf';
   if (!it.videoUrl) it.videoUrl = 'https://www.youtube.com/watch?v=sx8WM-IB3Y0';
   it.fallbackImageUrl = it.imageUrl;
@@ -2132,6 +2145,107 @@ INITIAL_SACRED_ITEMS.forEach((it) => {
     it.imageUrl = COPYRIGHT_FREE_ITEM_PHOTOS[it.id];
   }
 });
+
+// Ensures stale cached short summaries never overwrite our complete unabridged scriptures,
+// while preserving Admin cover image, YouTube links, and intentional custom body edits.
+export function mergeWithCompleteSeedContent(item) {
+  if (!item || !item.id) return item;
+  const enriched = FULL_SACRED_CONTENT_MAP[String(item.id)];
+  if (!enriched) return item;
+  const curBody = typeof item.body === 'object' && item.body ? item.body : {};
+  const nextBody = { ...curBody };
+  if (!item.isCustomBodyEdited) {
+    ['English', 'Hindi', 'Sanskrit'].forEach((langKey) => {
+      const curText = String(curBody[langKey] || '').trim();
+      const fullText = String(enriched[langKey] || '').trim();
+      if (fullText.length > curText.length) {
+        nextBody[langKey] = fullText;
+      }
+    });
+  }
+  return {
+    ...item,
+    body: nextBody,
+    faqs: Array.isArray(item.faqs) && item.faqs.length > 0 ? item.faqs : (enriched.faqs || [])
+  };
+}
+
+function renderInlineFormatting(text) {
+  const parts = String(text || '').split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g);
+  return parts.map((part, idx) => {
+    if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
+      return <strong key={idx} className="font-extrabold">{part.slice(2, -2)}</strong>;
+    }
+    if (part.startsWith('*') && part.endsWith('*') && part.length > 2) {
+      return <em key={idx} className="italic opacity-90">{part.slice(1, -1)}</em>;
+    }
+    return <React.Fragment key={idx}>{part}</React.Fragment>;
+  });
+}
+
+export const StructuredScriptureBody = ({ text, darkMode, fontSize = 'base' }) => {
+  const blocks = useMemo(() => String(text || '').split(/\n\n+/), [text]);
+  const sizeClass = fontSize === 'xl' ? 'text-lg sm:text-xl' : fontSize === 'lg' ? 'text-base sm:text-lg' : 'text-sm sm:text-base';
+
+  return (
+    <div className={`space-y-4 leading-relaxed ${sizeClass}`}>
+      {blocks.map((block, bIdx) => {
+        const lines = block.split('\n').map((l) => l.trim()).filter(Boolean);
+        if (lines.length === 0) return null;
+
+        // If block starts with ## Heading followed by paragraph lines
+        const elements = [];
+        let listBuffer = [];
+        const flushList = (keyPrefix) => {
+          if (listBuffer.length === 0) return;
+          elements.push(
+            <ul key={`${keyPrefix}-ul`} className="list-disc pl-5 space-y-1.5">
+              {listBuffer.map((li, i) => (
+                <li key={i}>{renderInlineFormatting(li)}</li>
+              ))}
+            </ul>
+          );
+          listBuffer = [];
+        };
+
+        lines.forEach((line, lIdx) => {
+          if (line.startsWith('## ')) {
+            flushList(`${bIdx}-${lIdx}`);
+            elements.push(
+              <h2
+                key={`${bIdx}-${lIdx}-h2`}
+                className={`text-lg sm:text-xl font-black pt-3 pb-1 border-b ${
+                  darkMode ? 'text-amber-300 border-amber-500/20' : 'text-[#9A3412] border-amber-900/15'
+                }`}
+              >
+                {line.slice(3).trim()}
+              </h2>
+            );
+          } else if (line.startsWith('### ')) {
+            flushList(`${bIdx}-${lIdx}`);
+            elements.push(
+              <h3 key={`${bIdx}-${lIdx}-h3`} className="text-base sm:text-lg font-extrabold text-[#EA580C] pt-2">
+                {line.slice(4).trim()}
+              </h3>
+            );
+          } else if (line.startsWith('- ')) {
+            listBuffer.push(line.slice(2).trim());
+          } else {
+            flushList(`${bIdx}-${lIdx}`);
+            elements.push(
+              <p key={`${bIdx}-${lIdx}-p`} className="leading-relaxed">
+                {renderInlineFormatting(line)}
+              </p>
+            );
+          }
+        });
+        flushList(`${bIdx}-end`);
+
+        return <div key={bIdx} className="space-y-2">{elements}</div>;
+      })}
+    </div>
+  );
+};
 
 CATEGORIES.forEach((cat) => {
   cat.fallbackBgImage = cat.bgImage;
@@ -2523,7 +2637,7 @@ export default function App() {
       .filter((seed) => !deletedSet.has(String(seed.id)))
       .map((seed) => {
         const edited = editsMap[String(seed.id)];
-        return edited ? { ...seed, ...edited, fallbackImageUrl: seed.fallbackImageUrl } : seed;
+        return edited ? mergeWithCompleteSeedContent({ ...seed, ...edited, fallbackImageUrl: seed.fallbackImageUrl }) : seed;
       });
 
     return [...Array.from(collectedCustomMap.values()), ...mergedSeeds];
@@ -2705,8 +2819,8 @@ export default function App() {
             const localTime = Date.parse(localIt.updatedAt || 0) || 0;
             const remTime = Date.parse(rem.updatedAt || 0) || 0;
             return remTime >= localTime
-              ? { ...localIt, ...rem, fallbackImageUrl: localIt.fallbackImageUrl || rem.fallbackImageUrl }
-              : localIt;
+              ? mergeWithCompleteSeedContent({ ...localIt, ...rem, fallbackImageUrl: localIt.fallbackImageUrl || rem.fallbackImageUrl })
+              : mergeWithCompleteSeedContent(localIt);
           });
         remoteMap.forEach((rem, id) => {
           if (!deletedSet.has(id) && !merged.some((m) => String(m.id) === id)) {
@@ -2750,7 +2864,7 @@ export default function App() {
           if (!stored) return it;
           const t1 = Date.parse(it.updatedAt || 0) || 0;
           const t2 = Date.parse(stored.updatedAt || 0) || 0;
-          return t2 > t1 ? { ...it, ...stored, fallbackImageUrl: it.fallbackImageUrl || stored.fallbackImageUrl } : it;
+          return t2 > t1 ? mergeWithCompleteSeedContent({ ...it, ...stored, fallbackImageUrl: it.fallbackImageUrl || stored.fallbackImageUrl }) : mergeWithCompleteSeedContent(it);
         });
         idbMap.forEach((stored, id) => {
           if (!merged.some((m) => String(m.id) === id)) {
@@ -2969,14 +3083,39 @@ export default function App() {
         type: 'article',
         jsonLd: {
           '@context': 'https://schema.org',
-          '@type': 'Article',
-          headline: selectedItem.title,
-          description,
-          publisher: {
-            '@type': 'Organization',
-            name: 'Sanatan Setu Library',
-            logo: { '@type': 'ImageObject', url: `${baseUrl}/icon-192.png` }
-          }
+          '@graph': [
+            {
+              '@type': 'Article',
+              headline: selectedItem.title,
+              description,
+              author: { '@type': 'Person', name: selectedItem.author || 'Vedic Tradition' },
+              inLanguage: detailLang === 'Hindi' ? 'hi' : detailLang === 'Odia' ? 'or' : 'en',
+              mainEntityOfPage: `${baseUrl}${langPrefix}/scripture/${encodeURIComponent(selectedItem.id)}`,
+              publisher: {
+                '@type': 'Organization',
+                name: 'Sanatan Setu Library',
+                logo: { '@type': 'ImageObject', url: `${baseUrl}/icon-192.png` }
+              }
+            },
+            {
+              '@type': 'BreadcrumbList',
+              itemListElement: [
+                { '@type': 'ListItem', position: 1, name: 'Home', item: `${baseUrl}/` },
+                { '@type': 'ListItem', position: 2, name: selectedItem.category, item: `${baseUrl}/category/${encodeURIComponent(selectedItem.category.toLowerCase().replace(/\s+/g, '-'))}` },
+                { '@type': 'ListItem', position: 3, name: selectedItem.title, item: `${baseUrl}${langPrefix}/scripture/${encodeURIComponent(selectedItem.id)}` }
+              ]
+            },
+            ...(Array.isArray(selectedItem.faqs) && selectedItem.faqs.length > 0
+              ? [{
+                  '@type': 'FAQPage',
+                  mainEntity: selectedItem.faqs.map((fq) => ({
+                    '@type': 'Question',
+                    name: fq.q,
+                    acceptedAnswer: { '@type': 'Answer', text: fq.a }
+                  }))
+                }]
+              : [])
+          ]
         }
       };
     }
@@ -3710,6 +3849,7 @@ export default function App() {
         pdfUrl: cleanExternalUrl(editingItem.pdfUrl),
         videoUrl: cleanExternalUrl(editingItem.videoUrl),
         isModified: true,
+        isCustomBodyEdited: true,
         updatedAt: nowIso
       };
       try {
@@ -4575,7 +4715,13 @@ export default function App() {
                       <div className="p-5 flex-1 flex flex-col justify-between">
                         <div>
                           <h3 className={`font-bold text-lg group-hover:text-[#EA580C] transition-colors line-clamp-2 ${darkMode ? 'text-amber-50' : 'text-[#2C1A12]'}`}>
-                            {item.title}
+                            <a
+                              href={`/scripture/${encodeURIComponent(item.id)}`}
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleOpenItem(item); }}
+                              className="hover:underline"
+                            >
+                              {item.title}
+                            </a>
                           </h3>
                           <p className={`text-xs mt-2 line-clamp-3 leading-relaxed ${darkMode ? 'text-amber-200/75' : 'text-[#78523A]'}`}>
                             {item.description}
@@ -5093,11 +5239,82 @@ export default function App() {
                 </div>
               </div>
 
+              {/* SEO Breadcrumb Navigation */}
+              <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs font-semibold opacity-80 flex-wrap">
+                <a
+                  href="/"
+                  onClick={(e) => { e.preventDefault(); handleCloseItem(); setSelectedCategory('All'); }}
+                  className="hover:text-[#EA580C] hover:underline"
+                >
+                  Home
+                </a>
+                <span>/</span>
+                <a
+                  href={`/category/${encodeURIComponent(selectedItem.category.toLowerCase().replace(/\s+/g, '-'))}`}
+                  onClick={(e) => { e.preventDefault(); handleCloseItem(); handleSelectCategory(selectedItem.category, false); }}
+                  className="hover:text-[#EA580C] hover:underline"
+                >
+                  {selectedItem.category}
+                </a>
+                <span>/</span>
+                <span className="text-[#EA580C] truncate max-w-[260px] sm:max-w-md">{selectedItem.title}</span>
+              </nav>
+
               <SacredVideoPlayer item={selectedItem} darkMode={darkMode} lang={detailLang} />
 
-              <div className={`max-w-none leading-relaxed whitespace-pre-line ${readerFontSize === 'xl' ? 'text-xl' : readerFontSize === 'lg' ? 'text-lg' : 'text-base'}`}>
-                {getBodyForLanguage(selectedItem, detailLang)}
-              </div>
+              {/* Complete Structured Scripture Content with Real Semantic H2/H3 Headings */}
+              <StructuredScriptureBody
+                text={getBodyForLanguage(selectedItem, detailLang)}
+                darkMode={darkMode}
+                fontSize={readerFontSize}
+              />
+
+              {/* Per-Scripture SEO Frequently Asked Questions */}
+              {Array.isArray(selectedItem.faqs) && selectedItem.faqs.length > 0 && (
+                <section className={`mt-8 p-5 rounded-2xl border space-y-3 ${darkMode ? 'bg-[#1F140E] border-amber-500/25' : 'bg-amber-50/80 border-amber-900/15'}`}>
+                  <h2 className="text-lg font-black text-[#EA580C]">Frequently Asked Questions</h2>
+                  <div className="space-y-3">
+                    {selectedItem.faqs.map((faq, idx) => (
+                      <div key={idx} className={`p-3.5 rounded-xl border ${darkMode ? 'bg-[#160F0A] border-amber-500/15' : 'bg-white border-amber-900/10'}`}>
+                        <h3 className="font-bold text-sm">{faq.q}</h3>
+                        <p className={`text-xs sm:text-sm mt-1 leading-relaxed ${darkMode ? 'text-amber-200/80' : 'text-[#78523A]'}`}>{faq.a}</p>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* Internal Linking: Related Scriptures & 108 Naam Jaap CTA */}
+              <section className={`mt-6 pt-5 border-t space-y-3 ${darkMode ? 'border-amber-500/20' : 'border-amber-900/10'}`}>
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <h2 className="text-base font-extrabold">Explore Related Sacred Scriptures</h2>
+                  <a
+                    href="/naam-jaap-counter"
+                    onClick={(e) => { e.preventDefault(); handleCloseItem(); setActiveView('jaap'); }}
+                    className="px-3.5 py-1.5 rounded-xl bg-[#EA580C] text-white text-xs font-bold shadow hover:bg-orange-600 transition-all"
+                  >
+                    📿 Open 108 Naam Jaap Counter →
+                  </a>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {approvedItems
+                    .filter((rel) => rel.id !== selectedItem.id && (rel.category === selectedItem.category || rel.isFeatured))
+                    .slice(0, 4)
+                    .map((rel) => (
+                      <a
+                        key={rel.id}
+                        href={`/scripture/${encodeURIComponent(rel.id)}`}
+                        onClick={(e) => { e.preventDefault(); handleOpenItem(rel); }}
+                        className={`p-3 rounded-xl border text-xs font-bold flex items-center justify-between gap-2 transition-all hover:border-[#EA580C] ${
+                          darkMode ? 'bg-[#1F140E] border-amber-500/20 text-amber-100' : 'bg-white border-amber-900/10 text-[#2C1A12]'
+                        }`}
+                      >
+                        <span className="line-clamp-1">{rel.title}</span>
+                        <ChevronRight className="w-4 h-4 text-[#EA580C] shrink-0" />
+                      </a>
+                    ))}
+                </div>
+              </section>
             </div>
           </article>
         </div>
