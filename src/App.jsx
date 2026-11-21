@@ -3043,18 +3043,35 @@ export default function App() {
   );
 
   const generatedSitemapXml = useMemo(() => {
-    const baseUrl = typeof window !== 'undefined' && window.location.origin.startsWith('http')
-      ? window.location.origin
-      : 'https://sanatansetulibrary.com';
+    const baseUrl = 'https://sanatansetulibrary.com';
     const today = new Date().toISOString().split('T')[0];
-    const urls = [
-      `  <url>\n    <loc>${baseUrl}/</loc>\n    <lastmod>${today}</lastmod>\n    <priority>1.0</priority>\n  </url>`,
-      `  <url>\n    <loc>${baseUrl}/#jaap</loc>\n    <lastmod>${today}</lastmod>\n    <priority>0.95</priority>\n  </url>`
+    const staticRoutes = [
+      '/', '/naam-jaap-counter', '/radha-naam-jaap-counter', '/ram-naam-jaap-counter',
+      '/om-namah-shivaya-counter', '/gayatri-mantra-108-counter', '/hare-krishna-jaap-counter',
+      '/about', '/contact', '/privacy', '/disclaimer'
     ];
-    approvedItems.forEach((item) => {
-      urls.push(`  <url>\n    <loc>${baseUrl}/#article/${encodeURIComponent(item.id)}</loc>\n    <lastmod>${today}</lastmod>\n    <priority>0.90</priority>\n  </url>`);
+    const urls = staticRoutes.map((p) =>
+      `  <url>\n    <loc>${baseUrl}${p}</loc>\n    <lastmod>${today}</lastmod>\n    <priority>${p === '/' ? '1.0' : p.includes('counter') ? '0.95' : '0.60'}</priority>\n  </url>`
+    );
+    CATEGORIES.forEach((cat) => {
+      const slug = encodeURIComponent(cat.id.toLowerCase().replace(/\s+/g, '-'));
+      urls.push(`  <url>\n    <loc>${baseUrl}/category/${slug}</loc>\n    <lastmod>${today}</lastmod>\n    <priority>0.85</priority>\n  </url>`);
     });
-    return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>`;
+    approvedItems.forEach((item) => {
+      const enc = encodeURIComponent(item.id);
+      const enUrl = `${baseUrl}/scripture/${enc}`;
+      const hiUrl = `${baseUrl}/hi/scripture/${enc}`;
+      const orUrl = `${baseUrl}/or/scripture/${enc}`;
+      const modDate = item.updatedAt && !Number.isNaN(Date.parse(item.updatedAt))
+        ? new Date(item.updatedAt).toISOString().split('T')[0]
+        : today;
+      [enUrl, hiUrl, orUrl].forEach((loc) => {
+        urls.push(
+          `  <url>\n    <loc>${loc}</loc>\n    <lastmod>${modDate}</lastmod>\n    <priority>0.90</priority>\n    <xhtml:link rel="alternate" hreflang="en" href="${enUrl}" />\n    <xhtml:link rel="alternate" hreflang="hi" href="${hiUrl}" />\n    <xhtml:link rel="alternate" hreflang="or" href="${orUrl}" />\n    <xhtml:link rel="alternate" hreflang="x-default" href="${enUrl}" />\n  </url>`
+        );
+      });
+    });
+    return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n        xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${urls.join('\n')}\n</urlset>`;
   }, [approvedItems]);
 
   const generatedRobotsTxt = useMemo(() => {
